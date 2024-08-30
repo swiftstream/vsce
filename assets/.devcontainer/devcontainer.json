@@ -1,0 +1,62 @@
+// For format details, see https://aka.ms/devcontainer.json.
+// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "webber",
+	"build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "Dockerfile"
+    },
+	"containerEnv": {
+		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"
+	},
+	// "remoteEnv": {
+	// 	"S_PORT": "8888"
+	// },
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"appPort": ["8888:443"],
+	//"forwardPorts": [8888],
+	"otherPortsAttributes": {"onAutoForward": "ignore"},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "uname -a",
+	"postStartCommand": "cmd.sh",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+    		// Add the IDs of extensions you want installed when the container is created.
+    		"extensions": [
+				"SwifWeb.webber",
+				"sswg.swift-lang"
+			],
+			"settings": {
+				"extensions.ignoreRecommendations": true,
+				"swift.path": "/swift/toolchains/swift-wasm-5.10.0-RELEASE/usr/bin",
+				"swift.swiftEnvironmentVariables": {
+					"DEVELOPER_DIR": "public"
+				},
+				"lldb.library": "/swift/toolchains/swift-wasm-5.10.0-RELEASE/usr/lib/liblldb.so",
+				"lldb.launch.expressions": "native",
+				"swift.disableAutoResolve": false,
+				"swift.autoGenerateLaunchConfigurations": true,
+				"swift.backgroundCompilation": false,
+				"swift.showCreateSwiftProjectInWelcomePage": false
+			}
+		}
+	},
+
+	// Adds the `ptrace` capability required for debugger.
+	"capAdd": ["SYS_PTRACE"],
+
+	// Adds volume for swift toolchains.
+	"mounts": [
+		{ "source": "swift-wasm-toolchains", "target": "/swift/toolchains", "type": "volume" }
+	]
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

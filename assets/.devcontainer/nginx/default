@@ -1,0 +1,52 @@
+map ${DOLLAR}host ${DOLLAR}not_built_yet {
+    default '<!DOCTYPE html><html><head></head><body><h1 style="text-align:center;">Seems you haven\'t built your web project yet</h1><h2 style="text-align:center;">Build the project and refresh the page</h2><p style="text-align:center;font-size:100pt;">🏗️</p></body></html>';
+}
+
+server {
+	listen 80;
+
+	server_name _;
+	
+	root ${PWD}/www;
+
+	error_page 404 /custom_404.html;
+    location = /custom_404.html {
+        internal;
+        return 404 ${DOLLAR}not_built_yet;
+    }
+    
+	location / {
+      try_files ${DOLLAR}uri /index.html =404;
+    }
+
+	location ~* \.(js|jpg|png|css|webp|wasm)${DOLLAR} {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
+server {
+	listen 443 ssl;
+
+	server_name _;
+	ssl_certificate /etc/nginx/certs/selfsigned.crt;
+	ssl_certificate_key /etc/nginx/certs/selfsigned.key;
+	proxy_set_header Host ${DOLLAR}host;
+	proxy_set_header X-Forwarded-For ${DOLLAR}remote_addr;
+
+	root ${PWD}/www;
+	
+	error_page 404 /custom_404.html;
+    location = /custom_404.html {
+        internal;
+        return 404 ${DOLLAR}not_built_yet;
+    }
+    
+	location / {
+      try_files ${DOLLAR}uri /index.html =404;
+    }
+
+	location ~* \.(js|jpg|png|css|webp|wasm)${DOLLAR} {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
