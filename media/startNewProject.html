@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                padding-top: 28px;
+                padding-left: 60px;
+                padding-right: 60px;
+                padding-bottom: 28px;
+                background-color: var(--vscode-editor-background);
+            }
+            body.vscode-light .backLogo {
+                background-image: url("__LF__/webber-light.png");
+            }
+            h4 {
+                font-weight: normal;
+            }
+            .svgIcon {
+                color: var(--vscode-editor-foreground); 
+            }
+            .radios .radio {
+                background-color: var(--vscode-editor-selectionHighlightBackground);
+                border-color: #FFFFFF00;
+                border-width: 3px;
+                border-radius: 8px;
+                border-style: solid;
+                margin-right: 16px;
+                display: inline-block;
+                width: 100px;
+                height: 100px;
+                cursor: pointer;
+            }
+            .radios input[type=radio] {
+                display: none;
+            }
+            .radios input[type=radio]:hover + .radio {
+                background-color: var(--vscode-editor-inactiveSelectionBackground);
+            }
+            body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios input[type=radio]:hover + .radio {
+                background-color: transparent!important;
+                border-color: var(--vscode-button-border,transparent)!important;
+            }
+            .radios input[type=radio]:checked + .radio {
+                background-color: var(--vscode-editor-selectionBackground);
+                cursor: default;
+                border-color: var(--vscode-button-background);
+            }
+            body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios input[type=radio]:checked + .radio {
+                background-color: transparent!important;
+                border-color: var(--vscode-button-border,transparent)!important;
+            }
+            .radios .hint {
+                display: none;
+                position: absolute;
+                top: calc(100% + 8px);
+                left: -20px;
+                right: -20px;
+                background-color: var(--vscode-editor-background);
+                border-color: #FFFFFF00;
+                border-width: 0px;
+                border-radius: 8px;
+                border-style: solid;
+                opacity: 0.9;
+            }
+            body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios .hint {
+                background-color: var(--vscode-editor-background)!important;
+            }
+            .radios .hint span {
+                position: relative;
+                display: block;
+                left: 0px;
+                right: 0px;
+                top: 0px;
+                bottom: 0px;
+                background-color: var(--vscode-editor-background);
+                color: var(--vscode-editor-foreground);
+                padding: 4px 8px;
+                font-size: var(--vscode-font-size);
+                font-weight: lighter;
+                text-align: center;
+                border-color: var(--vscode-editor-selectionBackground);
+                border-width: 1px;
+                border-radius: inherit;
+                border-style: inherit;
+            }
+            body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios .hint span {
+                background-color: var(--vscode-editor-background)!important;
+                border-color: var(--vscode-button-border,transparent)!important;
+            }
+            .radios input[type=radio]:hover + .radio .hint {
+                display: block;
+            }
+            .radios label.radio {
+                position: relative;
+            }
+            body.vscode-high-contrast:not(.vscode-high-contrast-light) .radio img {
+                filter: invert(100%);
+            }
+            .t_name {
+                width: calc(100% - 45px);
+                border-color: var(--vscode-editor-inactiveSelectionBackground);
+                border-width: 1px;
+                border-radius: 0px;
+                border-style: solid;
+                background-color: var(--vscode-input-background);
+                color: var(--vscode-input-foreground);
+                padding: 4px 8px;
+            }
+            .t_name::placeholder {
+                color: var(--vscode-input-placeholderForeground);
+            }
+            .t_name:focus {
+                border-color: var(--vscode-button-background);
+                outline: var(--vscode-button-background);
+            }
+            .fileInputBox {
+                display: inline-block;
+                background-color: var(--vscode-input-background);
+                color: var(--vscode-input-foreground);
+                border-color: var(--vscode-editor-inactiveSelectionBackground);
+                border-width: 1px;
+                border-radius: 0px;
+                border-style: solid;
+                padding: 4px 8px;
+                width: calc(100% - 45px);
+                cursor: pointer;
+            }
+            .fileInputBoxBut {
+                display: inline-block;
+                margin-left: 5px;
+                background-color: transparent;
+                color: var(--vscode-input-foreground);
+                cursor: pointer;
+            }
+            .t_path {
+                display: inline-block;
+                background-color: var(--vscode-input-background);
+                color: var(--vscode-input-foreground);
+                border-color: var(--vscode-editor-inactiveSelectionBackground);
+                border-width: 1px;
+                border-radius: 0px;
+                border-style: solid;
+                padding: 4px 8px;
+                width: calc(100% - 45px);
+                cursor: pointer;
+            }
+            .t_path_but {
+                display: inline-block;
+                margin-left: 5px;
+                background-color: transparent;
+                color: var(--vscode-input-foreground);
+                cursor: pointer;
+            }
+            .t_pwa {
+                position: absolute;
+                top: 35px;
+                left: 10px;
+            }
+            .t_spa {
+                position: absolute;
+                top: 31px;
+                left: 10px;
+            }
+            .t_tg {
+                position: absolute;
+                top: 31px;
+                left: 17px;
+            }
+            .t_lib {
+                position: absolute;
+                top: 31px;
+                left: 27px;
+            }
+            .styles {
+                display: none;
+            }
+            .libraryTypes {
+                display: none;
+            }
+            .libraryFiles {
+                display: none;
+            }
+            .t_pure {
+                position: absolute;
+                top: 23px;
+                left: 32px;
+            }
+            .t_tailwind {
+                position: absolute;
+                top: 26px;
+                left: 10px;
+            }
+            .t_bootstrap {
+                position: absolute;
+                top: 23px;
+                left: 16px;
+            }
+            .t_materialize {
+                position: absolute;
+                top: 29px;
+                left: 10px;
+            }
+            .t_semantic {
+                position: absolute;
+                top: 23px;
+                left: 23px;
+            }
+            .t_js {
+                position: absolute;
+                top: 23px;
+                left: 23px;
+            }
+            .fileInput input[type=file] {
+                display: none;
+            }
+            .selectButton {
+                position: relative;
+                display: inline-block;
+                min-width: 233px;
+                border: 1px solid var(--vscode-button-border,transparent);
+                border-radius: 2px;
+                background-color: var(--vscode-button-background);
+                color: var(--vscode-button-foreground);
+                padding: 6px 10px;
+                cursor: pointer;
+                margin-top: 16px;
+            }
+            .selectButton:hover {
+                background-color: var(--vscode-button-hoverBackground);
+            }
+            .selectButton:disabled {
+                background-color: var(--vscode-button-background)!important;
+                cursor: default;
+            }
+            #createLoader {
+                display:none;
+            }
+            #createTooLongHint {
+                display: none;
+                margin-top: 4px;
+            }
+            #openProjectButtonHint {
+                display: none;
+                margin-top: 8px;
+            }
+            #openProjectButton {
+                display: none;
+            }
+            /* HTML: <div class="loader"></div> */
+            .loader {
+                position: absolute;
+                left: 12px;
+                top: 5px;
+                width: 10px;
+                aspect-ratio: 1;
+                border-radius: 50%;
+                border: 4px solid;
+                border-color: var(--vscode-button-foreground) #0000;
+                animation: l1 1s infinite;
+            }
+            @keyframes l1 {to{transform: rotate(.5turn)}}
+        </style>
+    </head>
+    <body>
+        <h1>New Swift Web Project</h1>
+        <h4>Name</h4>
+        <input id="nameInput" class="t_name" type="text" placeholder="The Name of new Project" onkeypress="return event.charCode != 32" />
+        <h4>Folder</h4>
+        <span id="folderLabel" class="t_path">Path to the project folder</span>
+        <span id="folderButton" class="t_path_but">•••</span>
+        <h4>Type</h4>
+        <div class="radios">
+            <input class="radioInput typeInput" type="radio" name="rGroup" value="pwa" id="r1" />
+            <label class="radio" for="r1">
+                <img class="t_pwa" src="__LF__/logo-pwa.svg" width="80" height="30" />
+                <span class="hint"><span>Progressive Web Application</span></span>
+            </label>
+            <input class="radioInput typeInput" type="radio" name="rGroup" value="spa" id="r2" />
+            <label class="radio" for="r2">
+                <img class="t_spa" src="__LF__/logo-spa.svg" width="78" height="36" />
+                <span class="hint"><span>Single Page Application</span></span>
+            </label>
+            <input class="radioInput typeInput" type="radio" name="rGroup" value="tg" id="r3" />
+            <label class="radio" for="r3">
+                <img class="t_tg" src="__LF__/logo-tg.svg" width="66" height="36" />
+                <span class="hint"><span>Telegram Mini App</span></span>
+            </label>
+            <input class="radioInput typeInput" type="radio" name="rGroup" value="lib" id="r4" />
+            <label class="radio" for="r4">
+                <img class="t_lib" src="__LF__/logo-lib.svg" width="46" height="36" />
+                <span class="hint"><span>Library</span></span>
+            </label>
+        </div>
+        <h4 class="styles">Style</h4>
+        <div class="radios styles">
+            <input class="radioInput styleInput" type="radio" name="uGroup" value="lib" id="u1" />
+            <label class="radio" for="u1">
+                <img class="t_pure" src="__LF__/logo-pure.svg" width="36" height="54" />
+                <span class="hint"><span>No CSS frameworks</span></span>
+            </label>
+            <input class="radioInput styleInput" type="radio" name="uGroup" value="tailwind" id="u2" />
+            <label class="radio" for="u2">
+                <img class="t_tailwind" src="__LF__/logo-tailwind.svg" width="80" height="48" />
+                <span class="hint"><span>Tailwind CSS</span></span>
+            </label>
+            <input class="radioInput styleInput" type="radio" name="uGroup" value="bootstrap" id="u3" />
+            <label class="radio" for="u3">
+                <img class="t_bootstrap" src="__LF__/logo-bootstrap.svg" width="68" height="54" />
+                <span class="hint"><span>Bootstrap CSS</span></span>
+            </label>
+            <input class="radioInput styleInput" type="radio" name="uGroup" value="materialize" id="u4" />
+            <label class="radio" for="u4">
+                <img class="t_materialize" src="__LF__/logo-materialize.svg" width="80" height="41" />
+                <span class="hint"><span>Materialize CSS</span></span>
+            </label>
+            <input class="radioInput styleInput" type="radio" name="uGroup" value="semantic" id="u5" />
+            <label class="radio" for="u5">
+                <img class="t_semantic" src="__LF__/logo-semantic.svg" width="54" height="54" />
+                <span class="hint"><span>SemanticUI CSS</span></span>
+            </label>
+        </div>
+        <h4 class="libraryTypes">Library Type</h4>
+        <div class="radios libraryTypes">
+            <input class="radioInput libraryTypeInput" type="radio" name="ltGroup" value="pure" id="lt1" />
+            <label class="radio" for="lt1">
+                <img class="t_pure" src="__LF__/logo-pure.svg" width="36" height="54" />
+                <span class="hint"><span>Pure Swift</span></span>
+            </label>
+            <input class="radioInput libraryTypeInput" type="radio" name="ltGroup" value="js" id="lt2" />
+            <label class="radio" for="lt2">
+                <img class="t_js" src="__LF__/logo-js.svg" width="54" height="54" />
+                <span class="hint"><span>JS Wrapper</span></span>
+            </label>
+        </div>
+        <h4 class="libraryFiles">Library Files (optional)</h4>
+        <div class="libraryFiles fileInput">
+            <input id="fileInputCSSJS" type="file" name="filefield" multiple="multiple" accept="text/javascript, text/css, font/ttf, font/truetype, application/x-font-ttf, application/x-font-truetype, application/x-font-opentype, application/font-woff, application/font-woff2, application/vnd.ms-fontobject, application/font-sfnt" />
+            <label class="radio" for="fileInputCSSJS">
+                <span id="fileInputBoxCSSJS" class="fileInputBox">Select JS, CSS, and font files</span>
+                <span class="fileInputBoxBut">•••</span>
+            </label>
+        </div>
+        <br/>
+        <button id="createButton" class="selectButton"><div id="createLoader" class="loader"></div><span id="createButtonTitle">Create Project</span></button>
+        <span id="createTooLongHint">If it takes too long, then seems Docker is hanging, so we suggest restarting it.</span>
+        <span id="openProjectButtonHint">You can open the project, and after restarting Docker, you need to run the 'Reopen in Container' command.</span>
+        <button id="openProjectButton" class="selectButton">Open the Project</button>
+        <script>
+        var userHomePath = ''
+        var name = ''
+        var folder = ''
+        var type = ''
+        var libraryType = ''
+        var libraryFilePaths = []
+        var style = ''
+        const vscode = acquireVsCodeApi()
+        const nameInput = document.getElementById('nameInput')
+        const folderLabel = document.getElementById('folderLabel')
+        const folderButton = document.getElementById('folderButton')
+        const typeInputs = document.getElementsByClassName('typeInput')
+        const libraryTypeInputs = document.getElementsByClassName('libraryTypeInput')
+        const libraryTypes = document.getElementsByClassName('libraryTypes')
+        const libraryFiles = document.getElementsByClassName('libraryFiles')
+        const styleInputs = document.getElementsByClassName('styleInput')
+        const styles = document.getElementsByClassName('styles')
+        const fileInputCSSJS = document.getElementById('fileInputCSSJS')
+        const fileInputBoxCSSJS = document.getElementById('fileInputBoxCSSJS')
+        const createButton = document.getElementById('createButton')
+        const createButtonTitle = document.getElementById('createButtonTitle')
+        const createLoader = document.getElementById('createLoader')
+        const createTooLongHint = document.getElementById('createTooLongHint')
+        const openProjectButtonHint = document.getElementById('openProjectButtonHint')
+        const openProjectButton = document.getElementById('openProjectButton')
+        nameInput.focus()
+        function disableItems(value) {
+            nameInput.disabled = value
+            Array.from(typeInputs).forEach((el) => el.disabled = value)
+            Array.from(libraryTypeInputs).forEach((el) => el.disabled = value)
+            Array.from(styleInputs).forEach((el) => el.disabled = value)
+            Array.from(fileInputCSSJS).forEach((el) => el.disabled = value)
+            createButton.disabled = value
+        }
+        function updateFolderLabel(value) {
+            folderLabel.innerHTML = value
+        }
+        window.addEventListener('message', event => {
+            let payload = event.data.data
+            switch (event.data.type) {
+            case 'userHomePath':
+                userHomePath = payload.path
+                folder = payload.path
+                updateFolderLabel(payload.path)
+                break
+            case 'setProjectFolder':
+                folder = payload.path
+                updateFolderLabel(folder)
+                break
+            case 'creatingFailed':
+                disableItems(false)
+                break
+            case 'openingInContainer':
+                createButtonTitle.innerHTML = 'Opening in container...'
+                createLoader.style.display = 'block'
+                setTimeout(() => {
+                    window.scrollTo(0, document.body.scrollHeight)
+                }, 100)
+                setTimeout(() => {
+                    createTooLongHint.style.display = 'block'
+                    openProjectButtonHint.style.display = 'block'
+                    openProjectButton.style.display = 'block'
+                }, 60*1000)
+                break
+            }
+        })
+        vscode.postMessage({ command: 'getUserHomePath', payload: {} })
+        function toggleElementsVisibility(show, elements) {
+            Array.from(elements).forEach((el) => el.style.display = show ? 'block' : 'none')
+        }
+        function uncheckRadios(radios) {
+            Array.from(radios).forEach((el) => el.checked = false)
+        }
+        function checkValues() {
+            const isNameOK = name.length > 0
+            const isFolderOK = folder.length > 0
+            const isTypeOK = type.length > 0
+            var isLibraryTypeOK = true
+            var isStyleOK = true
+            if (type == 'lib' || type == '') {
+                style = ''
+                if (type == 'lib') {
+                    toggleElementsVisibility(true, libraryTypes)
+                    toggleElementsVisibility(libraryType.length > 0, libraryFiles)
+                    isLibraryTypeOK = libraryType.length > 0
+                } else {
+                    toggleElementsVisibility(false, libraryTypes)
+                    toggleElementsVisibility(false, libraryFiles)
+                    uncheckRadios(libraryTypeInputs)
+                    libraryType = ''
+                    libraryFilePaths = []
+                }
+                toggleElementsVisibility(false, styles)
+                uncheckRadios(styleInputs)
+            } else {
+                toggleElementsVisibility(false, libraryTypes)
+                uncheckRadios(libraryTypeInputs)
+                toggleElementsVisibility(false, libraryFiles)
+                libraryType = ''
+                libraryFilePaths = []
+                toggleElementsVisibility(true, styles)
+                isStyleOK = style.length > 0
+            }
+            const isDone = isNameOK && isFolderOK && isTypeOK && isStyleOK && isLibraryTypeOK
+            if (isDone) {
+                createButton.style.display = 'block'
+            } else {
+                createButton.style.display = 'none'
+            }
+        }
+        nameInput.addEventListener('input', function (evt) {
+            name = nameInput.value
+            if (folder == userHomePath) {
+                updateFolderLabel(userHomePath + '/' + name.replaceAll(' ', ''))
+            } else {
+                updateFolderLabel(folder)
+            }
+            checkValues()
+        })
+        function selectFolder() {
+            vscode.postMessage({ command: 'selectFolder', payload: { type: 'setProjectFolder' } })
+        }
+        folderLabel.addEventListener('click', selectFolder)
+        folderButton.addEventListener('click', selectFolder)
+        Array.from(typeInputs).forEach((input) => { input.onclick = () => {
+            type = input.value
+            checkValues()
+        }})
+        Array.from(libraryTypeInputs).forEach((input) => { input.onclick = () => {
+            libraryType = input.value
+            checkValues()
+        }})
+        Array.from(styleInputs).forEach((input) => { input.onclick = () => {
+            style = input.value
+            checkValues()
+        }})
+        fileInputCSSJS.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const paths = Array.from(e.target.files).map((x) => x.path)
+                const fileNames = paths.map((x) => x.split('/')[x.split('/').length - 1])
+                fileInputBoxCSSJS.innerHTML = fileNames.join(', ')
+            } else {
+                fileInputBoxCSSJS.innerHTML = ''
+            }
+        })
+        createButton.addEventListener('click', () => {
+            disableItems(true)
+            vscode.postMessage({ command: 'createNewProject', payload: {
+                name: name,
+                path: folder == userHomePath ? `${userHomePath}/${name.replaceAll(' ', '')}` : folder,
+                type: type,
+                style: style,
+                libraryType: libraryType,
+                libraryFiles: libraryFilePaths
+            } })
+        })
+        openProjectButton.addEventListener('click', () => {
+            vscode.postMessage({ command: 'openNewProject', payload: {
+                path: folder == userHomePath ? `${userHomePath}/${name.replaceAll(' ', '')}` : folder
+            } })
+        })
+        checkValues()
+        </script>
+    </body>
+</html>
