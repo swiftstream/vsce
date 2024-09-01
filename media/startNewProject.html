@@ -339,7 +339,7 @@
         </div>
         <h4 class="libraryFiles">Library Files (optional)</h4>
         <div class="libraryFiles fileInput">
-            <input id="fileInputCSSJS" type="file" name="filefield" multiple="multiple" accept="text/javascript, text/css, font/ttf, font/truetype, application/x-font-ttf, application/x-font-truetype, application/x-font-opentype, application/font-woff, application/font-woff2, application/vnd.ms-fontobject, application/font-sfnt" />
+            <input id="fileInputCSSJS" type="file" name="filefield" multiple="multiple" accept="text/javascript, text/css, font/ttf, font/truetype, application/x-font-ttf, application/x-font-truetype, application/x-font-opentype, application/vnd.ms-opentype, font/otf, application/font-woff, application/font-woff2, application/vnd.ms-fontobject, application/font-sfnt" />
             <label class="radio" for="fileInputCSSJS">
                 <span id="fileInputBoxCSSJS" class="fileInputBox">Select JS, CSS, and font files</span>
                 <span class="fileInputBoxBut">•••</span>
@@ -382,7 +382,7 @@
             Array.from(typeInputs).forEach((el) => el.disabled = value)
             Array.from(libraryTypeInputs).forEach((el) => el.disabled = value)
             Array.from(styleInputs).forEach((el) => el.disabled = value)
-            Array.from(fileInputCSSJS).forEach((el) => el.disabled = value)
+            fileInputCSSJS.disabled = value
             createButton.disabled = value
         }
         function updateFolderLabel(value) {
@@ -490,6 +490,7 @@
         fileInputCSSJS.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
                 const paths = Array.from(e.target.files).map((x) => x.path)
+                libraryFilePaths = paths
                 const fileNames = paths.map((x) => x.split('/')[x.split('/').length - 1])
                 fileInputBoxCSSJS.innerHTML = fileNames.join(', ')
             } else {

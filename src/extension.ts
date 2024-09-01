@@ -1,16 +1,11 @@
 import { ExtensionContext, OpenDialogOptions, TreeView, Uri, ViewColumn, WebviewPanel, WebviewView, commands, window, workspace } from 'vscode'
 import { WebberState } from './enums/WebberStateEnum'
-import { CreateProjectType } from './enums/CreateProjectTypeEnum'
 import * as fs from 'fs'
-import { quickOpen } from './quickOpen'
 import { selectFolder } from './helpers/selectFolderHelper'
-import { Dependency, DepNodeProvider } from './depNodeProvider'
 import { startNewProjectWizard } from './wizards/startNewProjectWizard'
 
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
-
-let depNodeProvider: DepNodeProvider | undefined
  
 export async function activate(context: ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -107,43 +102,6 @@ export async function showInputBox() {
 		}
 	});
 	window.showInformationMessage(`Got: ${result}`);
-}
-
-
-
-
-
-
-
-// MARK: Pickers
-
-var newProjectType: string | undefined = undefined
-
-async function chooseNewProjectType() {
-	const type = await window.showQuickPick([
-		CreateProjectType.PWA,
-		CreateProjectType.SPA
-	], {
-		placeHolder: 'Please select the project type'
-	})
-	newProjectType = type
-	return type == undefined ? false : true
-}
-
-async function createTheProject() {
-	
-	if (projectDirectory) {
-		// return await startNewProject()
-	} else {
-		const folderUri = await selectFolder('Please select a folder for Swift project', 'Create Here')
-		if (folderUri) {
-			projectDirectory = folderUri.path
-			// await startNewProject()
-			commands.executeCommand('vscode.openFolder', folderUri)
-		} else {
-			// await startTheProject()
-		}
-	}
 }
 
 export function deactivate() {}
