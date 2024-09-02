@@ -80,12 +80,12 @@ async function switchToProjectMode() {
  * Shows a pick list using window.showQuickPick().
  */
 export async function showQuickPick() {
-	let i = 0;
+	let i = 0
 	const result = await window.showQuickPick(['one', 'two', 'three'], {
 		placeHolder: 'one, two or three',
 		onDidSelectItem: item => window.showInformationMessage(`Focus ${++i}: ${item}`)
 	})
-	window.showInformationMessage(`Got: ${result}`);
+	window.showInformationMessage(`Got: ${result}`)
 }
 
 /**
@@ -97,11 +97,11 @@ export async function showInputBox() {
 		valueSelection: [2, 4],
 		placeHolder: 'For example: fedcba. But not: 123',
 		validateInput: text => {
-			window.showInformationMessage(`Validating: ${text}`);
-			return text === '123' ? 'Not 123!' : null;
+			window.showInformationMessage(`Validating: ${text}`)
+			return text === '123' ? 'Not 123!' : null
 		}
-	});
-	window.showInformationMessage(`Got: ${result}`);
+	})
+	window.showInformationMessage(`Got: ${result}`)
 }
 
 export function deactivate() {}

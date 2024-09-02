@@ -102,77 +102,144 @@ async function createNewProjectFiles(
 		['settings.json'].forEach(async (file) => {
 			await copyFile(`assets/.vscode/${file}`, `${path}/.vscode/${file}`)
 		})
-		var serviceProduct = ''
-		var serviceExecutableTarget = ''
-		if (type != 'spa' && type != 'lib') {
-			serviceProduct = `,`
-			serviceProduct += `\n    .executable(name: "Service", targets: ["Service"])`
-			serviceExecutableTarget = `,`
-			serviceExecutableTarget += `\n    .executableTarget(name: "Service", dependencies: [`
-			serviceExecutableTarget += `\n        .product(name: "ServiceWorker", package: "web")`
-			serviceExecutableTarget += `\n    ], resources: [`
-			serviceExecutableTarget += `\n        //.copy("images/favicon.ico"),`
-			serviceExecutableTarget += `\n        //.copy("images")`
-			serviceExecutableTarget += `\n    ])`
-		}
-		var products = ''
-		if (type == 'lib') {
-			products = `.library(name: "${name}", type: .static, targets: ["${name}"])`
-		} else {
-			products = `.executable(name: "App", targets: ["App"])${serviceProduct}`
-		}
-		var appTarget = `.executableTarget(`
-		appTarget += `\n    name: "App",`
-		appTarget += `\n    dependencies: [`
-		appTarget += `\n        .product(name: "Web", package: "web")`
-		appTarget += `\n    ]`
-		appTarget += `\n)${serviceExecutableTarget}`
-		const sortedLibraryFilePaths = sortLibraryFilePaths(libraryFiles)
-		var libResourcesArray: string[] = []
-		enum LibraryFileType { js = 'js', css = 'css', fonts = 'fonts' }
-		function parseStructuredLibraryFiles(type: LibraryFileType) {
-			if (sortedLibraryFilePaths[type].length == 0) { return }
-			const assetPath = `${path}/Sources/${name}/${type}`
-			if (!fs.existsSync(assetPath)) {
-				fs.mkdirSync(assetPath, { recursive: true })
+		// Copy images
+		if (type == 'spa') {
+			const p = `${path}/Sources/App`
+			if (!fs.existsSync(p)) {
+				fs.mkdirSync(p, { recursive: true })
 			}
-			sortedLibraryFilePaths[type].forEach(src => {
-				const pathComponents = src.split('/')
-				const filename = pathComponents[pathComponents.length - 1]
-				fs.copyFileSync(src, `${assetPath}/${filename}`)
-				libResourcesArray.push(`.copy("${type}/${filename}")`)
-			})
-			libResourcesArray.push(`.copy("${type}")`)
+			await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
+		} else if (type != 'lib') {
+			const p = `${path}/Sources/Service/images`
+			if (!fs.existsSync(p)) {
+				fs.mkdirSync(p, { recursive: true })
+			}
+			await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
+			await copyFile(`media/icon-192.png`, `${p}/icon-192.png`)
+			await copyFile(`media/icon-512.png`, `${p}/icon-512.png`)
 		}
-		parseStructuredLibraryFiles(LibraryFileType.js)
-		parseStructuredLibraryFiles(LibraryFileType.css)
-		parseStructuredLibraryFiles(LibraryFileType.fonts)
-		const libResources = libResourcesArray.length > 0 ? `    ${libResourcesArray.join(`,\n            `)}` : '// .copy("css/bootstrap.css"),\n            // .copy("css")'
-		var libTarget = `.target(name: "${name}", dependencies: [`
-		libTarget += `\n            .product(name: "Web", package: "web")`
-		libTarget += `\n        ], resources: [`
-		libTarget += `\n        ${libResources}`
-		libTarget += `\n        ])`
+		const swifWebRepo = 'https://github.com/swifweb'
+		const sortedLibraryFilePaths = sortLibraryFilePaths(libraryFiles)
+		// MARK: PLATFORMS
+		var platforms: string[] = []
+		platforms.push(`.macOS(.v10_15)`)
+		// MARK: PRODUCTS
+		var products: string[] = []
+		if (type == 'lib') {
+			products.push(`.library(name: "${name}", type: .static, targets: ["${name}"])`)
+		} else {
+			products.push(`.executable(name: "App", targets: ["App"])`)
+		}
+		if (type != 'spa' && type != 'lib') {
+			products.push(`.executable(name: "Service", targets: ["Service"])`)
+		}
+		// MARK: DEPENDENCIES
+		var dependencies: string[] = []
+		dependencies.push(`.package(url: "${swifWebRepo}/web", from: "1.0.0-beta.3.0.0")`)
+		if (type == `tailwind`) {
+			dependencies.push(`.package(url: "${swifWebRepo}/tailwind", from: "1.0.0")`)
+			products.push(`.product(name: "Tailwind", package: "tailwind")`)
+		} else if (type == `bootstrap`) {
+			dependencies.push(`.package(url: "${swifWebRepo}/bootstrap", from: "0.0.1")`)
+			products.push(`.product(name: "Bootstrap", package: "bootstrap")`)
+		} else if (type == `materialize`) {
+			dependencies.push(`.package(url: "${swifWebRepo}/materialize", from: "1.0.0")`)
+			products.push(`.product(name: "Materialize", package: "materialize")`)
+		} else if (type == `semantic`) {
+			dependencies.push(`.package(url: "${swifWebRepo}/semantic", from: "1.0.0")`)
+			products.push(`.product(name: "SemanticUI", package: "semantic-ui")`)
+		}
+		// MARK: TARGETS
+		function buildTarget(type: string, name: string, options: { dependencies?: string[], resources?: string[], plugins?: string[] }): string {
+			var items: string[] = []
+			items.push(`name: "${name}"`)
+			function arrayItems(name: string, items: string[]): string {
+				return `${name}: [\n                ${items.join(',\n                ')}\n            ]`
+			}
+			if (options.dependencies && options.dependencies.length > 0) {
+				items.push(arrayItems('dependencies', options.dependencies))
+			}
+			if (options.resources && options.resources.length > 0) {
+				items.push(arrayItems('resources', options.resources))
+			}
+			if (options.plugins && options.plugins.length > 0) {
+				items.push(arrayItems('plugins', options.plugins))
+			}
+			return `.${type}(\n            ${items.join(',\n            ')}\n        )`
+		}
+		var targets: string[] = []
+		if (type == 'lib') {
+			var libResourcesArray: string[] = []
+			enum LibraryFileType { js = 'js', css = 'css', fonts = 'fonts' }
+			function parseStructuredLibraryFiles(type: LibraryFileType) {
+				if (sortedLibraryFilePaths[type].length == 0) { return }
+				const assetPath = `${path}/Sources/${name}/${type}`
+				if (!fs.existsSync(assetPath)) {
+					fs.mkdirSync(assetPath, { recursive: true })
+				}
+				sortedLibraryFilePaths[type].forEach(src => {
+					const pathComponents = src.split('/')
+					const filename = pathComponents[pathComponents.length - 1]
+					fs.copyFileSync(src, `${assetPath}/${filename}`)
+					libResourcesArray.push(`.copy("${type}/${filename}")`)
+				})
+				libResourcesArray.push(`.copy("${type}")`)
+			}
+			parseStructuredLibraryFiles(LibraryFileType.js)
+			parseStructuredLibraryFiles(LibraryFileType.css)
+			parseStructuredLibraryFiles(LibraryFileType.fonts)
+			const libResources: string[] = libResourcesArray.length > 0 ? libResourcesArray : ['// .copy("css/bootstrap.css")', '// .copy("css")']
+			targets.push(buildTarget('target', name, {
+				dependencies: [
+					'.product(name: "Web", package: "web")'
+				], resources: libResources
+			}))
+		} else {
+			targets.push(buildTarget('executableTarget', 'App', {
+				dependencies: [
+					'.product(name: "Web", package: "web")'
+				], resources: (type == 'spa') ? ['.copy("favicon.ico")'] : []
+			}))
+			if (type != 'spa') {
+				targets.push(buildTarget('executableTarget', 'Service', {
+					dependencies: [
+						'.product(name: "ServiceWorker", package: "web")'
+					], resources: [
+						'.copy("images/favicon.ico")',
+						'.copy("images/icon-192.png")',
+						'.copy("images/icon-512.png")',
+						'.copy("images")'
+					]
+				}))
+			}
+		}
+		// MARK: PACKAGE
+		var packageItems: string[] = []
+		packageItems.push(`name: "${name}"`)
+		function packageArrayItems(name: string, items: string[]): string {
+			return `${name}: [\n        ${items.join(',\n        ')}\n    ]`
+		}
+		if (platforms.length > 0) {
+			packageItems.push(packageArrayItems('platforms', platforms))
+		}
+		if (products.length > 0) {
+			packageItems.push(packageArrayItems('products', products))
+		}
+		if (dependencies.length > 0) {
+			packageItems.push(packageArrayItems('dependencies', dependencies))
+		}
+		if (targets.length > 0) {
+			packageItems.push(packageArrayItems('targets', targets))
+		}
 		var packageSwift = `// swift-tools-version: 5.10`
 		packageSwift += `\nimport PackageDescription`
 		packageSwift += `\n`
 		packageSwift += `\nlet package = Package(`
-		packageSwift += `\n    name: "${name}",`
-		packageSwift += `\n    platforms: [`
-		packageSwift += `\n        .macOS(.v10_15)`
-		packageSwift += `\n    ],`
-		packageSwift += `\n    products: [`
-		packageSwift += `\n        ${products}`
-		packageSwift += `\n    ],`
-		packageSwift += `\n    dependencies: [`
-		packageSwift += `\n        .package(url: "https://github.com/swifweb/web", from: "1.0.0-beta.3.0.0")`
-		packageSwift += `\n    ],`
-		packageSwift += `\n    targets: [`
-		packageSwift += `\n        ${type == 'lib' ? libTarget : appTarget}`
-		packageSwift += `\n    ]`
+		packageSwift += `\n    ${packageItems.join(',\n    ')}`
 		packageSwift += `\n)`
 		fs.writeFileSync(`${path}/Package.swift`, packageSwift)
 		if (type == 'lib') {
+			//MARK: MAIN LIB FILE
 			var mainFile = `import Web`
 			mainFile += `\n`
 			mainFile += `\npublic class ${name} {`
@@ -219,7 +286,143 @@ async function createNewProjectFiles(
 				mainFile += `\n    }`
 				mainFile += `\n}`
 			}
-			fs.writeFileSync(`${path}/Sources/${name}/${name}.swift`, mainFile)
+			const p = `${path}/Sources/${name}`
+			if (!fs.existsSync(p)) {
+				fs.mkdirSync(p, { recursive: true })
+			}
+			fs.writeFileSync(`${p}/${name}.swift`, mainFile)
+		} else if (['spa', 'pwa'].includes(type)) {
+			//MARK: MAIN APP FILE
+			var mainFile = `import Web`
+			mainFile += `\n`
+			mainFile += `\n@main`
+			mainFile += `\nclass App: WebApp {`
+			mainFile += `\n    @AppBuilder override var app: Configuration {`
+			mainFile += `\n        Lifecycle.didFinishLaunching { app in`
+			if (type == 'pwa') {
+				mainFile += `\n            Navigator.shared.serviceWorker?.register("./service.js")`
+			}
+			mainFile += `\n            print("Lifecycle.didFinishLaunching")`
+			mainFile += `\n        }.willTerminate {`
+			mainFile += `\n            print("Lifecycle.willTerminate")`
+			mainFile += `\n        }.willResignActive {`
+			mainFile += `\n            print("Lifecycle.willResignActive")`
+			mainFile += `\n        }.didBecomeActive {`
+			mainFile += `\n            print("Lifecycle.didBecomeActive")`
+			mainFile += `\n        }.didEnterBackground {`
+			mainFile += `\n            print("Lifecycle.didEnterBackground")`
+			mainFile += `\n        }.willEnterForeground {`
+			mainFile += `\n            print("Lifecycle.willEnterForeground")`
+			mainFile += `\n        }`
+			mainFile += `\n        Routes {`
+			mainFile += `\n            Page { IndexPage() }`
+			mainFile += `\n            Page("hello") { HelloPage() }`
+			mainFile += `\n            Page("**") { NotFoundPage() }`
+			mainFile += `\n        }`
+			mainFile += `\n    }`
+			mainFile += `\n}`
+			const p = `${path}/Sources/App`
+			if (!fs.existsSync(p)) {
+				fs.mkdirSync(p, { recursive: true })
+			}
+			fs.writeFileSync(`${p}/${name}.swift`, mainFile)
+			// IndexPage file
+			var indexPage = `import Web`
+			indexPage += `\n`
+			indexPage += `\nclass IndexPage: PageController {`
+			indexPage += `\n    @DOM override var body: DOM.Content {`
+			indexPage += `\n        P("Index page")`
+			indexPage += `\n    }`
+			indexPage += `\n}`
+			const pagesPath = `${path}/Sources/App/Pages`
+			if (!fs.existsSync(pagesPath)) {
+				fs.mkdirSync(pagesPath, { recursive: true })
+			}
+			fs.writeFileSync(`${pagesPath}/IndexPage.swift`, indexPage)
+			// HelloPage file
+			var helloPage = `import Web`
+			helloPage += `\n`
+			helloPage += `\nclass HelloPage: PageController {`
+			helloPage += `\n    @DOM override var body: DOM.Content {`
+			helloPage += `\n        P("HELLO page")`
+			helloPage += `\n            .textAlign(.center)`
+			helloPage += `\n            .body {`
+			helloPage += `\n                Button("go back").display(.block).onClick {`
+			helloPage += `\n                    History.back()`
+			helloPage += `\n                }`
+			helloPage += `\n            }`
+			helloPage += `\n    }`
+			helloPage += `\n}`
+			helloPage += `\n`
+			helloPage += `\nclass Hello_Preview: WebPreview {`
+			helloPage += `\n    @Preview override class var content: Preview.Content {`
+			helloPage += `\n        Language.en`
+			helloPage += `\n        Title("Hello endpoint")`
+			helloPage += `\n        Size(200, 200)`
+			helloPage += `\n        HelloPage()`
+			helloPage += `\n    }`
+			helloPage += `\n}`
+			fs.writeFileSync(`${path}/Sources/App/Pages/HelloPage.swift`, helloPage)
+			// NotFoundPage file
+			var notFoundPage = `import Web`
+			notFoundPage += `\n`
+			notFoundPage += `\nclass NotFoundPage: PageController {`
+			notFoundPage += `\n    @DOM override var body: DOM.Content {`
+			notFoundPage += `\n        P("404 NOT FOUND page")`
+			notFoundPage += `\n            .textAlign(.center)`
+			notFoundPage += `\n            .body {`
+			notFoundPage += `\n                Button("go back").display(.block).onClick {`
+			notFoundPage += `\n                    History.back()`
+			notFoundPage += `\n                }`
+			notFoundPage += `\n            }`
+			notFoundPage += `\n    }`
+			notFoundPage += `\n}`
+			notFoundPage += `\n`
+			notFoundPage += `\nclass NotFound_Preview: WebPreview {`
+			notFoundPage += `\n    @Preview override class var content: Preview.Content {`
+			notFoundPage += `\n        Language.en`
+			notFoundPage += `\n        Title("Not found endpoint")`
+			notFoundPage += `\n        Size(200, 200)`
+			notFoundPage += `\n        NotFoundPage()`
+			notFoundPage += `\n    }`
+			notFoundPage += `\n}`
+			fs.writeFileSync(`${path}/Sources/App/Pages/NotFoundPage.swift`, notFoundPage)
+			if (type == 'pwa') {
+				// Service Worker file
+				var servicePage = `import ServiceWorker`
+				servicePage += `\n`
+				servicePage += `\n@main`
+				servicePage += `\npublic class Service: ServiceWorker {`
+				servicePage += `\n    @ServiceBuilder public override var body: ServiceBuilder.Content {`
+				servicePage += `\n        Manifest`
+				servicePage += `\n            .name("SwiftPWA")`
+				servicePage += `\n            .startURL(".")`
+				servicePage += `\n            .display(.standalone)`
+				servicePage += `\n            .backgroundColor("#2A3443")`
+				servicePage += `\n            .themeColor("white")`
+				servicePage += `\n            .icons(`
+				servicePage += `\n                .init(src: "images/icon-192.png", sizes: .x192, type: .png),`
+				servicePage += `\n                .init(src: "images/icon-512.png", sizes: .x512, type: .png)`
+				servicePage += `\n            )`
+				servicePage += `\n        Lifecycle.activate {`
+				servicePage += `\n            debugPrint("service activate event")`
+				servicePage += `\n        }.install {`
+				servicePage += `\n            debugPrint("service install event")`
+				servicePage += `\n        }.fetch {`
+				servicePage += `\n            debugPrint("service fetch event")`
+				servicePage += `\n        }.sync {`
+				servicePage += `\n            debugPrint("service sync event")`
+				servicePage += `\n        }.contentDelete {`
+				servicePage += `\n            debugPrint("service contentDelete event")`
+				servicePage += `\n        }`
+				servicePage += `\n    }`
+				servicePage += `\n}`
+				const p = `${path}/Sources/Service`
+				if (!fs.existsSync(p)) {
+					fs.mkdirSync(p, { recursive: true })
+				}
+				fs.writeFileSync(`${path}/Sources/Service/Service.swift`, servicePage)
+			}
 		}
 		if (await openProject(Uri.parse(path)) == false) {
 			commands.executeCommand(`vscode.openFolder`, Uri.parse(path))
