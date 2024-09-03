@@ -80,12 +80,15 @@ async function createNewProjectFiles(
 			const rewriteContent = await window.showWarningMessage(
 				`
 				Folder already contains Package.swift.
-				Would you like to rewrite it?
+				Would you like to overwrite it?
 				`,
 				'Rewrite',
 				'Cancel'
 			)
-			if (rewriteContent != 'Rewrite') { return }
+			if (rewriteContent != 'Rewrite') {
+				webViewPanel?.webview.postMessage({ type: 'creatingFailed', data: {} })
+				return
+			}
 		}
 		// Copy devcontainer files
 		if (!fs.existsSync(`${path}/.devcontainer`)) {
