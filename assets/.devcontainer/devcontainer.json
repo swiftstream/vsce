@@ -32,7 +32,8 @@
     		// Add the IDs of extensions you want installed when the container is created.
     		"extensions": [
 				"SwifWeb.webber",
-				"sswg.swift-lang"
+				"sswg.swift-lang",
+				"ms-vscode.wasm-dwarf-debugging"
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
