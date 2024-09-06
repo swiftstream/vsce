@@ -102,7 +102,7 @@ async function createNewProjectFiles(
 		if (!fs.existsSync(`${path}/.vscode`)) {
 			fs.mkdirSync(`${path}/.vscode`)
 		}
-		['settings.json'].forEach(async (file) => {
+		['settings.json', 'launch.json'].forEach(async (file) => {
 			await copyFile(`assets/.vscode/${file}`, `${path}/.vscode/${file}`)
 		})
 		// Copy images

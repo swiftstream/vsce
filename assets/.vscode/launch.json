@@ -1,0 +1,12 @@
+{
+    "configurations": [
+      {
+        "type": "chrome",
+        "request": "launch",
+        "name": "Start App",
+        "url": "https://localhost:8888",
+        "includeLaunchArgs": true,
+        "runtimeArgs": ["--args", "--test-type", "--user-data-dir=/tmp", "--ignore-certificate-errors", "--unsafely-treat-insecure-origin-as-secure=https://localhost:8888"]
+      }
+    ]
+  }
