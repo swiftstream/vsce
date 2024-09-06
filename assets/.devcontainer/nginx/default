@@ -1,5 +1,5 @@
 map ${DOLLAR}host ${DOLLAR}not_built_yet {
-    default '<!DOCTYPE html><html><head></head><body><h1 style="text-align:center;">Seems you haven\'t built your web project yet</h1><h2 style="text-align:center;">Build the project and refresh the page</h2><p style="text-align:center;font-size:100pt;">🏗️</p></body></html>';
+    default '<!DOCTYPE html><html><head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap" rel="stylesheet"><style>body{font-family:"Roboto",sans-serif;font-weight:100;font-style:normal;text-align:center;}</style></head><body><h1>Seems you haven\'t built your web project yet</h1><h2>Build the project and refresh the page</h2></body></html>';
 }
 
 server {
