@@ -4,11 +4,13 @@
 	"name": "webber",
 	"build": {
         // Path is relative to the devcontainer.json file.
-        "dockerfile": "Dockerfile"
+        "dockerfile": "Dockerfile",
+		"args": {
+			"JSKIT": "0.20.0"
+		}
     },
 	"containerEnv": {
-		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE",
-		"S_JSKIT": "0.17.0"
+		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"
 	},
 	// "remoteEnv": {
 	// 	"S_PORT": "8888"

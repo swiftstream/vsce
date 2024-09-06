@@ -2,6 +2,18 @@ FROM ubuntu:focal
 
 # fixes hang on interactive dialogs
 ARG DEBIAN_FRONTEND=noninteractive
+# npm package versions
+ARG SASS=^1.77.8
+ARG ROLLUP=^2.70.0
+ARG TSLIB=^2.3.1
+ARG TS=^4.6.3
+ARG WASI=0.12.0
+ARG WASMFS=0.12.0
+ARG WEBPACK=^5.9.4
+ARG WEBPACKCLI=^5.1.4
+ARG JSKIT=0.17.0
+# passing JSKit version into environment
+ENV S_JSKIT=${JSKIT}
 
 # it is very important to match it with the image platform
 # e.g. for `ubuntu:focal` it should be `ubuntu20.04`
@@ -33,9 +45,20 @@ RUN apt-get install -y curl
 RUN apt-get install -y wget
 RUN apt-get install -y pv
 # install wasm related required dependencies
-# RUN apt-get install -y binaryen
-# RUN curl https://get.wasmer.io -sSfL | sh
-# RUN apt-get install -y npm
+RUN apt-get install -y binaryen
+RUN curl https://get.wasmer.io -sSfL | sh
+# install node and all required packages
+RUN apt-get install -y npm
+RUN npm install -g sass@${SASS} --quiet --no-progress
+RUN npm install -g rollup@${ROLLUP} --quiet --no-progress
+RUN npm install -g tslib@${TSLIB} --quiet --no-progress
+RUN npm install -g typescript@${TS} --quiet --no-progress
+RUN npm install -g @wasmer/wasi@${WASI} --quiet --no-progress
+RUN npm install -g @wasmer/wasmfs@${WASMFS} --quiet --no-progress
+RUN npm install -g reconnecting-websocket --quiet --no-progress
+RUN npm install -g webpack@${WEBPACK} --quiet --no-progress
+RUN npm install -g webpack-cli@${WEBPACKCLI} --quiet --no-progress
+RUN npm install -g javascript-kit-swift@${JSKIT} --quiet --no-progress
 # install nginx to serve the result
 RUN apt-get install -y nginx
 # install envsubst to put env vars into nginx config
