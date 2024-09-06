@@ -35,6 +35,12 @@
 				"npm: watch-tests"
 			],
 			"problemMatcher": []
+		},
+		{
+			"label": "Build Dev Extension",
+			"command": "vsce",
+			"args": ["package", "-o", "extension.vsix"],
+			"type": "shell"
 		}
 	]
 }
