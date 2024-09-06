@@ -23,7 +23,7 @@
     "preview"
   ],
   "activationEvents": [
-    "*"
+    "workspaceContains:Package.swift"
   ],
   "main": "./dist/extension.js",
   "contributes": {
