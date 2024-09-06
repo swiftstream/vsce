@@ -429,8 +429,6 @@ async function createNewProjectFiles(
 		}
 		if (await openProject(Uri.parse(path)) == false) {
 			commands.executeCommand(`vscode.openFolder`, Uri.parse(path))
-			window.showInformationMessage('containerExtension not found')
-			commands.executeCommand(`vscode.openFolder`, Uri.parse(path))
 		}
 	} catch (error) {
 		webViewPanel?.webview.postMessage({ type: 'creatingFailed', data: {} })
