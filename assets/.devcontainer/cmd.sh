@@ -19,7 +19,6 @@ mkdir -p "${nginxCertsPath}"
 
 # creating certs
 openssl req -x509 -days 3650 -keyout "${nginxCertsPath}/selfsigned.key" -out "${nginxCertsPath}/selfsigned.crt" -newkey rsa:2048 -nodes -sha256 -subj /CN=0.0.0.0 -extensions EXT -config /etc/nginx/openssl.cnf
-
 # download swift toolchain to volume if needed
 if [ ! -f ""${toolchainPath}"/usr/bin/swift" ]; then
     # path to swift toolchain tar ball file
@@ -44,9 +43,9 @@ if [ ! -f ""${toolchainPath}"/usr/bin/swift" ]; then
     rm -rf "${toolchainWrongPath}"
     # removing toolchain archive
     rm "${toolchainTarPath}"
-    echo "Toolchain successfully installed"
+    echo "Toolchain ${toolchainName} successfully installed"
 else
-    echo "Toolchain already installed"
+    echo "Toolchain ${toolchainName} already installed"
 fi
 echo "export PATH=${PATH}:${toolchainPath}/usr/bin" > ~/.bashrc
 export DOLLAR="$"
