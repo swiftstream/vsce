@@ -7,7 +7,8 @@
         "dockerfile": "Dockerfile"
     },
 	"containerEnv": {
-		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"
+		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE",
+		"S_JSKIT": "0.17.0"
 	},
 	// "remoteEnv": {
 	// 	"S_PORT": "8888"
