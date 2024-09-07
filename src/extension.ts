@@ -3,13 +3,13 @@ import { WebberState } from './enums/WebberStateEnum'
 import * as fs from 'fs'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard } from './wizards/startNewProjectWizard'
-import { Dependency, DepNodeProvider } from './depNodeProvider'
+import { Dependency, SidebarTreeView } from './sidebarTreeView'
 import { Webber } from './webber'
 
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 let webber: Webber | undefined
-let depNodeProvider: DepNodeProvider | undefined
+let depNodeProvider: SidebarTreeView | undefined
  
 function isContainer(): boolean {
 	return env.remoteName?.includes('container') == true
