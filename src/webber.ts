@@ -168,7 +168,7 @@ function buildCommand() {
 }
 async function debugInChromeCommand() {
 	if (isDebugging) return
-	const debugConfig = createDebugConfigIfNeeded()
+	const debugConfig = await createDebugConfigIfNeeded()
 	if (debugConfig) {
 		await commands.executeCommand('debug.startFromConfig', debugConfig)
 		isDebugging = true

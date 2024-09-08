@@ -1,18 +1,19 @@
-import { workspace } from "vscode"
+import { Uri, workspace } from "vscode"
 import { currentPort } from "../webber"
+import { projectDirectory } from "../extension"
+import JSON5 from 'json5'
+import * as fs from 'fs'
 
-export function createDebugConfigIfNeeded(): any {
+export async function createDebugConfigIfNeeded(): Promise<any> {
     var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
-	var debugConfig: any | undefined
 	if (configurations)
 		for (var config of configurations) {
-			if (config.type === 'chrome')
-				// Return existing configuration
-                return debugConfig
+			if (config.type === 'chrome' && config.url.includes(`:${currentPort}`)) {
+    			// Return existing configuration
+                return config
+            }
 		}
-	else
-		configurations = []
-	// Add a new configuration
+    // Add a new configuration
     const newConfig: any = {
         type: 'chrome',
         request: 'launch',
@@ -27,8 +28,26 @@ export function createDebugConfigIfNeeded(): any {
             `--unsafely-treat-insecure-origin-as-secure=https://localhost:${currentPort}`
         ]
     }
-    configurations = [newConfig, ...configurations]
-    config.update('configurations', configurations, true)
-    console.log('Launch configuration added')
+    const vscodePath = `${projectDirectory}/.vscode`
+    const launchPath = `${vscodePath}/launch.json`
+    if (!fs.existsSync(vscodePath)) {
+        fs.mkdirSync(vscodePath)
+    }
+    if (!fs.existsSync(launchPath)) {
+        var newLaunchContent = {
+            version: '0.2.0',
+            configurations: [newConfig]
+        }
+        fs.writeFileSync(launchPath, JSON.stringify(newLaunchContent, null, '\t'))
+        return newConfig
+    }
+    const launchContent = await workspace.fs.readFile(Uri.file(launchPath))
+    const launchParsed = JSON5.parse(launchContent.toString())
+    const existingConfigurations: any[] = launchParsed.configurations
+	var newLaunchContent = {
+        version: '0.2.0',
+        configurations: [newConfig, ...existingConfigurations]
+    }
+    fs.writeFileSync(launchPath, JSON.stringify(newLaunchContent, null, '\t'))
     return newConfig
 }
