@@ -1,4 +1,4 @@
-import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, debug, DebugSession } from "vscode";
+import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, debug, DebugSession, extensions } from "vscode";
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
@@ -160,9 +160,27 @@ export function status(icon: string | null, message: string, type: StatusType = 
 
 // MARK: Commands
 
-function reopenInContainerCommand() {
-	window.showInformationMessage(`reopenInContainerCommand`)
-
+async function reopenInContainerCommand() {
+	if (!projectDirectory) {
+		window.showInformationMessage('Please open project folder first')
+		return
+	}
+	const folderUri: Uri = Uri.parse(projectDirectory)
+	const extension = extensions.getExtension('ms-vscode-remote.remote-containers')
+    if (!extension) {
+		const res = await window.showInformationMessage(`You have to install Dev Containers extension first`, 'Install', 'Cancel')
+		if (res == 'Install') {
+			env.openExternal(Uri.parse('vscode:extension/ms-vscode-remote.remote-containers'))
+		}
+		return
+	}
+	try {
+		if (!extension.isActive) { await extension.activate() }
+		commands.executeCommand('remote-containers.openFolder', folderUri)
+		commands.executeCommand('remote-containers.revealLogTerminal')
+	} catch (error: any) {
+		window.showErrorMessage(`Unexpected error has occured: ${error.toString()}`)
+	}
 }
 function buildCommand() {
 	window.showInformationMessage(`buildCommand`)
