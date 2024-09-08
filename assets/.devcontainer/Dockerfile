@@ -22,7 +22,7 @@ ENV S_TOOLCHAIN_PLATFORM "ubuntu20.04"
 # update packages
 RUN apt-get update
 
-# install required dependencies accorgin to swift.org
+# install required dependencies according to swift.org
 RUN apt-get install -y binutils
 RUN apt-get install -y git
 RUN apt-get install -y gnupg2
