@@ -1,5 +1,7 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri } from "vscode"
-import { Webber } from "./webber"
+import { currentLoggingLevel, currentPort, currentProjectLabel, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, Webber } from "./webber"
+import { env } from "process"
+import { isInContainer } from "./extension"
 
 export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private _onDidChangeTreeData: EventEmitter<Dependency | undefined | void> = new EventEmitter<Dependency | undefined | void>()
@@ -20,84 +22,75 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 
 	async getChildren(element?: Dependency): Promise<Dependency[]> {
 		var items: Dependency[] = []
+		if (!isInContainer() && !env.S_DEV) {
+			if (element == null) {
+				items = [
+					new Dependency(SideTreeItem.Project, 'Project', `${currentProjectLabel}`, TreeItemCollapsibleState.Expanded, 'terminal-bash', false)
+				]
+			} else if (element?.label == SideTreeItem.Project) {
+				items = [
+					new Dependency(SideTreeItem.ReopenInContainer, 'Reopen in Container', '', TreeItemCollapsibleState.None, 'folder::charts.green')
+				]
+			}
+			return items
+		}
 		if (element == null) {
 			items = [
-				new Dependency(RootItem.Project, '', TreeItemCollapsibleState.Expanded, new ThemeIcon('terminal-bash')),
-				new Dependency(RootItem.Deploy, '', TreeItemCollapsibleState.Expanded, new ThemeIcon('cloud-upload')),
-				new Dependency(RootItem.Maintenance, '', TreeItemCollapsibleState.Expanded, new ThemeIcon('tools')),
-				new Dependency(RootItem.Settings, '', TreeItemCollapsibleState.Expanded, new ThemeIcon('debug-configure')),
-				new Dependency(RootItem.Recommendations, '', TreeItemCollapsibleState.Collapsed, new ThemeIcon('lightbulb')),
-				new Dependency(RootItem.Support, '', TreeItemCollapsibleState.Expanded, new ThemeIcon('question')) // feedback
+				new Dependency(SideTreeItem.Project, 'Project', `${currentProjectLabel}`, TreeItemCollapsibleState.Expanded, 'terminal-bash', false),
+				new Dependency(SideTreeItem.Deploy, 'Deploy', '', TreeItemCollapsibleState.Expanded, 'cloud-upload', false),
+				new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false),
+				new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false),
+				new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false),
+				new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Expanded, 'heart', false)
 			]
-		} else if (element?.label == RootItem.Project) {
+		} else if (element?.id == SideTreeItem.Project) {
 			items = [
-				new Dependency('Build', '', TreeItemCollapsibleState.None, new ThemeIcon('run', new ThemeColor('charts.green'))),
-				new Dependency('Debug in Chrome', '', TreeItemCollapsibleState.None, new ThemeIcon('debug-alt', new ThemeColor('charts.blue'))),
-				new Dependency('Hot reload', '', TreeItemCollapsibleState.None, new ThemeIcon('pass', new ThemeColor('charts.green'))), // circle-large-outline
-				new Dependency('Hot rebuild', '', TreeItemCollapsibleState.None, new ThemeIcon('pass', new ThemeColor('charts.green'))), // circle-large-outline
-				new Dependency('New', '', TreeItemCollapsibleState.Collapsed, new ThemeIcon('gist'))
+				new Dependency(SideTreeItem.Build, isBuilding ? 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding ? 'sync~spin::charts.green' : 'run::charts.green'),
+				new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
+				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
+				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
+				new Dependency(SideTreeItem.NewFile, 'New', '', TreeItemCollapsibleState.Collapsed, 'gist', false)
 			]
-		} else if (element?.label == "New") {
+		} else if (element?.id == SideTreeItem.NewFile) {
 			items = [
-				new Dependency('Page', '', TreeItemCollapsibleState.None, new ThemeIcon('file-add')),
-				new Dependency('Class', '', TreeItemCollapsibleState.None, new ThemeIcon('file-code')),
-				new Dependency('JS', '', TreeItemCollapsibleState.None, new ThemeIcon('file-code')),
-				new Dependency('CSS', '', TreeItemCollapsibleState.None, new ThemeIcon('file-code'))
+				new Dependency(SideTreeItem.NewFilePage, 'Page', '', TreeItemCollapsibleState.None, 'file-add'),
+				new Dependency(SideTreeItem.NewFileClass, 'Class', '', TreeItemCollapsibleState.None, 'file-code'),
+				new Dependency(SideTreeItem.NewFileJS, 'JS', '', TreeItemCollapsibleState.None, 'file-code'),
+				new Dependency(SideTreeItem.NewFileSCSS, 'SCSS', '', TreeItemCollapsibleState.None, 'file-code')
 			]
-		// 	if (this.workspaceRoot) {
-		// 		items = [
-		// 			new Dependency(
-		// 				isProjectGenerating ? "Generating" : isProjectGenerated ? "Regenerate" : "Generate",
-		// 				"",
-		// 				TreeItemCollapsibleState.None,
-		// 				new ThemeIcon(isProjectGenerating ? 'sync~spin' : 'debug-restart', 
-		// 				new ThemeColor('charts.blue')), 
-		// 				new DepCommand('Generate project', 'generateProject')
-		// 			),
-		// 			new Dependency(
-		// 				isBuildingApp ? "Building" : "Build",
-		// 				"",
-		// 				TreeItemCollapsibleState.None,
-		// 				new ThemeIcon(isBuildingApp ? 'sync~spin' : 'terminal-bash',
-		// 				new ThemeColor('charts.orange')),
-		// 				isBuildingApp ? undefined : new DepCommand('Build app', 'buildApp')
-		// 			),
-		// 			new Dependency("Install", `${(await droidy?.adb.devicesList())?.length ?? -1}`, TreeItemCollapsibleState.None, new ThemeIcon('remote', new ThemeColor('charts.yellow')), new DepCommand('Install app', 'installApp')),
-		// 			new Dependency("Run", "", TreeItemCollapsibleState.None, new ThemeIcon('run', new ThemeColor('charts.green')), new DepCommand('Run app', 'runApp'))
-		// 		]
-		// 	}
-		} else if (element.label == RootItem.Deploy) {
+		} else if (element.id == SideTreeItem.Deploy) {
 			items = [
-				new Dependency('Build release', '', TreeItemCollapsibleState.None, new ThemeIcon('globe', new ThemeColor('charts.green'))), // save
-				new Dependency('Deploy to Firebase', '', TreeItemCollapsibleState.None, new ThemeIcon('flame', new ThemeColor('charts.orange')))
+				new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'),
+				new Dependency(SideTreeItem.DeployToFirebase, isDeployingToFirebase ? 'Deploying to Firebase' : 'Deploy to Firebase', '', TreeItemCollapsibleState.None, isDeployingToFirebase ? 'sync~spin::charts.orange' : 'flame::charts.orange')
 			]
-		} else if (element.label == RootItem.Maintenance) {
+		} else if (element.id == SideTreeItem.Maintenance) {
 			items = [
-				new Dependency('Clear Build Cache', '', TreeItemCollapsibleState.None, new ThemeIcon('trash', new ThemeColor('charts.red'))),
-				new Dependency('Recompile App', '', TreeItemCollapsibleState.None, new ThemeIcon('repl')),
-				new Dependency('Recompile Service', '', TreeItemCollapsibleState.None, new ThemeIcon('server~spin')),
-				new Dependency('Recompile JS', '', TreeItemCollapsibleState.None, new ThemeIcon('code')), // symbol-module
-				new Dependency('Recompile CSS', '', TreeItemCollapsibleState.None, new ThemeIcon('symbol-color'))
+				new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : 'trash::charts.red'),
+				new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', 'App', TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'),
+				new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', 'Service', TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'),
+				new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'),
+				new Dependency(SideTreeItem.RecompileCSS, isRecompilingSCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingSCSS ? 'sync~spin' : 'symbol-color')
 			]
-		} else if (element.label == RootItem.Settings) {
+		} else if (element.id == SideTreeItem.Settings) {
 			items = [
-				new Dependency('Toolchain', '', TreeItemCollapsibleState.None, new ThemeIcon('versions')),
-				new Dependency('Port', '', TreeItemCollapsibleState.None, new ThemeIcon('radio-tower')),
-				new Dependency('Logging Level', '', TreeItemCollapsibleState.None, new ThemeIcon('output'))
+				new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain}`, TreeItemCollapsibleState.None, 'versions'),
+				new Dependency(SideTreeItem.Port, 'Port', `${currentPort}`, TreeItemCollapsibleState.None, 'radio-tower'),
+				new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output')
 			]
-		} else if (element?.label == RootItem.Recommendations) {
+		} else if (element?.id == SideTreeItem.Recommendations) {
 			items = [
-				new Dependency('Update SwifWeb to 2.0.0', '', TreeItemCollapsibleState.None, new ThemeIcon('refresh')),
-				new Dependency('Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, new ThemeIcon('refresh')),
+				new Dependency(SideTreeItem.UpdateSwifWeb, 'Update SwifWeb to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'),
+				new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'),
 			]
-		} else if (element?.label == RootItem.Support) {
+		} else if (element?.id == SideTreeItem.Support) {
 			items = [
-				new Dependency('Documentation', '', TreeItemCollapsibleState.None, new ThemeIcon('book')),
-				new Dependency('Repository', '', TreeItemCollapsibleState.None, new ThemeIcon('github')),
-				new Dependency('Leave Feedback', '', TreeItemCollapsibleState.None, new ThemeIcon('pencil'))
+				new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'),
+				new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'),
+				new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'),
+				new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange')
 			]
 		}
-		return Promise.resolve(items)
+		return items
 	}
 }
 
@@ -111,16 +104,30 @@ export class DepCommand implements Command {
 
 export class Dependency extends TreeItem {
 	constructor(
+		public readonly id: string,
 		public readonly label: string,
 		private readonly version: string,
 		public readonly collapsibleState: TreeItemCollapsibleState,
 		public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon,
-		public readonly command?: Command
+		private readonly commandPresent: boolean = true
 	) {
 		super(label, collapsibleState)
+		this.id = id
 		this.tooltip = label
 		this.description = this.version
-		this.iconPath = iconPath
+		if (typeof iconPath === 'string' || iconPath instanceof String) {
+			const splitted = iconPath.split('::')
+			if (splitted.length == 2) {
+				this.iconPath = new ThemeIcon(`${splitted[0]}`, new ThemeColor(`${splitted[1]}`))
+			} else {
+				this.iconPath = new ThemeIcon(`${iconPath}`)
+			}
+		} else {
+			this.iconPath = iconPath
+		}
+		if (commandPresent) {
+			this.command = new DepCommand(label, id)
+		}
 	}
 
 	// iconPath = '$(sync~spin)'
@@ -132,11 +139,37 @@ export class Dependency extends TreeItem {
 	contextValue = 'dependency'
 }
 
-enum RootItem {
+export enum SideTreeItem {
 	Project = 'Project',
+		ReopenInContainer = 'ReopenInContainer',
+		Build = 'Build',
+		DebugInChrome = 'DebugInChrome',
+		HotReload = 'HotReload',
+		HotRebuild = 'HotRebuild',
+		NewFile = 'NewFile',
+			NewFilePage = 'NewFilePage',
+			NewFileClass = 'NewFileClass',
+			NewFileJS = 'NewFileJS',
+			NewFileSCSS = 'NewFileCSS',
 	Deploy = 'Deploy',
+		BuildRelease = 'BuildRelease',
+		DeployToFirebase = 'DeployToFirebase',
 	Maintenance = 'Maintenance',
+		ClearBuildCache = 'ClearBuildCache',
+		RecompileApp = 'RecompileApp',
+		RecompileService = 'RecompileService',
+		RecompileJS = 'RecompileJS',
+		RecompileCSS = 'RecompileCSS',
 	Settings = 'Settings',
+		Toolchain = 'Toolchain',
+		Port = 'Port',
+		LoggingLevel = 'LoggingLevel',
 	Recommendations = 'Recommendations',
-	Support = 'Support'
+		UpdateSwifWeb = 'UpdateSwifWeb',
+		UpdateJSKit = 'UpdateJSKit',
+	Support = 'Support',
+		Documentation = 'Documentation',
+		Repository = 'Repository',
+		Discussions = 'Discussions',
+		SubmitAnIssue = 'SubmitAnIssue'
 }

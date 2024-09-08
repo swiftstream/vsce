@@ -12,6 +12,12 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
+			"env": {
+				// Development Test Values
+				//"S_DEV": "TRUE",
+				//"S_TOOLCHAIN": "5.10-RELEASE",
+				//"S_JSKIT": "0.17.0"
+			},
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
 			],

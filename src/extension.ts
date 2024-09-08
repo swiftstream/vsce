@@ -1,17 +1,18 @@
-import { ExtensionContext, OpenDialogOptions, TreeView, Uri, ViewColumn, WebviewPanel, WebviewView, commands, env, window, workspace } from 'vscode'
+import { ExtensionContext, TextDocument, TextDocumentChangeEvent, TreeView, commands, window, workspace } from 'vscode'
 import { WebberState } from './enums/WebberStateEnum'
 import * as fs from 'fs'
+import { env } from "process"
 import { selectFolder } from './helpers/selectFolderHelper'
-import { startNewProjectWizard } from './wizards/startNewProjectWizard'
+import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
 import { Webber } from './webber'
 
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 let webber: Webber | undefined
-let depNodeProvider: SidebarTreeView | undefined
+export let sidebarTreeView: SidebarTreeView | undefined
  
-function isContainer(): boolean {
+export function isInContainer(): boolean {
 	return env.remoteName?.includes('container') == true
 }
 
@@ -39,6 +40,9 @@ export async function activate(context: ExtensionContext) {
 		}
 	})
 
+	if (projectDirectory) {
+		webber = new Webber(projectDirectory)
+	}
 	registerCommands()
 
 	////
@@ -67,15 +71,11 @@ export async function activate(context: ExtensionContext) {
 
 function registerCommands() {
 	extensionContext.subscriptions.push(commands.registerCommand('startNewProjectWizard', startNewProjectWizard))
-	commands.registerCommand('openProject', openProject)
-	// commands.registerCommand('generateProject', generateProject)
-	// commands.registerCommand('regenerateProject', generateProject)
-	// commands.registerCommand('buildApp', buildApp)
-	// commands.registerCommand('installApp', installApp)
-	// commands.registerCommand('runApp', runApp)
+	extensionContext.subscriptions.push(commands.registerCommand('openProject', openProjectCommand))
+	webber?.registercommands()
 }
 
-async function openProject() {
+async function openProjectCommand() {
 	const folderUri = await selectFolder('Please select folder with a project', 'Open')
 	commands.executeCommand('remote-containers.openFolder', folderUri)
 	commands.executeCommand('remote-containers.revealLogTerminal')
@@ -87,9 +87,9 @@ async function switchToProjectMode() {
 		webber = new Webber(projectDirectory)
 		// await webber.prepare(undefined)
 	}
-	depNodeProvider = new DepNodeProvider(projectDirectory, webber)
+	sidebarTreeView = new SidebarTreeView(projectDirectory, webber)
 	let tv: TreeView<Dependency> = window.createTreeView('webberSidebar', {
-		treeDataProvider: depNodeProvider
+		treeDataProvider: sidebarTreeView
 	})
 }
 
