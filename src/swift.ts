@@ -2,12 +2,13 @@ import { Bash } from './bash'
 import { Toolchain } from './toolchain'
 import * as fs from 'fs'
 import { print } from './webber'
+import { projectDirectory } from './extension'
 
 export class Swift {
-    constructor(private toolchain: Toolchain, private projectDirectory: string) {}
+    constructor(private toolchain: Toolchain) {}
 
     async getExecutableTarget(): Promise<string | undefined> {
-        if (!fs.existsSync(`${this.projectDirectory}/Package.swift`)) {
+        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `🚨 No Package.swift file in the project directory`
         }
         try {
@@ -16,7 +17,7 @@ export class Swift {
             const result = await Bash.execute({
                 path: _path,
                 description: `get executable target`,
-                cwd: this.projectDirectory
+                cwd: projectDirectory
             }, ['package', 'dump-package'])
             const json = JSON.parse(result.stdout)
             if (json.products.length > 0) {
@@ -75,7 +76,7 @@ export class Swift {
         } else {
             args = ['--build-path', './.build/.native']
         }
-        if (!fs.existsSync(`${this.projectDirectory}/Package.swift`)) {
+        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `🚨 No Package.swift file in the project directory`
         }
         var env = process.env
@@ -88,7 +89,7 @@ export class Swift {
             const result = await Bash.execute({
                 path: this.toolchain._pathToSwiftBin,
                 description: `Building swift`,
-                cwd: this.projectDirectory,
+                cwd: projectDirectory,
                 env: env
             }, args)
         } catch (error: any) {

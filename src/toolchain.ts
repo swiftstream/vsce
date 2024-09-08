@@ -20,14 +20,9 @@ export class Toolchain {
     get _pathToSwiftBin(): string { return `${this._binPath}/swift` }
 
     private _swift: Swift | null = null
-    get swift(): Swift { return this._swift || (this._swift = new Swift(this, this.projectDirectory)) }
+    get swift(): Swift { return this._swift || (this._swift = new Swift(this)) }
 
-    projectDirectory: string
-
-    constructor(projectDirectory: string) {
-        this.projectDirectory = projectDirectory
-
-    }
+    constructor() {}
 
     async prepare() {
 

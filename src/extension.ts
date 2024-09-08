@@ -32,7 +32,7 @@ export async function activate(context: ExtensionContext) {
 	// Monitoring project directory path
 	projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
 		? workspace.workspaceFolders[0].uri.fsPath : undefined
-	workspace.onDidChangeWorkspaceFolders(event => {
+	workspace.onDidChangeWorkspaceFolders(event => { // TODO: track project directory change
 		window.showInformationMessage('onDidChangeWorkspaceFolders')
 		console.log('onDidChangeWorkspaceFolders')
 		for (const added of event.added) {
@@ -40,9 +40,8 @@ export async function activate(context: ExtensionContext) {
 		}
 	})
 
-	if (projectDirectory) {
-		webber = new Webber(projectDirectory)
-	}
+	webber = new Webber()
+
 	registerCommands()
 
 	////
@@ -83,10 +82,7 @@ async function openProjectCommand() {
 
 async function switchToProjectMode() {
 	commands.executeCommand('setContext', 'webber.state', WebberState.ProjectMode)
-	if (projectDirectory) {
-		webber = new Webber(projectDirectory)
-		// await webber.prepare(undefined)
-	}
+	// await webber.prepare(undefined)
 	sidebarTreeView = new SidebarTreeView(projectDirectory, webber)
 	let tv: TreeView<Dependency> = window.createTreeView('webberSidebar', {
 		treeDataProvider: sidebarTreeView

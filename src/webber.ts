@@ -1,8 +1,10 @@
-import { commands, StatusBarAlignment, ThemeColor, env, window, Uri } from "vscode";
+import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, debug, DebugSession } from "vscode";
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
-import { extensionContext, sidebarTreeView } from "./extension";
+import { extensionContext, projectDirectory, sidebarTreeView } from "./extension";
+import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
+import { createDebugConfigIfNeeded } from "./helpers/createDebugconfigIfNeeded";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 1001)
@@ -20,31 +22,42 @@ export var isHotReloadEnabled = false
 export var isHotRebuildEnabled = false
 export var isBuildingRelease = false
 export var isDeployingToFirebase = false
-export var containsBuildCache = true // TODO:
 export var isClearingBuildCache = false
 export var isRecompilingApp = false
-export var containsService = true // TODO:
+export var containsService = true // TODO: check if contains service
 export var isRecompilingService = false
-export var containsJS = true // TODO:
+export var containsJS = true // TODO: check if contains JS
 export var isRecompilingJS = false
-export var containsSCSS = true // TODO:
+export var containsSCSS = true // TODO: check if contains SCSS
 export var isRecompilingSCSS = false
-export var containsRecommendations = true // TODO:
-export var containsUpdateForSwifweb = true // TODO:
-export var containsUpdateForJSKit = true // TODO:
-export var currentProjectLabel: string = 'PWA App'
+export var containsRecommendations = true // TODO: check if contains any recommendations
+export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be updated
+export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${process.env.S_TOOLCHAIN}`
-export var currentPort: string = '8888'
-export var currentLoggingLevel: LogLevel = LogLevel.Normal
+export var currentPort: string = '8888' // reads from devcontainer.json
+export var currentLoggingLevel: LogLevel = LogLevel.Normal // TODO: read from extension config
 
 export class Webber {
     private _toolchain: Toolchain | null = null
-    get toolchain(): Toolchain { return this._toolchain || (this._toolchain = new Toolchain(this._currentDirectoryPath)) }
+    get toolchain(): Toolchain { return this._toolchain || (this._toolchain = new Toolchain()) }
     project = new Project(this)
 
-    get currentDirectoryPath() { return this._currentDirectoryPath }
+    constructor() {
+		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
+			if (e.configuration.type.includes('chrome')) {
+				isDebugging = false
+				sidebarTreeView?.refresh()
+			}
+		}))
+		this._configure()
+	}
 
-	constructor(private _currentDirectoryPath: string) {}
+	private async _configure() {
+		if (projectDirectory) {
+			currentPort = `${await readPortFromDevContainer() ?? 8888}`
+			createDebugConfigIfNeeded()
+		}
+	}
 
     async build(productName: string, release: boolean, tripleWasm: boolean = true) {
 		await this.toolchain.build(productName, release, tripleWasm)
@@ -153,9 +166,17 @@ function buildCommand() {
 	window.showInformationMessage(`buildCommand`)
 
 }
-function debugInChromeCommand() {
-	window.showInformationMessage(`debugInChromeCommand`)
-
+async function debugInChromeCommand() {
+	if (isDebugging) return
+	const debugConfig = createDebugConfigIfNeeded()
+	if (debugConfig) {
+		await commands.executeCommand('debug.startFromConfig', debugConfig)
+		isDebugging = true
+	} else {
+		isDebugging = false
+		window.showWarningMessage(`Unable to find Chrome launch configuration`)
+	}
+	sidebarTreeView?.refresh()
 }
 function hotReloadCommand() {
 	window.showInformationMessage(`hotReloadCommand`)
