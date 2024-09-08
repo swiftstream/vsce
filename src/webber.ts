@@ -5,6 +5,7 @@ import { SideTreeItem } from "./sidebarTreeView";
 import { defaultPort, extensionContext, projectDirectory, sidebarTreeView } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugconfigIfNeeded";
+import * as fs from 'fs'
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 1001)
@@ -23,6 +24,7 @@ export var isHotRebuildEnabled = false
 export var isBuildingRelease = false
 export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
+export var isClearedBuildCache = false
 export var isRecompilingApp = false
 export var containsService = true // TODO: check if contains service
 export var isRecompilingService = false
@@ -213,8 +215,31 @@ function deployToFirebaseCommand() {
 
 }
 function clearBuildCacheCommand() {
-	window.showInformationMessage(`clearBuildCacheCommand`)
-
+	if (isClearingBuildCache || isClearedBuildCache) return
+	isClearingBuildCache = true
+	sidebarTreeView?.refresh()
+	const buildFolder = `${projectDirectory}/.build`
+	const startTime = new Date()
+	if (fs.existsSync(buildFolder)) {
+		fs.rmdirSync(buildFolder, { recursive: true })
+	}
+	const endTime = new Date()
+	function afterClearing() {
+		isClearingBuildCache = false
+		isClearedBuildCache = true
+		sidebarTreeView?.refresh()
+		setTimeout(() => {
+			isClearedBuildCache = false
+			sidebarTreeView?.refresh()
+		}, 1000)
+	}
+	if (endTime.getTime() - startTime.getTime() < 1000) {
+		setTimeout(() => {
+			afterClearing()
+		}, 1000)
+	} else {
+		afterClearing()
+	}
 }
 function recompileAppCommand() {
 	window.showInformationMessage(`recompileAppCommand`)
