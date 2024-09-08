@@ -7,6 +7,7 @@ import { startNewProjectWizard as startNewProjectWizard } from './wizards/startN
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
 import { Webber } from './webber'
 
+export const defaultPort = 8888
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 let webber: Webber | undefined

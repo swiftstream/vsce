@@ -2,7 +2,7 @@ import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, 
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
-import { extensionContext, projectDirectory, sidebarTreeView } from "./extension";
+import { defaultPort, extensionContext, projectDirectory, sidebarTreeView } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugconfigIfNeeded";
 
@@ -34,7 +34,7 @@ export var containsRecommendations = true // TODO: check if contains any recomme
 export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be updated
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${process.env.S_TOOLCHAIN}`
-export var currentPort: string = '8888' // reads from devcontainer.json
+export var currentPort: string = `${defaultPort}` // reads from devcontainer.json
 export var currentLoggingLevel: LogLevel = LogLevel.Normal // TODO: read from extension config
 
 export class Webber {
@@ -54,7 +54,7 @@ export class Webber {
 
 	private async _configure() {
 		if (projectDirectory) {
-			currentPort = `${await readPortFromDevContainer() ?? 8888}`
+			currentPort = `${await readPortFromDevContainer() ?? defaultPort}`
 			createDebugConfigIfNeeded()
 		}
 	}
