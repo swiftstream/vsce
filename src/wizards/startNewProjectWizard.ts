@@ -98,13 +98,6 @@ async function createNewProjectFiles(
 		['Dockerfile', 'devcontainer.json', 'cmd.sh', 'nginx/default', 'nginx/mime.types', 'nginx/openssl.cnf'].forEach(async (file) => {
 			await copyFile(`assets/.devcontainer/${file}`, `${path}/.devcontainer/${file}`)
 		})
-		// Copy vscode files
-		if (!fs.existsSync(`${path}/.vscode`)) {
-			fs.mkdirSync(`${path}/.vscode`)
-		}
-		['settings.json', 'launch.json'].forEach(async (file) => {
-			await copyFile(`assets/.vscode/${file}`, `${path}/.vscode/${file}`)
-		})
 		// Copy images
 		if (type == 'spa') {
 			const p = `${path}/Sources/App`
