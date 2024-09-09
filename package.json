@@ -27,10 +27,39 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [],
+  "commands": [],
+    "configuration": {
+      "title": "SwifWeb",
+      "properties": {
+        "swifweb.hotReload": {
+          "order": 1,
+          "type": "boolean",
+          "default": true,
+          "description": "Hot reload in the browser whenever any file saved"
+        },
+        "swifweb.hotRebuild": {
+          "order": 2,
+          "type": "boolean",
+          "default": true,
+          "description": "Hot rebuild whenever any file saved"
+        },
+        "swifweb.loggingLevel": {
+            "order": 3,
+						"type": "string",
+						"description": "Building process log level",
+						"enum": [
+							"Normal",
+							"Detailed",
+							"Verbose"
+						],
+            "default": "Normal",
+						"uniqueItems": true
+			  }
+      }
+    },
     "menus": {
-			"view/title": []
-		},
+      "view/title": []
+    },
     "views": {
       "explorer": [
         {
@@ -38,17 +67,19 @@
           "name": "Empty Project Actions"
         },
         {
-            "type": "webview",
-            "id": "calicoColors.colorsView",
-            "name": "Calico Colors"
+          "type": "webview",
+          "id": "calicoColors.colorsView",
+          "name": "Calico Colors"
         }
       ],
-      "webber-sidebar": [{
+      "webber-sidebar": [
+        {
           "id": "webberSidebar",
           "name": "PROJECT",
           "icon": "media/dep.svg",
           "contextualTitle": "SwifWeb Actions"
-      }]
+        }
+      ]
     },
     "viewsContainers": {
       "activitybar": [
@@ -89,17 +120,18 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.92.0",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
+    "@types/vscode": "^1.92.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.4.5",
     "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4",
-    "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.0"
+    "json5": "^2.2.3"
   }
 }

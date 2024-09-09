@@ -5,12 +5,13 @@ import { env } from "process"
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
-import { Webber } from './webber'
+import { currentPort, setPendingNewPort, Webber } from './webber'
+import { readPortFromDevContainer } from './helpers/readPortFromDevContainer'
 
 export const defaultPort = 8888
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
-let webber: Webber | undefined
+export let webber: Webber | undefined
 export let sidebarTreeView: SidebarTreeView | undefined
  
 export function isInContainer(): boolean {
@@ -18,9 +19,23 @@ export function isInContainer(): boolean {
 }
 
 export async function activate(context: ExtensionContext) {
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "swifweb" is now active!')
+    projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
+		? workspace.workspaceFolders[0].uri.fsPath : undefined
+	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
+	workspace.onDidSaveTextDocument(async (document: TextDocument) => {
+		if (document.languageId === "swift" && document.uri.scheme === "file") {
+			
+		} else if (document.languageId === "jsonc" && document.uri.scheme === "file") {
+			if (document.uri.path == devContainerPath) {
+				const readPort = await readPortFromDevContainer()
+				if (readPort && `${readPort}` != currentPort) {
+					setPendingNewPort(`${readPort}`)
+				} else {
+					setPendingNewPort(undefined)
+				}
+			}
+		}
+	})
 
 	// vscode.window.createTreeView("", )
 	
@@ -31,8 +46,6 @@ export async function activate(context: ExtensionContext) {
 	extensionContext = context
 	
 	// Monitoring project directory path
-	projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
-		? workspace.workspaceFolders[0].uri.fsPath : undefined
 	workspace.onDidChangeWorkspaceFolders(event => { // TODO: track project directory change
 		window.showInformationMessage('onDidChangeWorkspaceFolders')
 		console.log('onDidChangeWorkspaceFolders')

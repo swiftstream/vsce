@@ -2,7 +2,7 @@ import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, 
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
-import { defaultPort, extensionContext, projectDirectory, sidebarTreeView } from "./extension";
+import { defaultPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugconfigIfNeeded";
 import * as fs from 'fs'
@@ -37,7 +37,18 @@ export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be up
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${process.env.S_TOOLCHAIN}`
 export var currentPort: string = `${defaultPort}` // reads from devcontainer.json
-export var currentLoggingLevel: LogLevel = LogLevel.Normal // TODO: read from extension config
+export var pendingNewPort: string | undefined
+export var currentLoggingLevel: LogLevel = LogLevel.Normal
+
+export function setPendingNewPort(value: string | undefined) {
+	if (!isInContainer() && value) {
+		currentPort = value
+		pendingNewPort = undefined
+	} else {
+		pendingNewPort = value
+	}
+	sidebarTreeView?.refresh()
+}
 
 export class Webber {
     private _toolchain: Toolchain | null = null
@@ -58,7 +69,36 @@ export class Webber {
 		if (projectDirectory) {
 			currentPort = `${await readPortFromDevContainer() ?? defaultPort}`
 			createDebugConfigIfNeeded()
+			this.setHotReload()
+			this.setHotRebuild()
+			this.setLoggingLevel()
+			workspace.onDidChangeConfiguration(event => {
+				if (event.affectsConfiguration('swifweb.hotReload'))
+					this.setHotReload()
+				if (event.affectsConfiguration('swifweb.hotRebuild'))
+					this.setHotRebuild()
+				if (event.affectsConfiguration('swifweb.loggingLevel'))
+					this.setLoggingLevel()
+			})
 		}
+	}
+
+	setHotReload(value?: boolean) {
+		isHotReloadEnabled = value ?? workspace.getConfiguration().get('swifweb.hotReload') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('swifweb.hotReload', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setHotRebuild(value?: boolean) {
+		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swifweb.hotRebuild') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('swifweb.hotRebuild', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setLoggingLevel(value?: LogLevel) {
+		currentLoggingLevel = value ?? workspace.getConfiguration().get('swifweb.loggingLevel') as LogLevel
+		if (value) workspace.getConfiguration().update('swifweb.loggingLevel', value)
+		sidebarTreeView?.refresh()
 	}
 
     async build(productName: string, release: boolean, tripleWasm: boolean = true) {
@@ -199,13 +239,11 @@ async function debugInChromeCommand() {
 	sidebarTreeView?.refresh()
 }
 function hotReloadCommand() {
-	window.showInformationMessage(`hotReloadCommand`)
-	isHotReloadEnabled = !isHotReloadEnabled
+	webber?.setHotReload(!isHotReloadEnabled)
 	sidebarTreeView?.refresh()
 }
 function hotRebuildCommand() {
-	window.showInformationMessage(`hotRebuildCommand`)
-	isHotRebuildEnabled = !isHotRebuildEnabled
+	webber?.setHotRebuild(!isHotRebuildEnabled)
 	sidebarTreeView?.refresh()
 }
 function newFilePageCommand() {
@@ -279,13 +317,59 @@ function toolchainCommand() {
 	window.showInformationMessage(`toolchainCommand`)
 
 }
-function portCommand() {
-	window.showInformationMessage(`portCommand`)
-
+async function portCommand() {
+	const port = await window.showInputBox({
+		value: `${currentPort}`,
+		placeHolder: 'Please select another port',
+		validateInput: text => {
+			const value = parseInt(text)
+			if (value < 80)
+				return 'Should be >= 80'
+			if (value > 65534)
+				return 'Should be < 65535'
+			return isNaN(parseInt(text)) ? 'Port should be a number' : null
+		}
+	})
+	if (port == currentPort) return
+	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
+	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
+	if (devContainerContent) {
+		const stringToReplace = `"appPort": ["${currentPort}:443"],`
+		if (!devContainerContent.includes(stringToReplace)) {
+			const res = await window.showErrorMessage(`Port doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
+			if (res == 'Edit manually') {
+				const doc = await workspace.openTextDocument(Uri.parse(devContainerPath))
+				await window.showTextDocument(doc, 1, false)
+				var appPortLine = 0
+				for (var i=0; i<doc.lineCount; i++) {
+					if (doc.lineAt(i).text.includes(`"appPort"`))
+						appPortLine = i
+				}
+				await commands.executeCommand('cursorMove', {
+						to: 'up', by:'wrappedLine', value: doc.lineCount
+				})
+				await commands.executeCommand('cursorMove', {
+					to: 'down', by: 'wrappedLine', value: appPortLine
+				})
+			}
+			return
+		}
+		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${port}:443"],`)
+		fs.writeFileSync(devContainerPath, devContainerContent)
+		setPendingNewPort(`${port}`)
+	}
 }
-function loggingLevelCommand() {
-	window.showInformationMessage(`loggingLevelCommand`)
-
+async function loggingLevelCommand() {
+	const newLoggingLevel = await window.showQuickPick([
+		LogLevel.Normal,
+		LogLevel.Detailed,
+		LogLevel.Verbose
+	], {
+		title: currentLoggingLevel,
+		placeHolder: 'Select new logging level'
+	})
+	webber?.setLoggingLevel(newLoggingLevel as LogLevel)
+	sidebarTreeView?.refresh()
 }
 function updateSwifWebCommand() {
 	window.showInformationMessage(`updateSwifWebCommand`)

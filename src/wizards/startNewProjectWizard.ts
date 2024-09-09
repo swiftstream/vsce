@@ -99,10 +99,12 @@ async function createNewProjectFiles(
 		['Dockerfile', 'devcontainer.json', 'cmd.sh', 'nginx/default', 'nginx/mime.types', 'nginx/openssl.cnf'].forEach(async (file) => {
 			await copyFile(`assets/.devcontainer/${file}`, `${path}/.devcontainer/${file}`)
 		})
-		var devContainerContent: string = fs.readFileSync(`${path}/.devcontainer/devcontainer.json`, 'utf8')
+		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
+		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {
 			const availablePort = await checkPortAndGetNextIfBusy(defaultPort)
 			devContainerContent.replace(`"appPort": ["${defaultPort}:443"],`, `"appPort": ["${availablePort}:443"],`)
+			fs.writeFileSync(devContainerPath, devContainerContent)
 		}
 		// Copy images
 		if (type == 'spa') {
