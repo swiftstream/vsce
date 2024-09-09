@@ -1,11 +1,12 @@
-import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, debug, DebugSession, extensions } from "vscode";
+import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, debug, DebugSession, extensions, ProgressLocation } from "vscode";
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
 import { defaultPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
-import { createDebugConfigIfNeeded } from "./helpers/createDebugconfigIfNeeded";
+import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import * as fs from 'fs'
+import { openDocumentInEditor } from "./helpers/openDocumentInEditor";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 1001)
@@ -413,28 +414,16 @@ async function portCommand() {
 			return isNaN(parseInt(text)) ? 'Port should be a number' : null
 		}
 	})
-	if (port == currentPort) return
+	const portToReplace = pendingNewPort ? pendingNewPort : currentPort
+	if (port == portToReplace) return
 	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 	if (devContainerContent) {
-		const stringToReplace = `"appPort": ["${currentPort}:443"],`
+		const stringToReplace = `"appPort": ["${portToReplace}:443"],`
 		if (!devContainerContent.includes(stringToReplace)) {
 			const res = await window.showErrorMessage(`Port doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
-			if (res == 'Edit manually') {
-				const doc = await workspace.openTextDocument(Uri.parse(devContainerPath))
-				await window.showTextDocument(doc, 1, false)
-				var appPortLine = 0
-				for (var i=0; i<doc.lineCount; i++) {
-					if (doc.lineAt(i).text.includes(`"appPort"`))
-						appPortLine = i
-				}
-				await commands.executeCommand('cursorMove', {
-						to: 'up', by:'wrappedLine', value: doc.lineCount
-				})
-				await commands.executeCommand('cursorMove', {
-					to: 'down', by: 'wrappedLine', value: appPortLine
-				})
-			}
+			if (res == 'Edit manually')
+				await openDocumentInEditor(devContainerPath, `"appPort"`)
 			return
 		}
 		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${port}:443"],`)
