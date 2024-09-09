@@ -97,7 +97,7 @@ async function openProjectCommand() {
 async function switchToProjectMode() {
 	commands.executeCommand('setContext', 'webber.state', WebberState.ProjectMode)
 	// await webber.prepare(undefined)
-	sidebarTreeView = new SidebarTreeView(projectDirectory, webber)
+	sidebarTreeView = new SidebarTreeView()
 	let tv: TreeView<Dependency> = window.createTreeView('webberSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
