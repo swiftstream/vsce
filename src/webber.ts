@@ -5,8 +5,9 @@ import { SideTreeItem } from "./sidebarTreeView";
 import { defaultPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
-import * as fs from 'fs'
 import { openDocumentInEditor } from "./helpers/openDocumentInEditor";
+import * as fs from 'fs'
+import { Swift } from "./swift";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 1001)
@@ -62,8 +63,8 @@ export function setPendingNewPort(value: string | undefined) {
 }
 
 export class Webber {
-    private _toolchain: Toolchain | null = null
-    get toolchain(): Toolchain { return this._toolchain || (this._toolchain = new Toolchain()) }
+    public toolchain: Toolchain
+	public swift: Swift
     project = new Project(this)
 
     constructor() {
@@ -73,6 +74,8 @@ export class Webber {
 				sidebarTreeView?.refresh()
 			}
 		}))
+		this.toolchain = new Toolchain(this)
+		this.swift = new Swift(this)
 		this._configure()
 	}
 

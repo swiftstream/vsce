@@ -1,28 +1,16 @@
 import { workspace } from "vscode"
 import { Swift } from "./swift"
-import { clearStatus, status } from "./webber"
+import { clearStatus, currentToolchain, Webber } from "./webber"
 import { Bash } from "./bash"
 
 export class Toolchain {
-    _path: string | null = null
+    private path: string = `/swift/toolchains/${currentToolchain}`
 
-    get swiftSettings(): {
-        version: string,
-        linkToArchive: string,
-        pathToLocalArchive: string
-    } { return workspace.getConfiguration('swift').get('settings')! }
-    set swiftSettings(newSettings) {
-        workspace.getConfiguration('swift').update('settings', newSettings)
-    }
+    get binPath(): string { return `${this.path}/usr/bin` }
+    get libPath(): string { return `${this.path}/usr/lib` }
+    get swiftPath(): string { return `${this.binPath}/swift` }
 
-    get _binPath(): string { return `${this._path}/usr/bin` }
-    get _libPath(): string { return `${this._path}/usr/lib` }
-    get _pathToSwiftBin(): string { return `${this._binPath}/swift` }
-
-    private _swift: Swift | null = null
-    get swift(): Swift { return this._swift || (this._swift = new Swift(this)) }
-
-    constructor() {}
+    constructor(private webber: Webber) {}
 
     async prepare() {
 
@@ -30,7 +18,7 @@ export class Toolchain {
 
     async checkVersion() {
         const result = await Bash.execute({
-            path: this._pathToSwiftBin,
+            path: this.swiftPath,
             description: 'check swift toolchain version'
         }, ['--version'])
         const version = result.stdout
@@ -44,7 +32,7 @@ export class Toolchain {
 
     async build(productName: string, release: boolean, tripleWasm: boolean = true) {
         try {
-            await this.swift.build(productName, release, tripleWasm)
+            await this.webber.swift.build(productName, release, tripleWasm)
             clearStatus()
         } catch (error) {
             clearStatus()

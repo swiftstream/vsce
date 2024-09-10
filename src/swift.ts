@@ -1,21 +1,18 @@
 import { Bash } from './bash'
-import { Toolchain } from './toolchain'
-import * as fs from 'fs'
-import { print } from './webber'
+import { print, Webber } from './webber'
 import { projectDirectory } from './extension'
+import * as fs from 'fs'
 
 export class Swift {
-    constructor(private toolchain: Toolchain) {}
+    constructor(private webber: Webber) {}
 
     async getExecutableTarget(): Promise<string | undefined> {
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `🚨 No Package.swift file in the project directory`
         }
         try {
-            const _path = await Bash.which('swift')
-            if (!_path) throw `🚨 Unable to find path to Swift`
             const result = await Bash.execute({
-                path: _path,
+                path: this.webber.toolchain.swiftPath,
                 description: `get executable target`,
                 cwd: projectDirectory
             }, ['package', 'dump-package'])
@@ -33,8 +30,21 @@ export class Swift {
         }
     }
 
-    async dump() {
+    async dump(): Promise<any> {
         const args: string[] = ['package', 'dump-package']
+        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
+            throw `🚨 No Package.swift file in the project directory`
+        }
+        try {
+            const result = await Bash.execute({
+                path: this.webber.toolchain.swiftPath,
+                description: `get executable target`,
+                cwd: projectDirectory
+            }, args)
+            return JSON.parse(result.stdout)
+        } catch (error: any) {
+            return undefined
+        }
     }
 
     async version() {
@@ -87,7 +97,7 @@ export class Swift {
         try {
             // print(`${this.toolchain._pathToAndroidBuild} ${['-target', arch, '--product', productName].join(' ')}`)
             const result = await Bash.execute({
-                path: this.toolchain._pathToSwiftBin,
+                path: this.webber.toolchain.swiftPath,
                 description: `Building swift`,
                 cwd: projectDirectory,
                 env: env
