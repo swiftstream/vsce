@@ -41,6 +41,31 @@
 			"command": "vsce",
 			"args": ["package", "-o", "extension.vsix"],
 			"type": "shell"
+		},
+		{
+			"label": "Docker List BuildX Containers (step 1)",
+			"command": "docker",
+			"args": ["buildx", "ls"],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Create BuildX Container (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "webber-container", "--driver=docker-container"],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Build and Push MultiArch Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swifweb/webber:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "webber-container",
+				"--push",
+				"./DockerImage"
+			],
+			"type": "shell"
 		}
 	]
 }

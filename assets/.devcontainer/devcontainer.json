@@ -2,9 +2,7 @@
 	"name": "webber",
 	"build": {
         "dockerfile": "Dockerfile",
-		"args": {
-			"JSKIT": "0.20.0"
-		}
+		"args": {}
     },
 	"containerEnv": {
 		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"

@@ -7,7 +7,7 @@ server {
 
 	server_name _;
 	
-	root ${PWD}/www;
+	root ${PWD}/DevPublic;
 
 	error_page 404 /custom_404.html;
     location = /custom_404.html {
