@@ -155,7 +155,11 @@ export function showOutput() {
 	output.show()
 }
 
-export function print(message: string, show: boolean | null = null) {
+export function print(message: string, level: LogLevel = LogLevel.Normal, show: boolean | null = null) {
+	if (level == LogLevel.Detailed && currentLoggingLevel == LogLevel.Normal)
+		return
+	if (level == LogLevel.Verbose && [LogLevel.Normal, LogLevel.Detailed].includes(currentLoggingLevel))
+		return
 	output.appendLine(message)
 	if (show) output.show()
 }
