@@ -337,7 +337,7 @@ async function toolchainCommand(selectedType?: string) {
 		const rawTags: any[] = JSON.parse(rawText)
 		console.dir(rawTags)
 		return rawTags.map((x) => {
-			return { name: x.tag_name.replace('swift-wasm-', '') }
+			return { name: x.tag_name }
 		})
 	}
 	var tags: Tag[] = []

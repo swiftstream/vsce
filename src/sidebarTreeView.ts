@@ -69,7 +69,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			if (containsSCSS)
 				items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingSCSS ? 'Recompiling' : 'Recompile', 'SCSS', TreeItemCollapsibleState.None, isRecompilingSCSS ? 'sync~spin' : 'symbol-color'))
 		} else if (element.id == SideTreeItem.Settings) {
-			items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
+			items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
 			items.push(new Dependency(SideTreeItem.Port, 'Port', `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
 			items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
 		} else if (element?.id == SideTreeItem.Recommendations) {
