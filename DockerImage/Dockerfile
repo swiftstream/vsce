@@ -36,7 +36,8 @@ RUN apt-get install -y pv
 RUN apt-get install -y binaryen
 RUN curl https://get.wasmer.io -sSfL | sh
 # install node and all required packages
-RUN apt-get install -y npm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN nvm install 20.17.0
 RUN npm install -g sass@^1.77.8 --quiet --no-progress
 # install nginx to serve the result
 RUN apt-get install -y nginx
