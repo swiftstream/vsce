@@ -39,6 +39,7 @@ RUN curl https://get.wasmer.io -sSfL | sh
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 RUN nvm install 20.17.0
 RUN npm install -g sass@^1.77.8 --quiet --no-progress
+RUN npm install -g webpack-cli --quiet --no-progress
 # install nginx to serve the result
 RUN apt-get install -y nginx
 # install envsubst to put env vars into nginx config
