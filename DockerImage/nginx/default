@@ -7,7 +7,7 @@ server {
 
 	server_name _;
 	
-	root ${PWD}/DevPublic;
+	root ${PWD}/BuildDev;
 
 	error_page 404 /custom_404.html;
     location = /custom_404.html {
@@ -33,7 +33,41 @@ server {
 	proxy_set_header Host ${DOLLAR}host;
 	proxy_set_header X-Forwarded-For ${DOLLAR}remote_addr;
 
-	root ${PWD}/www;
+	root ${PWD}/BuildDev;
+
+    gzip on;
+	gzip_comp_level 6;
+	gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript application/wasm;
+	
+	error_page 404 /custom_404.html;
+    location = /custom_404.html {
+        internal;
+        return 404 ${DOLLAR}not_built_yet;
+    }
+    
+	location / {
+      try_files ${DOLLAR}uri /index.html =404;
+    }
+
+	location ~* \.(js|jpg|png|css|webp|wasm)${DOLLAR} {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
+server {
+	listen 444 ssl;
+
+	server_name _;
+	ssl_certificate /etc/nginx/certs/selfsigned.crt;
+	ssl_certificate_key /etc/nginx/certs/selfsigned.key;
+	proxy_set_header Host ${DOLLAR}host;
+	proxy_set_header X-Forwarded-For ${DOLLAR}remote_addr;
+
+	root ${PWD}/BuildProd;
+
+    gzip on;
+	gzip_comp_level 6;
+	gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript application/wasm;
 	
 	error_page 404 /custom_404.html;
     location = /custom_404.html {
