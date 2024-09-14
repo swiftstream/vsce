@@ -27,7 +27,7 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-  "commands": [],
+    "commands": [],
     "configuration": {
       "title": "SwifWeb",
       "properties": {
@@ -44,17 +44,23 @@
           "description": "Hot rebuild whenever any file saved"
         },
         "swifweb.loggingLevel": {
-            "order": 3,
-						"type": "string",
-						"description": "Building process log level",
-						"enum": [
-							"Normal",
-							"Detailed",
-							"Verbose"
-						],
-            "default": "Normal",
-						"uniqueItems": true
-			  }
+          "order": 3,
+          "type": "string",
+          "description": "Building process log level",
+          "enum": [
+            "Normal",
+            "Detailed",
+            "Verbose"
+          ],
+          "default": "Normal",
+          "uniqueItems": true
+        },
+        "swifweb.webSourcesPath": {
+          "order": 4,
+          "type": "string",
+          "description": "Relative path to folder with web source files including node package.json",
+          "default": "WebSources"
+        }
       }
     },
     "menus": {
@@ -128,10 +134,10 @@
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
+    "json5": "^2.2.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
     "webpack": "^5.92.1",
-    "webpack-cli": "^5.1.4",
-    "json5": "^2.2.3"
+    "webpack-cli": "^5.1.4"
   }
 }

@@ -28,6 +28,7 @@ export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
 export var isClearedBuildCache = false
 export var isRecompilingApp = false
+export var webSourcesPath = 'WebSources'
 export var containsService = true // TODO: check if contains service
 export var isRecompilingService = false
 export var containsJS = true // TODO: check if contains JS
@@ -86,6 +87,7 @@ export class Webber {
 			this.setHotReload()
 			this.setHotRebuild()
 			this.setLoggingLevel()
+			this.setWebSourcesPath()
 			workspace.onDidChangeConfiguration(event => {
 				if (event.affectsConfiguration('swifweb.hotReload'))
 					this.setHotReload()
@@ -93,6 +95,8 @@ export class Webber {
 					this.setHotRebuild()
 				if (event.affectsConfiguration('swifweb.loggingLevel'))
 					this.setLoggingLevel()
+				if (event.affectsConfiguration('swifweb.webSourcesPath'))
+					this.setWebSourcesPath()
 			})
 		}
 	}
@@ -115,8 +119,10 @@ export class Webber {
 		sidebarTreeView?.refresh()
 	}
 
-    async build(productName: string, release: boolean, tripleWasm: boolean = true) {
-		await this.toolchain.build(productName, release, tripleWasm)
+	setWebSourcesPath(value?: string) {
+		webSourcesPath = value ?? workspace.getConfiguration().get('swifweb.webSourcesPath') as string
+		if (value) workspace.getConfiguration().update('swifweb.webSourcesPath', value)
+		sidebarTreeView?.refresh()
 	}
 
 	registercommands() {
