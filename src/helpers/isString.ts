@@ -1,0 +1,1 @@
+export var isString = (value: any) => typeof value === 'string'

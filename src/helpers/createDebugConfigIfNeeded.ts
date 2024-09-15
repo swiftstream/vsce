@@ -1,5 +1,5 @@
 import { Uri, workspace } from "vscode"
-import { currentPort } from "../webber"
+import { currentDevPort } from "../webber"
 import { projectDirectory } from "../extension"
 import JSON5 from 'json5'
 import * as fs from 'fs'
@@ -8,7 +8,7 @@ export async function createDebugConfigIfNeeded(): Promise<any> {
     var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
 	if (configurations)
 		for (var config of configurations) {
-			if (config.type === 'chrome' && config.url.includes(`:${currentPort}`)) {
+			if (config.type === 'chrome' && config.url.includes(`:${currentDevPort}`)) {
     			// Return existing configuration
                 return config
             }
@@ -18,14 +18,14 @@ export async function createDebugConfigIfNeeded(): Promise<any> {
         type: 'chrome',
         request: 'launch',
         name: 'Debug in Chrome',
-        url: `https://localhost:${currentPort}`,
+        url: `https://localhost:${currentDevPort}`,
         includeLaunchArgs: true,
         runtimeArgs: [
             '--args',
             '--test-type',
             '--user-data-dir=/tmp',
             '--ignore-certificate-errors',
-            `--unsafely-treat-insecure-origin-as-secure=https://localhost:${currentPort}`
+            `--unsafely-treat-insecure-origin-as-secure=https://localhost:${currentDevPort}`
         ]
     }
     const vscodePath = `${projectDirectory}/.vscode`

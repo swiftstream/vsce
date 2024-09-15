@@ -1,5 +1,5 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
-import { currentLoggingLevel, currentPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, Webber, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, containsSCSS, containsJS, isClearedBuildCache, pendingNewPort, pendingNewToolchain } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, Webber, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, containsSCSS, containsJS, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort } from "./webber"
 import { env } from "process"
 import { isInContainer } from "./extension"
 
@@ -70,7 +70,8 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingSCSS ? 'Recompiling' : 'Recompile', 'SCSS', TreeItemCollapsibleState.None, isRecompilingSCSS ? 'sync~spin' : 'symbol-color'))
 		} else if (element.id == SideTreeItem.Settings) {
 			items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
-			items.push(new Dependency(SideTreeItem.Port, 'Port', `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
+			items.push(new Dependency(SideTreeItem.DevPort, 'Port (debug)', `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
+			items.push(new Dependency(SideTreeItem.ProdPort, 'Port (release)', `${currentProdPort} ${pendingNewProdPort && pendingNewProdPort != currentProdPort ? `(${pendingNewProdPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
 			items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
 		} else if (element?.id == SideTreeItem.Recommendations) {
 			if (containsUpdateForSwifweb)
@@ -159,7 +160,8 @@ export enum SideTreeItem {
 		RecompileCSS = 'RecompileCSS',
 	Settings = 'Settings',
 		Toolchain = 'Toolchain',
-		Port = 'Port',
+		DevPort = 'DevPort',
+		ProdPort = 'ProdPort',
 		LoggingLevel = 'LoggingLevel',
 	Recommendations = 'Recommendations',
 		UpdateSwifWeb = 'UpdateSwifWeb',

@@ -4,6 +4,8 @@ import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
 import { defaultPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
+import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
+import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { openDocumentInEditor } from "./helpers/openDocumentInEditor";
 import * as fs from 'fs'
@@ -29,6 +31,8 @@ export var isClearingBuildCache = false
 export var isClearedBuildCache = false
 export var isRecompilingApp = false
 export var webSourcesPath = 'WebSources'
+export var buildDevPath = 'BuildDev'
+export var buildProdPath = 'BuildProd'
 export var containsService = true // TODO: check if contains service
 export var isRecompilingService = false
 export var containsJS = true // TODO: check if contains JS
@@ -40,8 +44,10 @@ export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be up
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${process.env.S_TOOLCHAIN}`
 export var pendingNewToolchain: string | undefined
-export var currentPort: string = `${defaultPort}` // reads from devcontainer.json
-export var pendingNewPort: string | undefined
+export var currentDevPort: string = `${defaultDevPort}`
+export var currentProdPort: string = `${defaultProdPort}`
+export var pendingNewDevPort: string | undefined
+export var pendingNewProdPort: string | undefined
 export var currentLoggingLevel: LogLevel = LogLevel.Normal
 
 export function setPendingNewToolchain(value: string | undefined) {
@@ -53,12 +59,21 @@ export function setPendingNewToolchain(value: string | undefined) {
 	}
 	sidebarTreeView?.refresh()
 }
-export function setPendingNewPort(value: string | undefined) {
+export function setPendingNewDevPort(value: string | undefined) {
 	if (!isInContainer() && value) {
-		currentPort = value
-		pendingNewPort = undefined
+		currentDevPort = value
+		pendingNewDevPort = undefined
 	} else {
-		pendingNewPort = value
+		pendingNewDevPort = value
+	}
+	sidebarTreeView?.refresh()
+}
+export function setPendingNewProdPort(value: string | undefined) {
+	if (!isInContainer() && value) {
+		currentProdPort = value
+		pendingNewProdPort = undefined
+	} else {
+		pendingNewProdPort = value
 	}
 	sidebarTreeView?.refresh()
 }
@@ -82,7 +97,9 @@ export class Webber {
 
 	private async _configure() {
 		if (projectDirectory) {
-			currentPort = `${await readPortFromDevContainer() ?? defaultPort}`
+			const readPorts = await readPortsFromDevContainer()
+			currentDevPort = `${readPorts.devPort ?? defaultDevPort}`
+			currentProdPort = `${readPorts.prodPort ?? defaultProdPort}`
 			createDebugConfigIfNeeded()
 			this.setHotReload()
 			this.setHotRebuild()
@@ -143,7 +160,8 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, recompileJSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, recompileCSSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Port, portCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateSwifWeb, updateSwifWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))
@@ -414,12 +432,14 @@ async function toolchainCommand(selectedType?: string) {
 		}
 	}
 }
-async function portCommand() {
+async function portDevCommand() {
 	const port = await window.showInputBox({
-		value: `${currentPort}`,
-		placeHolder: 'Please select another port',
+		value: `${pendingNewDevPort ? pendingNewDevPort : currentDevPort}`,
+		placeHolder: 'Please select another port for debug builds',
 		validateInput: text => {
 			const value = parseInt(text)
+			if ((pendingNewProdPort && `${value}` == pendingNewProdPort) || `${value}` == currentProdPort)
+				return "Can't set same port as for release builds"
 			if (value < 80)
 				return 'Should be >= 80'
 			if (value > 65534)
@@ -427,21 +447,57 @@ async function portCommand() {
 			return isNaN(parseInt(text)) ? 'Port should be a number' : null
 		}
 	})
-	const portToReplace = pendingNewPort ? pendingNewPort : currentPort
-	if (port == portToReplace) return
+	if (!port) return
+	const devPortToReplace = pendingNewDevPort ? pendingNewDevPort : currentDevPort
+	const prodPortToReplace = pendingNewProdPort ? pendingNewProdPort : currentProdPort
+	if (port == devPortToReplace) return
 	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 	if (devContainerContent) {
-		const stringToReplace = `"appPort": ["${portToReplace}:443"],`
+		const stringToReplace = `"appPort": ["${devPortToReplace}:443", "${prodPortToReplace}:444"],`
 		if (!devContainerContent.includes(stringToReplace)) {
 			const res = await window.showErrorMessage(`Port doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
 			if (res == 'Edit manually')
 				await openDocumentInEditor(devContainerPath, `"appPort"`)
 			return
 		}
-		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${port}:443"],`)
+		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${port}:443", "${prodPortToReplace}:444"],`)
 		fs.writeFileSync(devContainerPath, devContainerContent)
-		setPendingNewPort(`${port}`)
+		setPendingNewDevPort(`${port}`)
+	}
+}
+async function portProdCommand() {
+	const port = await window.showInputBox({
+		value: `${pendingNewProdPort ? pendingNewProdPort : currentProdPort}`,
+		placeHolder: 'Please select another port for release builds',
+		validateInput: text => {
+			const value = parseInt(text)
+			if ((pendingNewDevPort && `${value}` == pendingNewDevPort) || `${value}` == currentDevPort)
+				return "Can't set same port as for debug builds"
+			if (value < 80)
+				return 'Should be >= 80'
+			if (value > 65534)
+				return 'Should be < 65535'
+			return isNaN(parseInt(text)) ? 'Port should be a number' : null
+		}
+	})
+	if (!port) return
+	const devPortToReplace = pendingNewDevPort ? pendingNewDevPort : currentDevPort
+	const prodPortToReplace = pendingNewProdPort ? pendingNewProdPort : currentProdPort
+	if (port == prodPortToReplace) return
+	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
+	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
+	if (devContainerContent) {
+		const stringToReplace = `"appPort": ["${devPortToReplace}:443", "${prodPortToReplace}:444"],`
+		if (!devContainerContent.includes(stringToReplace)) {
+			const res = await window.showErrorMessage(`Port doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
+			if (res == 'Edit manually')
+				await openDocumentInEditor(devContainerPath, `"appPort"`)
+			return
+		}
+		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${devPortToReplace}:443", "${port}:444"],`)
+		fs.writeFileSync(devContainerPath, devContainerContent)
+		setPendingNewProdPort(`${port}`)
 	}
 }
 async function loggingLevelCommand() {
