@@ -1,14 +1,14 @@
-import { ExtensionContext, TextDocument, TextDocumentChangeEvent, TreeView, commands, window, workspace } from 'vscode'
+import { ExtensionContext, TextDocument, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
 import { WebberState } from './enums/WebberStateEnum'
 import * as fs from 'fs'
-import { env } from "process"
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
-import { currentPort, setPendingNewPort, Webber } from './webber'
-import { readPortFromDevContainer } from './helpers/readPortFromDevContainer'
+import { currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
+import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
 
-export const defaultPort = 8888
+export const defaultDevPort = 7770
+export const defaultProdPort = 8880
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 export let webber: Webber | undefined
@@ -21,17 +21,23 @@ export function isInContainer(): boolean {
 export async function activate(context: ExtensionContext) {
     projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
 		? workspace.workspaceFolders[0].uri.fsPath : undefined
+	
 	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 	workspace.onDidSaveTextDocument(async (document: TextDocument) => {
 		if (document.languageId === "swift" && document.uri.scheme === "file") {
 			
 		} else if (document.languageId === "jsonc" && document.uri.scheme === "file") {
 			if (document.uri.path == devContainerPath) {
-				const readPort = await readPortFromDevContainer()
-				if (readPort && `${readPort}` != currentPort) {
-					setPendingNewPort(`${readPort}`)
+				const readPorts = await readPortsFromDevContainer()
+				if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
+					setPendingNewDevPort(`${readPorts.devPort}`)
 				} else {
-					setPendingNewPort(undefined)
+					setPendingNewDevPort(undefined)
+				}
+				if (readPorts.prodPortPresent && `${readPorts.prodPort}` != currentProdPort) {
+					setPendingNewProdPort(`${readPorts.prodPort}`)
+				} else {
+					setPendingNewProdPort(undefined)
 				}
 			}
 		}
