@@ -15,7 +15,7 @@ export let webber: Webber | undefined
 export let sidebarTreeView: SidebarTreeView | undefined
  
 export function isInContainer(): boolean {
-	return env.remoteName?.includes('container') == true
+	return vsEnv.remoteName?.includes('container') == true
 }
 
 export async function activate(context: ExtensionContext) {
@@ -41,6 +41,9 @@ export async function activate(context: ExtensionContext) {
 				}
 			}
 		}
+	})
+	workspace.onDidChangeTextDocument((e: TextDocumentChangeEvent) => {
+		// window.showInformationMessage(`document changed`)
 	})
 
 	// vscode.window.createTreeView("", )

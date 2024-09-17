@@ -2,18 +2,18 @@ import { commands, StatusBarAlignment, ThemeColor, env, window, Uri, workspace, 
 import { Toolchain } from "./toolchain";
 import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
-import { defaultPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
-import { readPortFromDevContainer } from "./helpers/readPortFromDevContainer";
 import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { openDocumentInEditor } from "./helpers/openDocumentInEditor";
-import * as fs from 'fs'
 import { Swift } from "./swift";
+import { NPM } from "./npm";
+import * as fs from 'fs'
+import { isString } from "./helpers/isString";
 
 let output = window.createOutputChannel('SwifWeb')
-let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 1001)
-let problemStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 1000)
+let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
+let problemStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 0)
 
 export enum LogLevel {
 	Normal = 'Normal',
@@ -187,7 +187,12 @@ export function print(message: string, level: LogLevel = LogLevel.Normal, show: 
 		return
 	if (level == LogLevel.Verbose && [LogLevel.Normal, LogLevel.Detailed].includes(currentLoggingLevel))
 		return
-	output.appendLine(message)
+	var symbol = ''
+	if (level == LogLevel.Detailed)
+		symbol = '🟠 '
+	if (level == LogLevel.Verbose)
+		symbol = '🟣 '
+	output.appendLine(`${symbol}${message}`)
 	if (show) output.show()
 }
 
@@ -207,7 +212,13 @@ export function clearStatus() {
 export function status(icon: string | null, message: string, type: StatusType = StatusType.Default, command: string | null = null) {
 	if (icon) {
 		if (problemStatusBarIcon.text != icon) {
-			problemStatusBarIcon.text = `$(${icon})`
+			const splitted = icon.split('::')
+			if (splitted.length == 2) {
+				problemStatusBarIcon.text = `$(${splitted[0]})`
+				problemStatusBarIcon.color = new ThemeColor(`${splitted[1]}`)
+			} else {
+				problemStatusBarIcon.text = `$(${icon})`
+			}
 			problemStatusBarIcon.show()
 		}
 	} else {
