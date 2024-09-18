@@ -2,10 +2,11 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { commands, extensions, Uri, ViewColumn, WebviewPanel, window, workspace } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
-import { defaultPort, extensionContext } from '../extension'
+import { defaultDevPort, defaultProdPort, extensionContext } from '../extension'
 import { copyFile } from '../helpers/copyFile'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
+import { webSourcesPath } from '../webber'
 
 let webViewPanel: WebviewPanel | undefined
 
@@ -94,16 +95,16 @@ async function createNewProjectFiles(
 		// Copy devcontainer files
 		if (!fs.existsSync(`${path}/.devcontainer`)) {
 			fs.mkdirSync(`${path}/.devcontainer`)
-			fs.mkdirSync(`${path}/.devcontainer/nginx`)
 		}
-		['Dockerfile', 'devcontainer.json', 'cmd.sh', 'nginx/default', 'nginx/mime.types', 'nginx/openssl.cnf'].forEach(async (file) => {
+		['Dockerfile', 'devcontainer.json'].forEach(async (file) => {
 			await copyFile(`assets/.devcontainer/${file}`, `${path}/.devcontainer/${file}`)
 		})
 		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {
-			const availablePort = await checkPortAndGetNextIfBusy(defaultPort)
-			devContainerContent.replace(`"appPort": ["${defaultPort}:443"],`, `"appPort": ["${availablePort}:443"],`)
+			const availableDevPort = await checkPortAndGetNextIfBusy(defaultDevPort)
+			const availableProdPort = await checkPortAndGetNextIfBusy(defaultProdPort)
+			devContainerContent.replace(`"appPort": ["${defaultDevPort}:443", "${defaultProdPort}:444"],`, `"appPort": ["${availableDevPort}:443", "${availableProdPort}:444"],`)
 			fs.writeFileSync(devContainerPath, devContainerContent)
 		}
 		// Copy images
@@ -428,6 +429,25 @@ async function createNewProjectFiles(
 				fs.writeFileSync(`${path}/Sources/Service/Service.swift`, servicePage)
 			}
 		}
+		// MARK: PACKAGE.json
+		const wSourcesPath = `${path}/${webSourcesPath}`
+		if (!fs.existsSync(wSourcesPath)) {
+			fs.mkdirSync(wSourcesPath, { recursive: true })
+		}
+		var packageJson = {
+			name: name.toLowerCase(),
+			version: '1.0.0',
+			devDependencies: {
+				"@wasmer/wasi": "^0.12.0",
+				"@wasmer/wasmfs": "^0.12.0",
+				"javascript-kit-swift": "file:../.build/.wasi/checkouts/JavaScriptKit",
+				"reconnecting-websocket": "^4.4.0",
+				"webpack": "^5.91.0",
+				"webpack-cli": "^5.1.4"
+			}
+		}
+		fs.writeFileSync(`${wSourcesPath}/package.json`, JSON.stringify(packageJson, null, '\t'))
+		// MARK: OPEN PROJECT
 		if (await openProject(Uri.parse(path)) == false) {
 			commands.executeCommand(`vscode.openFolder`, Uri.parse(path))
 		}
@@ -435,10 +455,8 @@ async function createNewProjectFiles(
 		webViewPanel?.webview.postMessage({ type: 'creatingFailed', data: {} })
 		window.showErrorMessage(`Unable to create project: ${error}`)
 		if (!pathWasExists) {
-			window.showInformationMessage(`path to be deleted: ${path}`)
 			try {
 				fs.rmdirSync(path, { recursive: true })
-				window.showInformationMessage(`path deleted`)
 			} catch (error) {
 				window.showErrorMessage(`Unable to delete: ${error}`)
 			}
