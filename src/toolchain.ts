@@ -29,14 +29,4 @@ export class Toolchain {
         components = right.split(' ')
         // const version = components[0]
     }
-
-    async build(productName: string, release: boolean, tripleWasm: boolean = true) {
-        try {
-            await this.webber.swift.build(productName, release, tripleWasm)
-            clearStatus()
-        } catch (error) {
-            clearStatus()
-            throw error
-        }
-    }
 }

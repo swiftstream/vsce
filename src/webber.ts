@@ -81,6 +81,8 @@ export function setPendingNewProdPort(value: string | undefined) {
 export class Webber {
     public toolchain: Toolchain
 	public swift: Swift
+	public npmWeb: NPM
+	public npmJSKit: NPM
     project = new Project(this)
 
     constructor() {
@@ -92,6 +94,8 @@ export class Webber {
 		}))
 		this.toolchain = new Toolchain(this)
 		this.swift = new Swift(this)
+		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
+		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this._configure()
 	}
 
@@ -275,9 +279,216 @@ async function reopenInContainerCommand() {
 		window.showErrorMessage(`Unexpected error has occured: ${error.toString()}`)
 	}
 }
-function buildCommand() {
-	window.showInformationMessage(`buildCommand`)
+// MARK: Build Command
+function buildStepIfBuildWasiExists(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/.build/.wasi`)
+	print(`./.build/.wasi ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
+	return value
+}
+async function buildStepResolveSwiftPackages() {
+	if (!webber) { throw `webber is null` }
+	await webber.swift.packageResolve()
+}
+function buildStepIfJavaScriptKitCheckedout(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit/Package.swift`)
+	print(`./.build/.wasi/checkouts/JavaScriptKit ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
+	return value
+}
+function buildStepIfWebCheckedout(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/web/Package.swift`)
+	print(`./.build/.wasi/checkouts/web ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
+	return value
+}
+function buildStepIfJavaScriptKitTSCompiled(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit/Runtime/lib/index.d.ts`)
+	print(`java-script-kit ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
+	return value
+}
+function buildStepIfWebSourcesCompiled(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/node_modules`)
+	print(`${webSourcesPath}: node_modules ${value ? 'installed' : 'not installed'}`, LogLevel.Verbose)
+	return value
+}
+function buildStepIfWebSourcesBundleCompiled(): boolean {
+	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/dist/bundle.js`)
+	print(`${webSourcesPath}: bundle ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
+	return value
+}
+async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: string) => void, release: boolean }) {
+	if (!webber) { throw `webber is null` }
+	const jsKitPath = `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`
+	const jsKitNodeModulesPath = `${jsKitPath}/node_modules`
+	if (!fs.existsSync(jsKitNodeModulesPath)) {
+		print(`java-script-kit: npm install`, LogLevel.Verbose)
+		options.substatus('js-kit: npm install')
+		await webber.npmJSKit.install()
+		if (!fs.existsSync(jsKitNodeModulesPath))
+			throw `js-kit: npm install failed`
+		print(`java-script-kit: npm run build`, LogLevel.Verbose)
+		options.substatus('js-kit: npm run build')
+		await webber.npmJSKit.run(['build'])
+		if (!buildStepIfJavaScriptKitTSCompiled()) {
+			print(`java-script-kit: npm run build (2nd attempt)`, LogLevel.Verbose)
+			await webber.npmJSKit.run(['build'])
+		}
+	} else {
+		print(`java-script-kit: checking versions`, LogLevel.Verbose)
+		const packageLockPath = `${projectDirectory}/${webSourcesPath}/package-lock.json`
+		const jsKitPackagePath = `${jsKitPath}/package.json`
+		function readVersions(): { current: string, locked: string } {
+			const packageLockContent: string = fs.readFileSync(packageLockPath, 'utf8')
+			const jsKitPackageContent: string = fs.readFileSync(jsKitPackagePath, 'utf8')
+			const packageLock = JSON.parse(packageLockContent)
+			const jsKitPackage = JSON.parse(jsKitPackageContent)
+			const lockedPackages: any = packageLock.packages
+			const lockedKeys = Object.keys(lockedPackages).filter((x) => x.endsWith('/JavaScriptKit'))
+			if (lockedKeys.length != 1)
+				throw `js-kit: package not installed`
+			const result = {
+				current: jsKitPackage.version,
+				locked: lockedPackages[lockedKeys[0]].version
+			}
+			print(`java-script-kit: current v${result.current} locked v${result.locked}`, LogLevel.Verbose)
+			return result
+		}
+		if (fs.existsSync(packageLockPath)) {
+			const versions = readVersions()
+			if (versions.locked != versions.current) {
+				print(`${webSourcesPath}: updating v${versions.locked} to v${versions.current} via npm install`, LogLevel.Verbose)
+				options.substatus('websrc: npm install')
+				await webber.npmWeb.install()
+			}
+		} else {
+			if (!buildStepIfWebSourcesCompiled()) {
+				print(`${webSourcesPath}: initial npm install`, LogLevel.Verbose)
+				options.substatus('websrc: npm install')
+				await webber.npmWeb.install()
+			}
+		}
+		const versionsAfterInstall = readVersions()
+		if (versionsAfterInstall.locked != versionsAfterInstall.current)
+			throw `js-kit versions mismatch ${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`
+	}
+	print(`${webSourcesPath}: npm run ${options.release ? 'release' : 'debug'}`, LogLevel.Verbose)
+	options.substatus(`websrc: npm run ${options.release ? 'release' : 'debug'}`)
+	await webber.npmWeb.run([options.release ? 'release' : 'debug'])
+	if (!buildStepIfWebSourcesBundleCompiled()) {
+		print(`${webSourcesPath}: npm run ${options.release ? 'release' : 'debug'} (2nd attempt)`, LogLevel.Verbose)
+		await webber.npmWeb.run([options.release ? 'release' : 'debug'])
+	}
+	if (!buildStepIfWebSourcesBundleCompiled())
+		throw `js-kit: npm run build failed`
+}
+async function buildStepRetrieveTargets(): Promise<string[]> {
+	if (!webber) { throw `webber is null` }
+	const value = await webber.swift.getExecutableTargets()
+	print(`swift executable targets: [${value.join(', ')}]`, LogLevel.Verbose)
+	return value
+}
+async function buildStepBuildSwiftTarget(options: { targetName: string, release: boolean }) {
+	if (!webber) { throw `webber is null` }
+	const dateStart = new Date()
+	print(`started building \`${options.targetName}\` target in \`${options.release ? 'release' : 'debug'}\` mode`, LogLevel.Verbose)
+	await webber.swift.build({
+		targetName: options.targetName,
+		release: options.release,
+		tripleWasm: true
+	})
+	const dateEnd = new Date()
+	const time = dateEnd.getTime() - dateStart.getTime()
+	print(`finished building \`${options.targetName}\` target in ${time}ms`, LogLevel.Verbose)
+}
 
+async function buildCommand() {
+	if (!webber) return
+	function buildStatus(text: string) {
+		status('sync~spin', text, StatusType.Default)
+	}
+	try {
+		print(`Started building debug`, LogLevel.Detailed)
+		const dateStart = new Date()
+		// STEP: check if .build/.wasi exists
+		if (!buildStepIfBuildWasiExists()) {
+			print(`Project never been built, have to resolve packages first`, LogLevel.Detailed)
+			print(`🔦 Resolving Swift packages`)
+			buildStatus(`Resolving Swift packages`)
+			await buildStepResolveSwiftPackages()
+		}
+		if (!buildStepIfJavaScriptKitCheckedout() || !buildStepIfWebCheckedout()) {
+			print(`JavaScriptKit and/or web packages not found in checkouts, let's try to resolve one more time`, LogLevel.Detailed)
+			print(`🔦 Resolving Swift packages (2nd attempt)`)
+			buildStatus(`Resolving Swift packages (2nd attempt)`)
+			await buildStepResolveSwiftPackages()
+		}
+		let existsJS = buildStepIfJavaScriptKitCheckedout()
+		let existsWeb = buildStepIfWebCheckedout()
+		if (!existsJS || !existsWeb) {
+			clearStatus()
+			var text = `Unable to fetch swift packages`
+			if (existsJS || existsWeb) {
+				if (existsJS)
+					text = 'Missing `web` package'
+				else
+					text = 'Missing `JavaScriptKit` package'
+				print(`🙆‍♂️ ${text}`)
+				await window.showErrorMessage(text, 'Retry', 'Cancel')
+			} else {
+				const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
+				if (result == 'Retry') {
+					print(`Going to retry debug build command`, LogLevel.Detailed)
+					buildCommand()
+				}
+			}
+			return
+		}
+		print(`Going to retrieve swift targets`, LogLevel.Detailed)
+		const targets = await buildStepRetrieveTargets()
+		print(`Retrieve swift targets: [${targets.join(', ')}]`, LogLevel.Detailed)
+		if (targets.length == 0)
+			throw `No targets to build`
+		for (let i = 0; i < targets.length; i++) {
+			const targetName = targets[i]
+			print(`🧱 Building Swift target: ${targetName}`)
+			await buildStepBuildSwiftTarget({ targetName: targetName, release: false })
+			// STEP: copy .wasm file
+			// STEP: copy resources
+		}
+		if (!buildStepIfJavaScriptKitTSCompiled()) {
+			print(`java-script-kit: npm run build (2nd attempt)`, LogLevel.Verbose)
+			await webber.npmJSKit.run(['build'])
+		}
+		if (!buildStepIfWebSourcesBundleCompiled()) {
+			print(`🧱 Building web sources`)
+			buildStatus(`Building web sources`)
+			await buildStepJavaScriptKitCompileTS({
+				substatus: (t) => { buildStatus(`Building web sources (${t})`) },
+				release: false
+			})
+		}
+		// STEP: compile SCSS (or maybe with webpack instead of sass)
+		const dateEnd = new Date()
+		const time = dateEnd.getTime() - dateStart.getTime()
+		status('check', `Build Succeeded in ${time}ms`, StatusType.Default)
+		setTimeout(() => {
+			clearStatus()
+		}, 4000)
+		print(`✅ Build Succeeded in ${time}ms`)
+		console.log(`Build Succeeded in ${time}ms`)
+	} catch (error: any) {
+		var text = ''
+		if (isString(error)) {
+			text = error
+			print(`❌ ${text}`)
+		} else {
+			text = `Something went wrong during the build`
+			print(`❌ ${text}: ${error}`)
+			console.error(error)
+		}
+		status('error', text, StatusType.Error)
+		setTimeout(() => {
+			clearStatus()
+		}, 5000)
+	}
 }
 async function debugInChromeCommand() {
 	if (isDebugging) return

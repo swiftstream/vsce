@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import { isNull } from 'util'
-import { print } from './webber'
+import { LogLevel, print } from './webber'
 
 export class Bash {
     static async which(program: string): Promise<string | null> {
@@ -53,12 +53,14 @@ export class Bash {
             var stderr = ''
 			var stdout = ''
             process.stdout.on('data', function(msg) {
-                // print(`stdout: ${msg}`)
-				stdout += msg.toString()
+                const m = msg.toString()
+                print(`stdout: ${m.trim()}`, LogLevel.Verbose)
+				stdout += m
 			})
 			process.stderr.on('data', function(msg) {
-                // print(`stderr: ${msg}`)
-				stderr += msg.toString()
+                const m = msg.toString()
+                print(`stderr: ${m.trim()}`, LogLevel.Verbose)
+				stderr += m
 			})
 			process.on('error', (error: any) => {
                 const endTime = new Date().getTime()
