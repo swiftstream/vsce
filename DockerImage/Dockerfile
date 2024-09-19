@@ -5,7 +5,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # it is very important to match it with the image platform
 # e.g. for `ubuntu:focal` it should be `ubuntu20.04`
-ENV S_TOOLCHAIN_PLATFORM "ubuntu20.04"
+ENV S_TOOLCHAIN_PLATFORM="ubuntu20.04"
+ENV SWIFWEB_IMAGE_VERSION=100
 
 # update packages
 RUN apt-get update && apt-get upgrade -y
