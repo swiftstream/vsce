@@ -8,7 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV S_TOOLCHAIN_PLATFORM "ubuntu20.04"
 
 # update packages
-RUN apt-get update
+RUN apt-get update && apt-get upgrade -y
 
 # install required dependencies according to swift.org
 RUN apt-get install -y binutils
@@ -35,16 +35,20 @@ RUN apt-get install -y pv
 # install wasm related required dependencies
 RUN apt-get install -y binaryen
 RUN curl https://get.wasmer.io -sSfL | sh
-# install node and all required packages
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-RUN nvm install 20.17.0
-RUN npm install -g sass@^1.77.8 --quiet --no-progress
-RUN npm install -g webpack-cli --quiet --no-progress
 # install nginx to serve the result
 RUN apt-get install -y nginx
 # install envsubst to put env vars into nginx config
 RUN apt-get -y install gettext-base
-
+# install node and all required packages
+ENV NVM_DIR="/root/.nvm"
+ENV NODE_VERSION="20.17.0"
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default \
+    && npm install -g sass@^1.77.8 --quiet --no-progress \
+    && npm install -g webpack-cli@^5.1.4 --quiet --no-progress
 # copy required files
 COPY cmd.sh /usr/local/bin/
 COPY nginx/default /etc/nginx/sites-available/
