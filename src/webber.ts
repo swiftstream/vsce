@@ -10,6 +10,7 @@ import { Swift } from "./swift";
 import { NPM } from "./npm";
 import * as fs from 'fs'
 import { isString } from "./helpers/isString";
+import { Webpack, WebpackMode } from "./webpack";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -83,6 +84,7 @@ export class Webber {
 	public swift: Swift
 	public npmWeb: NPM
 	public npmJSKit: NPM
+	public webpack: Webpack
     project = new Project(this)
 
     constructor() {
@@ -96,6 +98,7 @@ export class Webber {
 		this.swift = new Swift(this)
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
+		this.webpack = new Webpack(this)
 		this._configure()
 	}
 
@@ -309,9 +312,9 @@ function buildStepIfWebSourcesCompiled(): boolean {
 	print(`${webSourcesPath}: node_modules ${value ? 'installed' : 'not installed'}`, LogLevel.Verbose)
 	return value
 }
-function buildStepIfWebSourcesBundleCompiled(): boolean {
-	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/dist/bundle.js`)
-	print(`${webSourcesPath}: bundle ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
+function buildStepIfWebSourcesBundleCompiled(options: { target: string, release: boolean }): boolean {
+	const value = fs.existsSync(`${projectDirectory}/${options.release ? buildProdPath : buildDevPath}/${options.target.toLowerCase()}.js`)
+	print(`${options.target} target bundle ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
 	return value
 }
 async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: string) => void, release: boolean }) {
@@ -369,15 +372,6 @@ async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: stri
 		if (versionsAfterInstall.locked != versionsAfterInstall.current)
 			throw `js-kit versions mismatch ${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`
 	}
-	print(`${webSourcesPath}: npm run ${options.release ? 'release' : 'debug'}`, LogLevel.Verbose)
-	options.substatus(`websrc: npm run ${options.release ? 'release' : 'debug'}`)
-	await webber.npmWeb.run([options.release ? 'release' : 'debug'])
-	if (!buildStepIfWebSourcesBundleCompiled()) {
-		print(`${webSourcesPath}: npm run ${options.release ? 'release' : 'debug'} (2nd attempt)`, LogLevel.Verbose)
-		await webber.npmWeb.run([options.release ? 'release' : 'debug'])
-	}
-	if (!buildStepIfWebSourcesBundleCompiled())
-		throw `js-kit: npm run build failed`
 }
 async function buildStepRetrieveTargets(): Promise<string[]> {
 	if (!webber) { throw `webber is null` }
@@ -454,16 +448,30 @@ async function buildCommand() {
 			// STEP: copy resources
 		}
 		if (!buildStepIfJavaScriptKitTSCompiled()) {
-			print(`java-script-kit: npm run build (2nd attempt)`, LogLevel.Verbose)
-			await webber.npmJSKit.run(['build'])
-		}
-		if (!buildStepIfWebSourcesBundleCompiled()) {
-			print(`🧱 Building web sources`)
-			buildStatus(`Building web sources`)
+			print(`🧱 Building JavaScriptKit`)
+			buildStatus(`Building js-kit`)
 			await buildStepJavaScriptKitCompileTS({
-				substatus: (t) => { buildStatus(`Building web sources (${t})`) },
+				substatus: (t) => { buildStatus(`Building js-kit: (${t})`) },
 				release: false
 			})
+		}
+		if (!buildStepIfWebSourcesCompiled()) {
+			print(`${webSourcesPath}: initial npm install`, LogLevel.Verbose)
+			buildStatus('websrc: npm install')
+			await webber.npmWeb.install()
+		}
+		for (let i = 0; i < targets.length; i++) {
+			const targetName = targets[i]
+			print(`🧱 Building ${targetName} web target`)
+			buildStatus(`Building web sources`)
+			await webber.webpack.build(WebpackMode.Development, targetName, false, `../${buildDevPath}`)
+			if (!buildStepIfWebSourcesBundleCompiled({ target: targetName, release: false })) {
+				print(`🧱 Building ${targetName} web target (2nd attempt)`)
+				buildStatus(`Building web sources (2nd attempt)`)
+				await webber.webpack.build(WebpackMode.Development, targetName, false, `../${buildDevPath}`)
+			}
+			if (!buildStepIfWebSourcesBundleCompiled({ target: targetName, release: false }))
+				throw `${targetName} web target build failed`
 		}
 		// STEP: compile SCSS (or maybe with webpack instead of sass)
 		const dateEnd = new Date()
