@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "importHelpers": true,
+        "rootDir": "./",
+        "noImplicitAny": true,
+        "strict": true,
+        "target": "es2020",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    }
+}

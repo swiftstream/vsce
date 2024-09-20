@@ -104,9 +104,24 @@ async function createNewProjectFiles(
 		if (devContainerContent) {
 			const availableDevPort = await checkPortAndGetNextIfBusy(defaultDevPort)
 			const availableProdPort = await checkPortAndGetNextIfBusy(defaultProdPort)
-			devContainerContent.replace(`"appPort": ["${defaultDevPort}:443", "${defaultProdPort}:444"],`, `"appPort": ["${availableDevPort}:443", "${availableProdPort}:444"],`)
+			devContainerContent = devContainerContent.replace(`${defaultDevPort}:443`, `${availableDevPort}:443`)
+			devContainerContent = devContainerContent.replace(`${defaultProdPort}:444`, `${availableProdPort}:444`)
 			fs.writeFileSync(devContainerPath, devContainerContent)
 		}
+		// Copy WebSources
+		if (!fs.existsSync(`${path}/WebSources`)) {
+			fs.mkdirSync(`${path}/WebSources`)
+		}
+		['app.js', 'index.html', 'serviceWorker.js', 'webpack.config.js'].forEach(async (file) => {
+			await copyFile(`assets/WebSources/${file}`, `${path}/WebSources/${file}`)
+		})
+		await copyFile(`assets/WebSources/_tsconfig.json`, `${path}/WebSources/tsconfig.json`)
+		if (!fs.existsSync(`${path}/WebSources/wasi`)) {
+			fs.mkdirSync(`${path}/WebSources/wasi`)
+		}
+		['devSocket.js', 'errorHandler.js', 'overrideFS.js', 'startTask.js'].forEach(async (file) => {
+			await copyFile(`assets/WebSources/wasi/${file}`, `${path}/WebSources/wasi/${file}`)
+		})
 		// Copy images
 		if (type == 'spa') {
 			const p = `${path}/Sources/App`

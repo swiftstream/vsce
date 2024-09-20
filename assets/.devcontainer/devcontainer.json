@@ -7,7 +7,7 @@
 	"containerEnv": {
 		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"
 	},
-	"appPort": ["8888:443"],
+	"appPort": ["7770:443", "8880:444"],
 	"otherPortsAttributes": {"onAutoForward": "ignore"},
 	"postStartCommand": "cmd.sh",
 	"customizations": {
