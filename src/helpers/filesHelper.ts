@@ -9,12 +9,12 @@ export function listFilesInFolder(path: string) {
     return fs.readdirSync(path)
 }
 
-export function wasFileChanged(path: string, lastModifedTimestampMs: number) {
-    const stat = fs.statSync(path)
+export function wasFileModified(options: { path: string, lastModifedTimestampMs: number }) {
+    const stat = fs.statSync(options.path)
     return (
-        lastModifedTimestampMs < stat.mtimeMs || 
-        lastModifedTimestampMs < stat.atimeMs || 
-        lastModifedTimestampMs < stat.ctimeMs
+        options.lastModifedTimestampMs < stat.mtimeMs || 
+        options.lastModifedTimestampMs < stat.atimeMs || 
+        options.lastModifedTimestampMs < stat.ctimeMs
     )
 }
 
@@ -24,16 +24,24 @@ function buildTimestampsPath(): string {
     return `${projectDirectory}/.vscode/.buildTimestamps.json`
 }
 
-export function getLastModifiedDates(): any {
+function getLastModifiedDates(): any {
     try {
-        return JSON.stringify(fs.readFileSync(buildTimestampsPath()))
+        return JSON.parse(fs.readFileSync(buildTimestampsPath(), 'utf8'))
     } catch (error) {
         return {}
     }
 }
 
-export function saveLastModifiedDateForKey(key: string) {
+export enum LastModifiedDateType {
+    SwiftPackage = 'swiftPackage'
+}
+
+export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {
+    return getLastModifiedDates()[`${key}${subkey}`] ?? 0
+}
+
+export function saveLastModifiedDateForKey(key: LastModifiedDateType, subkey: string = '') {
     var data = getLastModifiedDates()
-    data[key] = (new Date()).getTime()
+    data[`${key}${subkey}`] = (new Date()).getTime()
     fs.writeFileSync(buildTimestampsPath(), JSON.stringify(data))
 }

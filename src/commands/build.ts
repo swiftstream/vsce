@@ -5,6 +5,8 @@ import { window } from 'vscode'
 import { WebpackMode } from '../webpack'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
+import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
+import { allSwiftBuildTypes, SwiftBuildType } from '../swift'
 
 export async function buildCommand() {
 	if (!webber) return
@@ -14,19 +16,17 @@ export async function buildCommand() {
 	try {
 		print(`Started building debug`, LogLevel.Detailed)
 		const measure = new TimeMeasure()
-		
-		// STEP 1: check if .build/.wasi exists
-		if (!buildStepIfBuildWasiExists()) {
-			print(`Swift dependencies never been resolved, let's do it`, LogLevel.Detailed)
+		for (const type of allSwiftBuildTypes()) {
 			print(`🔦 Resolving Swift dependencies`)
-			buildStatus(`Resolving Swift dependencies`)
-			await buildStepResolveSwiftPackages()
-		}
-		if (!buildStepIfJavaScriptKitCheckedout() || !buildStepIfWebCheckedout()) {
-			print(`JavaScriptKit and/or web packages not found in checkouts, let's try to resolve one more time`, LogLevel.Detailed)
-			print(`🔦 Resolving Swift packages (2nd attempt)`)
-			buildStatus(`Resolving Swift packages (2nd attempt)`)
-			await buildStepResolveSwiftPackages()
+			buildStatus(`Resolving dependencies`)
+			await resolveSwiftDependencies({
+				type: type,
+				force: true,
+				substatus: (t) => {
+					buildStatus(`Resolving dependencies (${type}): ${t}`)
+					print(`🔦 Resolving Swift dependencies ${t}`, LogLevel.Detailed)
+				}
+			})
 		}
 		let existsJS = buildStepIfJavaScriptKitCheckedout()
 		let existsWeb = buildStepIfWebCheckedout()
@@ -115,15 +115,6 @@ export async function buildCommand() {
 
 // MARK: Helpers
 
-function buildStepIfBuildWasiExists(): boolean {
-	const value = fs.existsSync(`${projectDirectory}/.build/.wasi`)
-	print(`./.build/.wasi ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
-	return value
-}
-async function buildStepResolveSwiftPackages() {
-	if (!webber) { throw `webber is null` }
-	await webber.swift.packageResolve()
-}
 function buildStepIfJavaScriptKitCheckedout(): boolean {
 	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit/Package.swift`)
 	print(`./.build/.wasi/checkouts/JavaScriptKit ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)

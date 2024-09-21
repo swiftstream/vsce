@@ -70,21 +70,26 @@ export class Swift {
         }
     }
 
-    async packageResolve(): Promise<void> {
-        const args: string[] = ['package', 'resolve', "--build-path", "./.build/.wasi"]
+    async packageResolve(type: SwiftBuildType): Promise<void> {
+        const args: string[] = ['package', 'resolve', "--build-path", `./.build/.${type}`]
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
             const result = await Bash.execute({
                 path: this.webber.toolchain.swiftPath,
-                description: `get executable target`,
+                description: `resolving dependencies for ${type}`,
                 cwd: projectDirectory
             }, args)
-            window.showInformationMessage(`result: ${result.stderr}`)
+            if (result.code != 0) {
+                if (result.stderr.length > 0) {
+                    console.error({packageResolve: result.stderr})
+                }
+                throw `Unable to resolve swift packages for ${type}`
+            }
         } catch (error: any) {
             print(`error: ${isString(error) ? error : JSON.stringify(error)}`, LogLevel.Normal, true)
-            throw `Unable to resolve swift packages`
+            throw `Unable to resolve swift packages for ${type}`
         }
     }
 
@@ -344,4 +349,12 @@ export interface PackageContent {
     dependencies: Dependency[]
     products: Product[]
     targets: Target[]
+}
+export enum SwiftBuildType {
+    Native = 'native',
+    Live = 'live',
+    Wasi = 'wasi'
+}
+export function allSwiftBuildTypes(): SwiftBuildType[] {
+    return [SwiftBuildType.Native, SwiftBuildType.Live, SwiftBuildType.Wasi]
 }
