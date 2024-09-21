@@ -10,12 +10,33 @@ export function listFilesInFolder(path: string) {
 }
 
 export function wasFileModified(options: { path: string, lastModifedTimestampMs: number }) {
+    if (options.lastModifedTimestampMs == 0) return true
     const stat = fs.statSync(options.path)
     return (
         options.lastModifedTimestampMs < stat.mtimeMs || 
         options.lastModifedTimestampMs < stat.atimeMs || 
         options.lastModifedTimestampMs < stat.ctimeMs
     )
+}
+
+export function wasPathModified(options: { path: string, recursive: boolean, lastModifedTimestampMs: number }) {
+    if (options.lastModifedTimestampMs == 0) return true
+    function checkIfModified(path: string) {
+        const stat = fs.statSync(path)
+        const isModified = (
+            options.lastModifedTimestampMs < stat.mtimeMs || 
+            options.lastModifedTimestampMs < stat.atimeMs || 
+            options.lastModifedTimestampMs < stat.ctimeMs
+        )
+        if (isModified) return true
+        if (stat.isDirectory() && options.recursive) {
+            for (const file in fs.readdirSync(path))
+                if (checkIfModified(`${path}/${file}`))
+                    return true
+            return false
+        } else return isModified
+    }
+    return checkIfModified(options.path)
 }
 
 // MARK: Build Timestamps
@@ -33,7 +54,8 @@ function getLastModifiedDates(): any {
 }
 
 export enum LastModifiedDateType {
-    SwiftPackage = 'swiftPackage'
+    SwiftPackage = 'swiftPackage',
+    SwiftSources = 'swiftSources'
 }
 
 export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {

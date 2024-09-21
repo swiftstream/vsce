@@ -9,6 +9,7 @@ import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
 import { allSwiftBuildTypes } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { retrieveExecutableTargets } from './build/helpers'
+import { buildExecutableTarget } from './build/buildExecutableTargets'
 
 export async function buildCommand() {
 	if (!webber) return
@@ -50,12 +51,21 @@ export async function buildCommand() {
 		print(`Retrieved targets: [${targets.join(', ')}]`, LogLevel.Detailed)
 		if (targets.length == 0)
 			throw `No targets to build`
-		for (let i = 0; i < targets.length; i++) {
-			const targetName = targets[i]
-			print(`🧱 Building Swift target: ${targetName}`)
-			await buildStepBuildSwiftTarget({ targetName: targetName, release: false })
-			// STEP: copy .wasm file
-			// STEP: copy resources
+		// Phase 4: Build executable targets
+		for (const target in targets) {
+			for (const type of allSwiftBuildTypes()) {
+				print(`🧱 Building \`${target}\` Swift target`)
+				buildStatus(`\`${target}\` Swift target: building`)
+				await buildExecutableTarget({
+					type: type,
+					target: target,
+					release: false,
+					force: true,
+					substatus: (t) => {
+						buildStatus(`\`${target}\` Swift target: ${t}`)
+					}
+				})	
+			}
 		}
 		if (!buildStepIfJavaScriptKitTSCompiled()) {
 			print(`🧱 Building JavaScriptKit`)
@@ -180,17 +190,4 @@ async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: stri
 		if (versionsAfterInstall.locked != versionsAfterInstall.current)
 			throw `js-kit versions mismatch ${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`
 	}
-}
-async function buildStepBuildSwiftTarget(options: { targetName: string, release: boolean }) {
-	if (!webber) { throw `webber is null` }
-	const dateStart = new Date()
-	print(`started building \`${options.targetName}\` target in \`${options.release ? 'release' : 'debug'}\` mode`, LogLevel.Verbose)
-	await webber.swift.build({
-		targetName: options.targetName,
-		release: options.release,
-		tripleWasm: true
-	})
-	const dateEnd = new Date()
-	const time = dateEnd.getTime() - dateStart.getTime()
-	print(`finished building \`${options.targetName}\` target in ${time}ms`, LogLevel.Verbose)
 }
