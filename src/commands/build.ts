@@ -4,6 +4,7 @@ import { buildDevPath, buildProdPath, clearStatus, LogLevel, print, status, Stat
 import { window } from 'vscode'
 import { WebpackMode } from '../webpack'
 import { isString } from '../helpers/isString'
+import { TimeMeasure } from '../helpers/timeMeasureHelper'
 
 export async function buildCommand() {
 	if (!webber) return
@@ -12,8 +13,8 @@ export async function buildCommand() {
 	}
 	try {
 		print(`Started building debug`, LogLevel.Detailed)
-		const dateStart = new Date()
 		// STEP: check if .build/.wasi exists
+		const measure = new TimeMeasure()
 		if (!buildStepIfBuildWasiExists()) {
 			print(`Project never been built, have to resolve packages first`, LogLevel.Detailed)
 			print(`🔦 Resolving Swift packages`)
@@ -86,14 +87,13 @@ export async function buildCommand() {
 				throw `${targetName} web target build failed`
 		}
 		// STEP: compile SCSS (or maybe with webpack instead of sass)
-		const dateEnd = new Date()
-		const time = dateEnd.getTime() - dateStart.getTime()
-		status('check', `Build Succeeded in ${time}ms`, StatusType.Default)
+		measure.finish()
+		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Default)
 		setTimeout(() => {
 			clearStatus()
 		}, 4000)
-		print(`✅ Build Succeeded in ${time}ms`)
-		console.log(`Build Succeeded in ${time}ms`)
+		print(`✅ Build Succeeded in ${measure.time}ms`)
+		console.log(`Build Succeeded in ${measure.time}ms`)
 	} catch (error: any) {
 		var text = ''
 		if (isString(error)) {
