@@ -6,7 +6,8 @@ import { WebpackMode } from '../webpack'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, SwiftBuildType } from '../swift'
+import { allSwiftBuildTypes } from '../swift'
+import { checkRequiredDependencies } from './build/requiredDependencies'
 
 export async function buildCommand() {
 	if (!webber) return
@@ -16,6 +17,7 @@ export async function buildCommand() {
 	try {
 		print(`Started building debug`, LogLevel.Detailed)
 		const measure = new TimeMeasure()
+		// Phase 1: resolve Swift dependencies for each build type
 		for (const type of allSwiftBuildTypes()) {
 			print(`🔦 Resolving Swift dependencies`)
 			buildStatus(`Resolving dependencies`)
@@ -28,25 +30,16 @@ export async function buildCommand() {
 				}
 			})
 		}
-		let existsJS = buildStepIfJavaScriptKitCheckedout()
-		let existsWeb = buildStepIfWebCheckedout()
-		if (!existsJS || !existsWeb) {
+		// Phase 2: check if required dependencies present
+		const requiredDependencies = await checkRequiredDependencies()
+		if (requiredDependencies.missing.length > 0) {
 			clearStatus()
-			var text = `Unable to fetch swift packages`
-			if (existsJS || existsWeb) {
-				if (existsJS) {
-					text = 'Missing `web` package'
-				} else {
-					text = 'Missing `JavaScriptKit` package'
-					print(`🙆‍♂️ ${text}`)
-					await window.showErrorMessage(text, 'Retry', 'Cancel')
-				}
-			} else {
-				const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
-				if (result == 'Retry') {
-					print(`Going to retry debug build command`, LogLevel.Detailed)
-					buildCommand()
-				}
+			const text = `Missing ${requiredDependencies.missing.map((x) => `\`${x}\``).join(', ')} package${requiredDependencies.missing.length > 1 ? 's' : ''}`
+			print(`🙆‍♂️ ${text}`)
+			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
+			if (result == 'Retry') {
+				print(`Going to retry debug build command`, LogLevel.Detailed)
+				buildCommand()
 			}
 			return
 		}
@@ -115,16 +108,6 @@ export async function buildCommand() {
 
 // MARK: Helpers
 
-function buildStepIfJavaScriptKitCheckedout(): boolean {
-	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit/Package.swift`)
-	print(`./.build/.wasi/checkouts/JavaScriptKit ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
-	return value
-}
-function buildStepIfWebCheckedout(): boolean {
-	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/web/Package.swift`)
-	print(`./.build/.wasi/checkouts/web ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
-	return value
-}
 function buildStepIfJavaScriptKitTSCompiled(): boolean {
 	const value = fs.existsSync(`${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit/Runtime/lib/index.d.ts`)
 	print(`java-script-kit ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
