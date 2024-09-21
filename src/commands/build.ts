@@ -13,12 +13,13 @@ export async function buildCommand() {
 	}
 	try {
 		print(`Started building debug`, LogLevel.Detailed)
-		// STEP: check if .build/.wasi exists
 		const measure = new TimeMeasure()
+		
+		// STEP 1: check if .build/.wasi exists
 		if (!buildStepIfBuildWasiExists()) {
-			print(`Project never been built, have to resolve packages first`, LogLevel.Detailed)
-			print(`🔦 Resolving Swift packages`)
-			buildStatus(`Resolving Swift packages`)
+			print(`Swift dependencies never been resolved, let's do it`, LogLevel.Detailed)
+			print(`🔦 Resolving Swift dependencies`)
+			buildStatus(`Resolving Swift dependencies`)
 			await buildStepResolveSwiftPackages()
 		}
 		if (!buildStepIfJavaScriptKitCheckedout() || !buildStepIfWebCheckedout()) {
@@ -33,12 +34,13 @@ export async function buildCommand() {
 			clearStatus()
 			var text = `Unable to fetch swift packages`
 			if (existsJS || existsWeb) {
-				if (existsJS)
+				if (existsJS) {
 					text = 'Missing `web` package'
-				else
+				} else {
 					text = 'Missing `JavaScriptKit` package'
-				print(`🙆‍♂️ ${text}`)
-				await window.showErrorMessage(text, 'Retry', 'Cancel')
+					print(`🙆‍♂️ ${text}`)
+					await window.showErrorMessage(text, 'Retry', 'Cancel')
+				}
 			} else {
 				const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 				if (result == 'Retry') {
@@ -49,8 +51,8 @@ export async function buildCommand() {
 			return
 		}
 		print(`Going to retrieve swift targets`, LogLevel.Detailed)
-		const targets = await buildStepRetrieveTargets()
-		print(`Retrieve swift targets: [${targets.join(', ')}]`, LogLevel.Detailed)
+		const targets = await buildStepRetrieveExecutableTargets()
+		print(`Retrieved targets: [${targets.join(', ')}]`, LogLevel.Detailed)
 		if (targets.length == 0)
 			throw `No targets to build`
 		for (let i = 0; i < targets.length; i++) {
@@ -203,11 +205,9 @@ async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: stri
 			throw `js-kit versions mismatch ${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`
 	}
 }
-async function buildStepRetrieveTargets(): Promise<string[]> {
+async function buildStepRetrieveExecutableTargets(): Promise<string[]> {
 	if (!webber) { throw `webber is null` }
-	const value = await webber.swift.getExecutableTargets()
-	print(`swift executable targets: [${value.join(', ')}]`, LogLevel.Verbose)
-	return value
+	return await webber.swift.getExecutableTargets()
 }
 async function buildStepBuildSwiftTarget(options: { targetName: string, release: boolean }) {
 	if (!webber) { throw `webber is null` }
