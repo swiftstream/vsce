@@ -8,6 +8,7 @@ import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
 import { allSwiftBuildTypes } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
+import { retrieveExecutableTargets } from './build/helpers'
 
 export async function buildCommand() {
 	if (!webber) return
@@ -17,7 +18,7 @@ export async function buildCommand() {
 	try {
 		print(`Started building debug`, LogLevel.Detailed)
 		const measure = new TimeMeasure()
-		// Phase 1: resolve Swift dependencies for each build type
+		// Phase 1: Resolve Swift dependencies for each build type
 		for (const type of allSwiftBuildTypes()) {
 			print(`🔦 Resolving Swift dependencies`)
 			buildStatus(`Resolving dependencies`)
@@ -30,7 +31,7 @@ export async function buildCommand() {
 				}
 			})
 		}
-		// Phase 2: check if required dependencies present
+		// Phase 2: Check if required Swift dependencies present
 		const requiredDependencies = await checkRequiredDependencies()
 		if (requiredDependencies.missing.length > 0) {
 			clearStatus()
@@ -43,8 +44,9 @@ export async function buildCommand() {
 			}
 			return
 		}
+		// Phase 3: Retrieve executable Swift targets
 		print(`Going to retrieve swift targets`, LogLevel.Detailed)
-		const targets = await buildStepRetrieveExecutableTargets()
+		const targets = await retrieveExecutableTargets()
 		print(`Retrieved targets: [${targets.join(', ')}]`, LogLevel.Detailed)
 		if (targets.length == 0)
 			throw `No targets to build`
@@ -178,10 +180,6 @@ async function buildStepJavaScriptKitCompileTS(options: { substatus: (text: stri
 		if (versionsAfterInstall.locked != versionsAfterInstall.current)
 			throw `js-kit versions mismatch ${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`
 	}
-}
-async function buildStepRetrieveExecutableTargets(): Promise<string[]> {
-	if (!webber) { throw `webber is null` }
-	return await webber.swift.getExecutableTargets()
 }
 async function buildStepBuildSwiftTarget(options: { targetName: string, release: boolean }) {
 	if (!webber) { throw `webber is null` }
