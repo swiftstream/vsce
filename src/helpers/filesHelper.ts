@@ -19,7 +19,15 @@ export function wasFileModified(options: { path: string, lastModifedTimestampMs:
     )
 }
 
-export function wasPathModified(options: { path: string, recursive: boolean, specificExtensions?: string[], lastModifedTimestampMs: number }) {
+export function endsWithOneOfExtensions(file: string, extensions: string[] | undefined): boolean {
+    if (!extensions) return true
+    for (const ext in extensions)
+        if (file.endsWith(ext))
+            return true
+    return false
+}
+
+export function wasPathModified(options: { path: string, recursive: boolean, specificExtensions?: string[], exclude?: string[], lastModifedTimestampMs: number }) {
     if (options.lastModifedTimestampMs == 0) return true
     function checkIfModified(path: string, stat: fs.Stats) {
         const isModified = (
@@ -28,18 +36,13 @@ export function wasPathModified(options: { path: string, recursive: boolean, spe
             options.lastModifedTimestampMs < stat.ctimeMs
         )
         if (isModified) return true
-        function endsWithOneOfExtensions(file: string): boolean {
-            if (!options.specificExtensions) return true
-            for (const ext in options.specificExtensions)
-                if (file.endsWith(ext))
-                    return true
-            return false
-        }
         if (stat.isDirectory() && options.recursive) {
             for (const file in fs.readdirSync(path)) {
+                if (options.exclude && options.exclude.includes(file))
+                    continue
                 const fp = `${path}/${file}`
                 const stat = fs.statSync(fp)
-                if ((!stat.isDirectory() && endsWithOneOfExtensions(file)) && checkIfModified(fp, stat))
+                if ((!stat.isDirectory() && endsWithOneOfExtensions(file, options.specificExtensions)) && checkIfModified(fp, stat))
                     return true
             }
             return false
@@ -66,7 +69,8 @@ export enum LastModifiedDateType {
     SwiftPackage = 'swiftPackage',
     SwiftSources = 'swiftSources',
     JavaScriptKitPackage = 'JavaScriptKitPackage',
-    WebSources = 'webSources'
+    WebSources = 'webSources',
+    SCSS = 'SCSS'
 }
 
 export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {

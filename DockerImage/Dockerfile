@@ -47,9 +47,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     && . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION \
     && nvm alias default $NODE_VERSION \
-    && nvm use default \
-    && npm install -g sass@^1.77.8 --quiet --no-progress \
-    && npm install -g webpack-cli@^5.1.4 --quiet --no-progress
+    && nvm use default
 # copy required files
 COPY cmd.sh /usr/local/bin/
 COPY nginx/default /etc/nginx/sites-available/

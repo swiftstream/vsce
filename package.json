@@ -147,6 +147,7 @@
     "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
     "json5": "^2.2.3",
+    "sass": "^1.79.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
     "webpack": ">=5.94.0",

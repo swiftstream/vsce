@@ -11,6 +11,7 @@ import { buildJavaScriptKit } from './build/buildJavaScriptKit'
 import { buildWebSources } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
+import { proceedSCSS } from "./build/proceedSCSS"
 
 export async function buildCommand() {
 	if (!webber) return
@@ -99,7 +100,7 @@ export async function buildCommand() {
 		// Phase 9: Copy bundled resources from Swift build folder
 		await proceedBundledResources({ release: false })
 		// Phase 10: Compile SCSS
-		// STEP: compile SCSS (or maybe with webpack instead of sass)
+		await proceedSCSS({ force: true, release: false })
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Default)
 		setTimeout(() => {
