@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
 import { buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
-import { getLastModifiedDate, LastModifiedDateType, wasFileModified } from '../../helpers/filesHelper'
+import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { doesJavaScriptKitCheckedOut } from './helpers'
 import { SwiftBuildType } from '../../swift'
 
@@ -63,6 +63,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
             print(`Skipping JavaScriptKit versions check since WebSources never been built`, LogLevel.Verbose)
         }
 	}
+    saveLastModifiedDateForKey(LastModifiedDateType.JavaScriptKitPackage)
 }
 function doesJavaScriptKitCompiled(jsKitPath: string): boolean {
 	const value = fs.existsSync(`${jsKitPath}/Runtime/lib/index.d.ts`)
