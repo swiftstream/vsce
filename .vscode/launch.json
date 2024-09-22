@@ -14,8 +14,8 @@
 			],
 			"env": {
 				// Development Test Values
-				//"S_DEV": "TRUE",
-				//"S_TOOLCHAIN": "5.10-RELEASE",
+				// "S_DEV": "TRUE",
+				// "S_TOOLCHAIN": "swift-wasm-5.10-RELEASE"
 			},
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"

@@ -66,6 +66,20 @@
 				"./DockerImage"
 			],
 			"type": "shell"
+		},
+		{
+			"label": "Docker Build and Push MultiArch Image Without Cache (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swifweb/webber:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "webber-container",
+				"--push",
+				"./DockerImage"
+			],
+			"type": "shell"
 		}
 	]
 }
