@@ -36,6 +36,11 @@ export class Webpack {
         if (isServiceWorker)
             args = [...args, '--env', 'app=isServiceWorker']
         const result = await this.execute(args)
-        // console.dir(result)
+        if (result.code != 0) {
+            if (result.stderr.length > 0) {
+                console.error({packageResolve: result.stderr})
+            }
+            throw `Unable to build webpack for ${target}`
+        }
     }
 }

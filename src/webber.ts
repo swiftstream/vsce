@@ -51,6 +51,7 @@ export var isClearedBuildCache = false
 export function setClearedBuildCache(active: boolean) { isClearedBuildCache = active }
 export var isRecompilingApp = false
 export var webSourcesPath = 'WebSources'
+export var appTargetName = 'App'
 export var buildDevPath = 'BuildDev'
 export var buildProdPath = 'BuildProd'
 export var containsService = true // TODO: check if contains service
@@ -140,6 +141,8 @@ export class Webber {
 					this.setLoggingLevel()
 				if (event.affectsConfiguration('swifweb.webSourcesPath'))
 					this.setWebSourcesPath()
+				if (event.affectsConfiguration('swifweb.appTargetName'))
+					this.setAppTargetName()
 			})
 		}
 	}
@@ -165,6 +168,12 @@ export class Webber {
 	setWebSourcesPath(value?: string) {
 		webSourcesPath = value ?? workspace.getConfiguration().get('swifweb.webSourcesPath') as string
 		if (value) workspace.getConfiguration().update('swifweb.webSourcesPath', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setAppTargetName(value?: string) {
+		appTargetName = value ?? workspace.getConfiguration().get('swifweb.appTargetName') as string
+		if (value) workspace.getConfiguration().update('swifweb.appTargetName', value)
 		sidebarTreeView?.refresh()
 	}
 
@@ -275,4 +284,7 @@ export function status(icon: string | null, message: string, type: StatusType = 
 	problemStatusBarIcon.command = command ?? undefined
 	problemStatusBarItem.command = command ?? undefined
 	problemStatusBarItem.show()
+}
+export function buildStatus(text: string) {
+	status('sync~spin', text, StatusType.Default)
 }
