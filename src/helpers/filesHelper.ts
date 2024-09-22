@@ -55,7 +55,8 @@ function getLastModifiedDates(): any {
 
 export enum LastModifiedDateType {
     SwiftPackage = 'swiftPackage',
-    SwiftSources = 'swiftSources'
+    SwiftSources = 'swiftSources',
+    JavaScriptKitPackage = 'JavaScriptKitPackage'
 }
 
 export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {

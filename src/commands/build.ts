@@ -67,12 +67,13 @@ export async function buildCommand() {
 				})	
 			}
 		}
-		if (!buildStepIfJavaScriptKitTSCompiled()) {
-			print(`🧱 Building JavaScriptKit`)
-			buildStatus(`Building js-kit`)
-			await buildStepJavaScriptKitCompileTS({
-				substatus: (t) => { buildStatus(`Building js-kit: (${t})`) },
-				release: false
+		// Phase 5: Build JavaScriptKit TypeScript sources
+		print(`🧱 Building JavaScriptKit`)
+        buildStatus(`Building JavaScriptKit`)
+		await buildJavaScriptKit({
+			force: true,
+            substatus: (t) => { buildStatus(`Building JavaScriptKit: (${t})`) }
+        })
 			})
 		}
 		if (!buildStepIfWebSourcesCompiled()) {
