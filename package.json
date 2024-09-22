@@ -60,6 +60,12 @@
           "type": "string",
           "description": "Relative path to folder with web source files including node package.json",
           "default": "WebSources"
+        },
+        "swifweb.appTargetName": {
+          "order": 5,
+          "type": "string",
+          "description": "Name of the app target in Package.swift",
+          "default": "App"
         }
       }
     },
