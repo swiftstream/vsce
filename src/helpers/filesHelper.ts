@@ -76,5 +76,5 @@ export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = 
 export function saveLastModifiedDateForKey(key: LastModifiedDateType, subkey: string = '') {
     var data = getLastModifiedDates()
     data[`${key}${subkey}`] = (new Date()).getTime()
-    fs.writeFileSync(buildTimestampsPath(), JSON.stringify(data))
+    fs.writeFileSync(buildTimestampsPath(), JSON.stringify(data, null, '\t'))
 }

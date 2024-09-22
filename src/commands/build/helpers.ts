@@ -14,10 +14,6 @@ export function doesWebCheckedOut(type: SwiftBuildType): boolean {
 	print(`./.build/.${type}/checkouts/web ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
 	return value
 }
-export async function retrieveExecutableTargets(): Promise<string[]> {
-	if (!webber) { throw `webber is null` }
-	return await webber.swift.getExecutableTargets()
-}
 export async function buildSwiftTarget(options: { targetName: string, release: boolean }) {
 	if (!webber) { throw `webber is null` }
 	const measure = new TimeMeasure()

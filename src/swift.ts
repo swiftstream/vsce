@@ -2,7 +2,6 @@ import { Bash } from './bash'
 import { LogLevel, print, Webber } from './webber'
 import { projectDirectory } from './extension'
 import * as fs from 'fs'
-import { window } from 'vscode'
 import { isString } from './helpers/isString'
 
 export class Swift {
@@ -22,25 +21,32 @@ export class Swift {
         return result.stdout
     }
 
-    async getExecutableTargets(): Promise<string[]> {
+    async getTargets(): Promise<{ executables: string[], serviceWorkers: string[] }> {
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const result = await this.execute(['package', 'dump-package'])
-            const json = JSON.parse(result)
+            var result: { executables: string[], serviceWorkers: string[] } = {
+                executables: [],
+                serviceWorkers: []
+            }
+            const dump = await this.execute(['package', 'dump-package'])
+            const json = JSON.parse(dump)
             if (json.products.length > 0) {
-                var targets: string[] = []
                 for (let product of json.products) {
                     if (product.type.hasOwnProperty('executable')) {
-                        targets.push(product.name)
+                        result.executables.push(product.name)
                     }
                 }
-                return targets
+                for (let target of json.targets) {
+                    if (target.dependencies.filter((d:any) => d.product.includes('ServiceWorker')).length > 0) {
+                        result.serviceWorkers.push(target.name)
+                    }
+                }
             }
-            return []
+            return result
         } catch (error: any) {
-            console.dir({getExecutableTargetsError: error})
+            console.dir({getTargetsError: error})
             throw `Unable to get executable targets from the package dump`
         }
     }
@@ -67,6 +73,24 @@ export class Swift {
             }
         } catch (error: any) {
             return undefined
+        }
+    }
+
+    async grabPWAManifest(options: { serviceWorkerTarget: string }): Promise<any> {
+        const executablePath = `${projectDirectory}/.build/.native/debug/${options.serviceWorkerTarget}`
+        if (!fs.existsSync(executablePath)) {
+            throw `Missing executable binary of the service target, can't retrieve manifest`
+        }
+        try {
+            const result = await Bash.execute({
+                path: executablePath,
+                description: `grabbing PWA manifest`,
+                cwd: projectDirectory
+            }, [])
+            return JSON.parse(result.stdout)
+        } catch (error: any) {
+            console.dir({grabServiceWorkerManifestError: error})
+            throw `Unable to grab service worker manifest`
         }
     }
 

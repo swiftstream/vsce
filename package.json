@@ -66,6 +66,12 @@
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
+        },
+        "swifweb.serviceWorkerTargetName": {
+          "order": 6,
+          "type": "string",
+          "description": "Name of the service worker target in Package.swift",
+          "default": "Service"
         }
       }
     },

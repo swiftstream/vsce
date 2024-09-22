@@ -52,6 +52,7 @@ export function setClearedBuildCache(active: boolean) { isClearedBuildCache = ac
 export var isRecompilingApp = false
 export var webSourcesPath = 'WebSources'
 export var appTargetName = 'App'
+export var serviceWorkerTargetName = 'Service'
 export var buildDevPath = 'BuildDev'
 export var buildProdPath = 'BuildProd'
 export var containsService = true // TODO: check if contains service
@@ -143,6 +144,8 @@ export class Webber {
 					this.setWebSourcesPath()
 				if (event.affectsConfiguration('swifweb.appTargetName'))
 					this.setAppTargetName()
+				if (event.affectsConfiguration('swifweb.serviceWorkerTargetName'))
+					this.setServiceWorkerTargetName()
 			})
 		}
 	}
@@ -174,6 +177,12 @@ export class Webber {
 	setAppTargetName(value?: string) {
 		appTargetName = value ?? workspace.getConfiguration().get('swifweb.appTargetName') as string
 		if (value) workspace.getConfiguration().update('swifweb.appTargetName', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setServiceWorkerTargetName(value?: string) {
+		serviceWorkerTargetName = value ?? workspace.getConfiguration().get('swifweb.serviceWorkerTargetName') as string
+		if (value) workspace.getConfiguration().update('swifweb.serviceWorkerTargetName', value)
 		sidebarTreeView?.refresh()
 	}
 
