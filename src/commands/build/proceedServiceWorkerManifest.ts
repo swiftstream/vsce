@@ -19,7 +19,10 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
         // override generated manifest data with the static one
         generatedManifest = {...generatedManifest, ...staticManifest}
     }
-    const pathToSaveManifest = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}/${webManifestFile}`
+    const outputDir = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const pathToSaveManifest = `${outputDir}/${webManifestFile}`
+    if (!fs.existsSync(outputDir))
+        fs.mkdirSync(outputDir, { recursive: true })
     fs.writeFileSync(pathToSaveManifest, JSON.stringify(generatedManifest, null, '\t'))
     timeMeasure.finish()
     print(`Service worker manifest coking finished in ${timeMeasure.time}ms`, LogLevel.Verbose)
