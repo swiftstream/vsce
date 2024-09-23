@@ -15,7 +15,7 @@ export async function resolveSwiftDependencies(options: { type: SwiftBuildType, 
         path: `${projectDirectory}/Package.swift`,
         lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.SwiftPackage, options.type)
     })) {
-        print(`Swift .${options.type} Package have been modified, let's resolve dependencies`, LogLevel.Detailed)
+        print(`Swift .${options.type} Package has been modified, let's resolve dependencies`, LogLevel.Detailed)
         await resolveSwiftPackages(options.type)
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftPackage, options.type)
     }
