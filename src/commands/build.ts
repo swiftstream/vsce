@@ -20,7 +20,9 @@ export async function buildCommand() {
 		print(`force rebuilds everything by its nature`, LogLevel.Detailed)
 		const measure = new TimeMeasure()
 		// Phase 1: Resolve Swift dependencies for each build type
-		for (const type of allSwiftBuildTypes()) {
+		const types = allSwiftBuildTypes()
+		for (let i = 0; i < types.length; i++) {
+			const type = types[i]
 			print(`🔦 Resolving Swift dependencies`)
 			buildStatus(`Resolving dependencies`)
 			await resolveSwiftDependencies({
@@ -63,8 +65,11 @@ export async function buildCommand() {
 		if (isPWA && !targetsDump.serviceWorkers.includes(serviceWorkerTargetName))
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
 		// Phase 5: Build executable targets
-		for (const target in targetsDump.executables) {
-			for (const type of allSwiftBuildTypes()) {
+		for (let i = 0; i < targetsDump.executables.length; i++) {
+			const target = targetsDump.executables[i]
+			const types = allSwiftBuildTypes()
+			for (let n = 0; n < types.length; n++) {
+				const type = types[n]
 				print(`🧱 Building \`${target}\` Swift target`)
 				buildStatus(`\`${target}\` Swift target: building`)
 				await buildExecutableTarget({
@@ -85,7 +90,8 @@ export async function buildCommand() {
 			force: true
         })
 		// Phase 7: Build all the web sources
-		for (const target in targetsDump.executables) {
+		for (let t = 0; t < targetsDump.executables.length; t++) {
+			const target = targetsDump.executables[t]
 			print(`🧱 Building web sources for ${target}`)
 			buildStatus(`Building web sources for ${target}`)
 			await buildWebSources({

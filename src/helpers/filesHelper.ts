@@ -21,9 +21,11 @@ export function wasFileModified(options: { path: string, lastModifedTimestampMs:
 
 export function endsWithOneOfExtensions(file: string, extensions: string[] | undefined): boolean {
     if (!extensions) return true
-    for (const ext in extensions)
+    for (let i = 0; i < extensions.length; i++) {
+        const ext = extensions[i]
         if (file.endsWith(ext))
             return true
+    }
     return false
 }
 
@@ -37,7 +39,9 @@ export function wasPathModified(options: { path: string, recursive: boolean, spe
         )
         if (isModified) return true
         if (stat.isDirectory() && options.recursive) {
-            for (const file in fs.readdirSync(path)) {
+            const files = fs.readdirSync(path)
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i]
                 if (options.exclude && options.exclude.includes(file))
                     continue
                 const fp = `${path}/${file}`

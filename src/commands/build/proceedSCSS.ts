@@ -54,7 +54,9 @@ interface SCSSItem {
 function findSCSSFilesRecursively(folder: string, lastModifedTimestampMs: number): SCSSItem[] {
     var items: SCSSItem[] = []
     const excluded: string[] = ['node_modules']
-    for (const item in fs.readdirSync(folder)) {
+    const folderItems = fs.readdirSync(folder)
+    for (let itemIndex = 0; itemIndex < folderItems.length; itemIndex++) {
+        const item = folderItems[itemIndex]
         if (excluded.includes(item))
             continue
         const itemPath = `${folder}/${item}`

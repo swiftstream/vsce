@@ -58,7 +58,8 @@ export async function activate(context: ExtensionContext) {
 	workspace.onDidChangeWorkspaceFolders(event => { // TODO: track project directory change
 		window.showInformationMessage('onDidChangeWorkspaceFolders')
 		console.log('onDidChangeWorkspaceFolders')
-		for (const added of event.added) {
+		for (let i = 0; i < event.added.length; i++) {
+			const added = event.added[i]
 			console.dir(added)
 		}
 	})

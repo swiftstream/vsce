@@ -33,12 +33,9 @@ export class Swift {
             const dump = await this.execute(['package', 'dump-package'])
             const json = JSON.parse(dump)
             if (json.products.length > 0) {
-                for (let product of json.products) {
-                    if (product.type.hasOwnProperty('executable')) {
-                        result.executables.push(product.name)
-                    }
-                }
                 for (let target of json.targets) {
+                    if (target.type == 'executable')
+                        result.executables.push(target.name)
                     if (target.dependencies.filter((d:any) => d.product.includes('ServiceWorker')).length > 0) {
                         result.serviceWorkers.push(target.name)
                     }
@@ -214,13 +211,15 @@ export class Swift {
                 throw 'Unable to parse compilation errors'
             }
             var errorsCount = 0
-            for (const error of errors) {
+            for (let e = 0; e < errors.length; e++) {
                 errorsCount = errors.reduce((a, b) => a + b.places.length, 0)
                 print(" ")
-                for (const error of errors) {
+                for (let i = 0; i < errors.length; i++) {
+                    const error = errors[i]
                     print(` ${error.file.split('/').pop()} ${error.file}`)
                     print(` `)
-                    for (const place of error.places) {
+                    for (let n = 0; n < error.places.length; n++) {
+                        const place = error.places[n]
                         let lineNumberString = `${place.line} |`
                         let errorTitle = ' ERROR '
                         let errorTitlePrefix = '   '
@@ -280,7 +279,8 @@ export class Swift {
                     if (places.length > 0) {
                         let error = errors.find(element => element.file == filePath)
                         if (error) {
-                            for (const place of places) {
+                            for (let i = 0; i < places.length; i++) {
+                                const place = places[i]
                                 const found = error.places.find(element => element.line == place.line && element.reason == place.reason)
                                 if (!found) break
                                 error.places.push(place)

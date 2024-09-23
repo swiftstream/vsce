@@ -12,10 +12,12 @@ export async function proceedBundledResources(options: { release: boolean }) {
     const items = fs.readdirSync(buildFolder)
     const resourceFolders = items.filter((x) => x.endsWith('.resources'))
     print(`Copy bundle resources started`, LogLevel.Detailed)
-    for (const folder in resourceFolders) {
+    for (let f = 0; f < resourceFolders.length; f++) {
+        const folder = resourceFolders[f]
         const dirPath = `${buildFolder}/${folder}`
         const items = fs.readdirSync(dirPath)
-        for (const item in items) {
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+            const item = items[itemIndex]
             const fromFile = `${dirPath}/${item}`
             const toFile = `${destPath}/${item}`
             print(`📑 copy ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Detailed)
