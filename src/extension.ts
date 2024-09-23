@@ -6,9 +6,11 @@ import { startNewProjectWizard as startNewProjectWizard } from './wizards/startN
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
 import { currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
 import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
+import { DockerImage } from './dockerImage'
 
 export const defaultDevPort = 7770
 export const defaultProdPort = 8880
+export const dockerImage = new DockerImage()
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 export let webber: Webber | undefined
