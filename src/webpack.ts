@@ -1,6 +1,6 @@
 import { Bash, BashResult } from './bash'
 import { Webber, webSourcesPath } from './webber'
-import { projectDirectory } from './extension'
+import { dockerImage, projectDirectory } from './extension'
 
 export enum WebpackMode {
     Development = 'development',
@@ -8,7 +8,7 @@ export enum WebpackMode {
 }
 
 export class Webpack {
-    private binPath: string = '/root/.nvm/versions/node/v20.17.0/bin/webpack-cli'
+    private binPath: string = `/root/.nvm/versions/node/v${dockerImage.nodeVersion}/bin/webpack-cli`
 
     constructor(private webber: Webber) {}
 
@@ -25,16 +25,16 @@ export class Webpack {
     }
 
     // https://webpack.js.org/api/cli/#build
-    async build(mode: WebpackMode, target: string, isServiceWorker: boolean, relativeOutputPath: string) {
+    async build(mode: WebpackMode, target: string, isServiceWorker: boolean, absoluteOutputPath: string) {
         var args = [
             'build',
             '--define-process-env-node-env', mode,
             '--env', mode, // env.production/development = true
             '--env', `app.target=${target}`,
-            '--env', `app.relativeOutputPath=${relativeOutputPath}`
+            '--env', `app.absoluteOutputPath=${absoluteOutputPath}`
         ]
         if (isServiceWorker)
-            args = [...args, '--env', 'app=isServiceWorker']
+            args = [...args, '--env', 'app.isServiceWorker=true']
         const result = await this.execute(args)
         if (result.code != 0) {
             if (result.stderr.length > 0) {

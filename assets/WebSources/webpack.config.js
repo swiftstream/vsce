@@ -1,5 +1,3 @@
-const path = require('path')
-
 module.exports = (env, argv) => {
     return {
         entry: env.app.isServiceWorker ? './serviceWorker.js' : './app.js',
@@ -14,8 +12,8 @@ module.exports = (env, argv) => {
             extensions: ['.tsx', '.ts', '.js']
         },
         output: {
-            filename: `${env.app.target.toLowerCase()}.js`,
-            path: path.resolve(__dirname, env.app.relativeOutputPath)
+            filename: `${env.app.target}.js`,
+            path: env.app.absoluteOutputPath
         }
     }
 }

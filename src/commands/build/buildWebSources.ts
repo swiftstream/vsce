@@ -20,12 +20,12 @@ export async function buildWebSources(options: { target: string, isServiceWorker
     }
     print(`🧱 Building ${options.target} web target sources`)
     buildStatus(`Building ${options.target} web target sources`)
-    const bundlePath = `../${options.release ? buildProdPath : buildDevPath}`
-    await webber.webpack.build(WebpackMode.Development, options.target, options.isServiceWorker, bundlePath)
+    const bundlePath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    await webber.webpack.build(WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath })) {
         print(`🧱 Building ${options.target} web target sources (2nd attempt)`)
         buildStatus(`Building ${options.target} web target sources (2nd attempt)`)
-        await webber.webpack.build(WebpackMode.Development, options.target, options.isServiceWorker, bundlePath)
+        await webber.webpack.build(WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     }
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath }))
         throw `${options.target} web target build failed`
