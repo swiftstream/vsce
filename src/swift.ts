@@ -1,7 +1,7 @@
+import * as fs from 'fs'
 import { Bash } from './bash'
 import { LogLevel, print, Webber } from './webber'
 import { projectDirectory } from './extension'
-import * as fs from 'fs'
 import { isString } from './helpers/isString'
 
 export class Swift {

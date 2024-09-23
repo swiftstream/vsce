@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { Uri, window, workspace, WorkspaceEdit } from "vscode";
+import { Uri, window } from "vscode";
 import { extensionContext } from "../extension";
 
 export async function copyFile(

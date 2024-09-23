@@ -1,6 +1,6 @@
+import * as fs from 'fs'
 import { ExtensionContext, TextDocument, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
 import { WebberState } from './enums/WebberStateEnum'
-import * as fs from 'fs'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'

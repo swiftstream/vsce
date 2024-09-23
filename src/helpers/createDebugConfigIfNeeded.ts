@@ -1,8 +1,8 @@
+import * as fs from 'fs'
+import JSON5 from 'json5'
 import { Uri, workspace } from "vscode"
 import { currentDevPort } from "../webber"
 import { projectDirectory } from "../extension"
-import JSON5 from 'json5'
-import * as fs from 'fs'
 
 export async function createDebugConfigIfNeeded(): Promise<any> {
     var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')

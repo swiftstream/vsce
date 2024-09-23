@@ -1,8 +1,6 @@
-import { Bash, BashResult } from './bash'
-import { LogLevel, print, Webber, webSourcesPath } from './webber'
-import { projectDirectory } from './extension'
 import * as fs from 'fs'
-import { window } from 'vscode'
+import { Bash, BashResult } from './bash'
+import { LogLevel, print, Webber } from './webber'
 
 export class NPM {
     private binPath: string = '/root/.nvm/versions/node/v20.17.0/bin/npm'

@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as os from 'os'
-import { commands, extensions, Uri, ViewColumn, WebviewPanel, window, workspace } from 'vscode'
+import { commands, extensions, Uri, ViewColumn, WebviewPanel, window } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
 import { defaultDevPort, defaultProdPort, extensionContext } from '../extension'
 import { copyFile } from '../helpers/copyFile'
