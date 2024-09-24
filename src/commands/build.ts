@@ -15,6 +15,7 @@ import { proceedSCSS } from "./build/proceedSCSS"
 
 export async function buildCommand() {
 	if (!webber) return
+	if (isBuilding) return
 	setBuilding(true)
 	sidebarTreeView?.refresh()
 	try {
