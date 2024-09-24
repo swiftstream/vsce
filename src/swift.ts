@@ -385,5 +385,5 @@ export enum SwiftBuildType {
     Wasi = 'wasi'
 }
 export function allSwiftBuildTypes(): SwiftBuildType[] {
-    return [SwiftBuildType.Native, SwiftBuildType.Live, SwiftBuildType.Wasi]
+    return [SwiftBuildType.Native, SwiftBuildType.Wasi]
 }
