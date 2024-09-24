@@ -19,13 +19,16 @@ export async function proceedBundledResources(options: { release: boolean }) {
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
             const item = items[itemIndex]
             const fromFile = `${dirPath}/${item}`
+            const isFolder = fs.statSync(fromFile).isDirectory()
             const toFile = `${destPath}/${item}`
-            print(`📑 copy ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Detailed)
+            print(`📑 Copy ${isFolder ? 'folder' : 'file'} ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Detailed)
             if (fs.existsSync(toFile))
                 print(`⚠️ ${item} has been overwritten`, LogLevel.Detailed)
             fs.cpSync(fromFile, toFile, { recursive: true, force: true })
-            if (fs.statSync(fromFile).isDirectory()) fs.rmdirSync(fromFile)
-            else fs.rmSync(fromFile)
+            try {
+                if (isFolder) fs.rmdirSync(fromFile)
+                else fs.rmSync(fromFile)
+            } catch {}
         }
     }
     timeMeasure.finish()
