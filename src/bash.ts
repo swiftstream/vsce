@@ -69,10 +69,11 @@ export class Bash {
                 print(bashError.description) // Don't comment out
                 return reject(bashError)
 			})
-			process.on('close', (code) => {
+			process.on('close', (_exitCode) => {
                 const endTime = new Date().getTime()
                 const executionTime = Math.round((endTime - startTime) / 1000)
-				const result = new BashResult(path!, executionTime, code || -999, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)
+                const code = _exitCode || 0
+				const result = new BashResult(path!, executionTime, code, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)
                 if (code === null || (code != null && code != 0)) {
                     const bashError = new BashError({ result: result })
                     print(bashError.description) // Don't comment out
@@ -143,8 +144,9 @@ export class BashError {
 		let description = '⛔️'
         if (this.descr) description += ` Unable to ${this.descr}`
 		// if (this.executable) description += ` ${this.executable}`
-		if (this.code && this.code != -999) {
-            if (description.length > 0) description += ','
+		if (this.code && this.code != 0) {
+            if (description.length > 0)
+                description += ','
             description += ` exit code ${this.code}`
         }
 		if (this.executionTime) description += ` (executed in ${this.executionTime} seconds)`
