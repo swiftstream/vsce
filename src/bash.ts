@@ -54,12 +54,12 @@ export class Bash {
 			var stdout = ''
             process.stdout.on('data', function(msg) {
                 const m = msg.toString()
-                print(`stdout: ${m.trim()}`, LogLevel.Verbose)
+                print(`stdout: ${m.trim()}`, LogLevel.Unbearable)
 				stdout += m
 			})
 			process.stderr.on('data', function(msg) {
                 const m = msg.toString()
-                print(`stderr: ${m.trim()}`, LogLevel.Verbose)
+                print(`stderr: ${m.trim()}`, LogLevel.Unbearable)
 				stderr += m
 			})
 			process.on('error', (error: any) => {
