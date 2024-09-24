@@ -1,5 +1,5 @@
-import { webber } from "../extension"
-import { appTargetName, buildStatus, clearStatus, LogLevel, print, serviceWorkerTargetName, status, StatusType } from "../webber"
+import { sidebarTreeView, webber } from "../extension"
+import { appTargetName, buildStatus, clearStatus, isBuilding, LogLevel, print, serviceWorkerTargetName, setBuilding, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -63,38 +63,41 @@ export async function buildCommand() {
 			throw `${appTargetName} is missing in the Package.swift`
 		if (isPWA && !targetsDump.serviceWorkers.includes(serviceWorkerTargetName))
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
-		// Phase 5: Build executable targets
-		for (let i = 0; i < targetsDump.executables.length; i++) {
-			const target = targetsDump.executables[i]
-			const types = allSwiftBuildTypes()
-			for (let n = 0; n < types.length; n++) {
-				const type = types[n]
-				await buildExecutableTarget({
-					type: type,
-					target: target,
-					release: false,
-					force: true
-				})	
-			}
-		}
-		// Phase 6: Build JavaScriptKit TypeScript sources
-		await buildJavaScriptKit({
-			force: true
-        })
-		// Phase 7: Build all the web sources
-		for (let t = 0; t < targetsDump.executables.length; t++) {
-			const target = targetsDump.executables[t]
-			await buildWebSources({
-				target: target,
-				isServiceWorker: !(target === appTargetName),
-				release: false,
+		// Run phases 5 and 6 in parallel
+		await Promise.all([
+			// Phase 5: Build executable targets
+			Promise.all(allSwiftBuildTypes().map(async (type) => {
+				for (let i = 0; i < targetsDump.executables.length; i++) {
+					const target = targetsDump.executables[i]
+					await buildExecutableTarget({
+						type: type,
+						target: target,
+						release: false,
+						force: true
+					})	
+				}
+			})),
+			// Phase 6: Build JavaScriptKit TypeScript sources
+			buildJavaScriptKit({
 				force: true
 			})
-		}
-		// Phase 8: Retrieve manifest from the Service target
-		await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
-		// Phase 9: Copy bundled resources from Swift build folder
-		await proceedBundledResources({ release: false })
+		])
+		// Run phases 7, 8, 9 in parallel
+		await Promise.all([
+			// Phase 7: Build all the web sources
+			Promise.all(targetsDump.executables.map(async (target) => {
+				await buildWebSources({
+					target: target,
+					isServiceWorker: !(target === appTargetName),
+					release: false,
+					force: true
+				})
+			})),
+			// Phase 8: Retrieve manifest from the Service target
+			proceedServiceWorkerManifest({ isPWA: isPWA, release: false }),
+			// Phase 9: Copy bundled resources from Swift build folder
+			proceedBundledResources({ release: false })
+		])
 		// Phase 10: Compile SCSS
 		await proceedSCSS({ force: true, release: false })
 		measure.finish()
