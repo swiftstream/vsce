@@ -50,7 +50,8 @@
           "enum": [
             "Normal",
             "Detailed",
-            "Verbose"
+            "Verbose",
+            "Unbearable"
           ],
           "default": "Normal",
           "uniqueItems": true

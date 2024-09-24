@@ -6,7 +6,8 @@ export async function loggingLevelCommand() {
 	const newLoggingLevel = await window.showQuickPick([
 		LogLevel.Normal,
 		LogLevel.Detailed,
-		LogLevel.Verbose
+		LogLevel.Verbose,
+		LogLevel.Unbearable
 	], {
 		title: currentLoggingLevel,
 		placeHolder: 'Select new logging level'

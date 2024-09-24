@@ -35,7 +35,8 @@ let problemStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 0
 export enum LogLevel {
 	Normal = 'Normal',
 	Detailed = 'Detailed',
-	Verbose = 'Verbose'
+	Verbose = 'Verbose',
+	Unbearable = 'Unbearable'
 }
 
 export var isBuilding = false
@@ -225,18 +226,46 @@ export function clearPrint() {
 export function showOutput() {
 	output.show()
 }
-
-export function print(message: string, level: LogLevel = LogLevel.Normal, show: boolean | null = null) {
-	if (level == LogLevel.Detailed && currentLoggingLevel == LogLevel.Normal)
-		return
-	if (level == LogLevel.Verbose && [LogLevel.Normal, LogLevel.Detailed].includes(currentLoggingLevel))
-		return
-	var symbol = ''
-	if (level == LogLevel.Detailed)
-		symbol = '🟠 '
-	if (level == LogLevel.Verbose)
-		symbol = '🟣 '
-	output.appendLine(`${symbol}${message}`)
+interface ExtendedPrintMessage {
+	normal?: string,
+	detailed?: string,
+	verbose?: string,
+	unbearable?: string
+}
+const isExtendedPrintMessage = (value: any): value is ExtendedPrintMessage => (!!value?.normal || !!value?.detailed || !!value?.verbose || !!value?.unbearable)
+export function print(message: string | ExtendedPrintMessage, level: LogLevel = LogLevel.Normal, show: boolean | null = null) {
+	if (isExtendedPrintMessage(message)) {
+		if (currentLoggingLevel == LogLevel.Normal) {
+			if (message.normal) output.appendLine(message.normal)
+		} else if (currentLoggingLevel == LogLevel.Detailed) {
+			if (message.detailed) output.appendLine(message.detailed)
+			else if (message.normal) output.appendLine(message.normal)
+		} else if (currentLoggingLevel == LogLevel.Verbose) {
+			if (message.verbose) output.appendLine(message.verbose)
+			else if (message.detailed) output.appendLine(message.detailed)
+			else if (message.normal) output.appendLine(message.normal)
+		} else if (currentLoggingLevel == LogLevel.Unbearable) {
+			if (message.unbearable) output.appendLine(message.unbearable)
+			else if (message.verbose) output.appendLine(message.verbose)
+			else if (message.detailed) output.appendLine(message.detailed)
+			else if (message.normal) output.appendLine(message.normal)
+		}
+	} else {
+		if (level == LogLevel.Detailed && currentLoggingLevel == LogLevel.Normal)
+			return
+		if (level == LogLevel.Verbose && [LogLevel.Normal, LogLevel.Detailed].includes(currentLoggingLevel))
+			return
+		if (level == LogLevel.Unbearable && [LogLevel.Normal, LogLevel.Detailed, LogLevel.Verbose].includes(currentLoggingLevel))
+			return
+		var symbol = ''
+		if (level == LogLevel.Detailed)
+			symbol = '🟡 '
+		else if (level == LogLevel.Verbose)
+			symbol = '🟠 '
+		else if (level == LogLevel.Unbearable)
+			symbol = '🔘 '
+		output.appendLine(`${symbol}${message}`)
+	}
 	if (show) output.show()
 }
 
