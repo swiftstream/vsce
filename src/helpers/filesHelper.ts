@@ -58,7 +58,7 @@ export function wasPathModified(options: { path: string, recursive: boolean, spe
 // MARK: Build Timestamps
 
 function buildTimestampsPath(): string {
-    return `${projectDirectory}/.vscode/.buildTimestamps.json`
+    return `${projectDirectory}/.build/buildTimestamps.json`
 }
 
 function getLastModifiedDates(): any {
@@ -78,11 +78,11 @@ export enum LastModifiedDateType {
 }
 
 export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {
-    return getLastModifiedDates()[`${key}${subkey}`] ?? 0
+    return getLastModifiedDates()[`${key}${subkey.length > 0 ? '_' : ''}${subkey}`] ?? 0
 }
 
 export function saveLastModifiedDateForKey(key: LastModifiedDateType, subkey: string = '') {
     var data = getLastModifiedDates()
-    data[`${key}${subkey}`] = (new Date()).getTime()
+    data[`${key}${subkey.length > 0 ? '_' : ''}${subkey}`] = (new Date()).getTime()
     fs.writeFileSync(buildTimestampsPath(), JSON.stringify(data, null, '\t'))
 }
