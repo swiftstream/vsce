@@ -76,10 +76,7 @@ export async function buildCommand() {
 					type: type,
 					target: target,
 					release: false,
-					force: true,
-					substatus: (t) => {
-						buildStatus(`\`${target}\` Swift target: ${t}`)
-					}
+					force: true
 				})	
 			}
 		}

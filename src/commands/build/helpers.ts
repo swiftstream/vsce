@@ -14,14 +14,15 @@ export function doesWebCheckedOut(type: SwiftBuildType): boolean {
 	print(`./.build/.${type}/checkouts/web ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
 	return value
 }
-export async function buildSwiftTarget(options: { targetName: string, release: boolean }) {
+export async function buildSwiftTarget(options: { type: SwiftBuildType, targetName: string, release: boolean, progressHandler?: (p: string) => void }) {
 	if (!webber) { throw `webber is null` }
 	const measure = new TimeMeasure()
-	print(`started building \`${options.targetName}\` target in \`${options.release ? 'release' : 'debug'}\` mode`, LogLevel.Verbose)
+	print(`Started building \`${options.targetName}\` target in \`${options.release ? 'Release' : 'Debug'}\` mode`, LogLevel.Verbose)
 	await webber.swift.build({
+		type: options.type,
 		targetName: options.targetName,
 		release: options.release,
-		tripleWasm: true
+		progressHandler: options.progressHandler
 	})
 	measure.finish()
 	print(`finished building \`${options.targetName}\` target in ${measure.time}ms`, LogLevel.Verbose)

@@ -156,19 +156,19 @@ export class Swift {
         }
     }
 
-    async build(options: { targetName: string, release: boolean, tripleWasm: boolean }) {
+    async build(options: { type: SwiftBuildType, targetName: string, release: boolean, progressHandler?: (p: string) => void }) {
         print(`\`swift build\` started`, LogLevel.Verbose)
         var args: string[] = [
             'build',
             '-c', options.release ? 'release' : 'debug',
-            '--product', options.targetName
+            '--product', options.targetName,
+            '--build-path', `./.build/.${options.type}`
         ]
-        if (options.tripleWasm) {
+        if (options.type == SwiftBuildType.Wasi) {
             args = [...args,
                 '--enable-test-discovery',
                 '--static-swift-stdlib',
                 '--triple', 'wasm32-unknown-wasi',
-                '--build-path', './.build/.wasi',
                 '-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS',
                 '-Xswiftc', '-Xclang-linker',
                 '-Xswiftc', '-mexec-model=reactor',
@@ -178,8 +178,6 @@ export class Swift {
                 '-Xlinker', '--stack-first',
                 '-Xlinker', '--export=main'
             ]
-        } else {
-            args = ['--build-path', './.build/.native']
         }
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `Missing Package.swift file`
@@ -192,7 +190,16 @@ export class Swift {
                 path: this.webber.toolchain.swiftPath,
                 description: `Building swift`,
                 cwd: projectDirectory,
-                env: env
+                env: env,
+                processInstanceHandler: (process) => {
+                    if (!options.progressHandler) return
+                    process.stdout.on('data', function(msg) {
+                        const m = msg.toString()
+                        if (m.startsWith('[')) {
+                            options.progressHandler!(m.split(']')[0].replace('[', ''))
+                        }
+                    })
+                }
             }, args)
         } catch (error: any) {
             const rawError: string = error.stdout
