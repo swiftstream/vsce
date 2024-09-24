@@ -40,6 +40,7 @@ export enum LogLevel {
 }
 
 export var isBuilding = false
+export function setBuilding(active: boolean) { isBuilding = active }
 export var isDebugging = false
 export function setDebugging(active: boolean) { isDebugging = active }
 export var isHotReloadEnabled = false

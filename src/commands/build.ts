@@ -15,6 +15,8 @@ import { proceedSCSS } from "./build/proceedSCSS"
 
 export async function buildCommand() {
 	if (!webber) return
+	setBuilding(true)
+	sidebarTreeView?.refresh()
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
@@ -98,7 +100,11 @@ export async function buildCommand() {
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
+		setBuilding(false)
+		sidebarTreeView?.refresh()
 	} catch (error: any) {
+		setBuilding(false)
+		sidebarTreeView?.refresh()
 		var text = ''
 		if (isString(error)) {
 			text = error
