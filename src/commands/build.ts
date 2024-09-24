@@ -70,8 +70,6 @@ export async function buildCommand() {
 			const types = allSwiftBuildTypes()
 			for (let n = 0; n < types.length; n++) {
 				const type = types[n]
-				print(`🧱 Building \`${target}\` Swift target`)
-				buildStatus(`\`${target}\` Swift target: building`)
 				await buildExecutableTarget({
 					type: type,
 					target: target,
@@ -81,16 +79,12 @@ export async function buildCommand() {
 			}
 		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
-		print(`🧱 Building JavaScriptKit`)
-        buildStatus(`Building JavaScriptKit`)
 		await buildJavaScriptKit({
 			force: true
         })
 		// Phase 7: Build all the web sources
 		for (let t = 0; t < targetsDump.executables.length; t++) {
 			const target = targetsDump.executables[t]
-			print(`🧱 Building web sources for ${target}`)
-			buildStatus(`Building web sources for ${target}`)
 			await buildWebSources({
 				target: target,
 				isServiceWorker: !(target === appTargetName),
