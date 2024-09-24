@@ -22,6 +22,7 @@ export class Swift {
     }
 
     async getTargets(): Promise<{ executables: string[], serviceWorkers: string[] }> {
+        print(`Going to retrieve swift targets`, LogLevel.Verbose)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -41,6 +42,7 @@ export class Swift {
                     }
                 }
             }
+            print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Verbose)
             return result
         } catch (error: any) {
             console.dir({getTargetsError: error})
@@ -183,9 +185,8 @@ export class Swift {
             throw `Missing Package.swift file`
         }
         var env = process.env
-        const startTime = new Date().getTime()
         try {
-            print(`${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Detailed)
+            print(`🧰 ${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
             const result = await Bash.execute({
                 path: this.webber.toolchain.swiftPath,
                 description: `Building swift`,
@@ -255,9 +256,6 @@ export class Swift {
             }
             throw `🥺 Unable to continue cause of failed compilation, ${ending}\n`
         }
-        const endTime = new Date().getTime()
-        const time = endTime - startTime
-        print(`🎉 Built in ${time}ms`)
     }
 
     async pasreCompilationErrors(rawError: string): Promise<CompilationError[]> {

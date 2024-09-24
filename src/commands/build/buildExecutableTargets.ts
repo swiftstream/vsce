@@ -1,22 +1,31 @@
 import { projectDirectory } from "../../extension";
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified, wasPathModified } from "../../helpers/filesHelper";
+import { TimeMeasure } from "../../helpers/timeMeasureHelper";
 import { SwiftBuildType } from "../../swift";
 import { buildStatus, LogLevel, print } from "../../webber";
 import { buildSwiftTarget } from "./helpers";
 
 export async function buildExecutableTarget(options: { type: SwiftBuildType, target: string, release: boolean, force: boolean }) {
         if (!options.force && !doesModifiedAnySwiftFile(options.type)) {
-            print(`buildExecutableTargets skipping for .${options.type} because force == false and not modified any swift file`, LogLevel.Verbose)
+            print(`💨 Skipping building \`${options.target}\` swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode because \`force == false\` and not modified any swift file`, LogLevel.Verbose)
             return
         }
-        print(`🧱 Building \`${options.target}\` Swift target`)
-		buildStatus(`\`${options.target}\` Swift target: building`)
-        print(`Building ${options.target} target for ${options.type} in ${options.release ? 'release' : 'debug'} mode`, LogLevel.Detailed)
+        const measure = new TimeMeasure()
+        print({
+            detailed: `🧱 Building \`${options.target}\` swift target for \`.${options.type}\``,
+            verbose: `🧱 Building \`${options.target}\` swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode`
+        })
+        buildStatus(`\`${options.target}\` swift target: building`)
         await buildSwiftTarget({ type: options.type, targetName: options.target, release: false, progressHandler: (p) => {
-            buildStatus(`\`${options.target}\` Swift target: building ${p}`)
+            buildStatus(`\`${options.target}\` swift target: building ${p}`)
         } })
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftSources, options.type)
         // TODO: if dependencies tracking enabled then save timestamp for it as well
+        measure.finish()
+        print({
+            detailed: `🎉 Finished building \`${options.target}\` swift target for \`.${options.type}\` in ${measure.time}ms`,
+            verbose: `🎉 Finished building swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode in ${measure.time}ms`
+        })
 }
 
 function doesModifiedAnySwiftFile(type: SwiftBuildType): boolean {

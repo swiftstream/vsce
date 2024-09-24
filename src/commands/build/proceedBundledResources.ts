@@ -8,10 +8,10 @@ export async function proceedBundledResources(options: { release: boolean }) {
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
     if (!fs.existsSync(buildFolder)) throw `Unable to copy bundled resources, seems swift project hasn't been built`
-    const timeMeasure = new TimeMeasure()
+    const measure = new TimeMeasure()
     const items = fs.readdirSync(buildFolder)
     const resourceFolders = items.filter((x) => x.endsWith('.resources') && !x.startsWith('JavaScriptKit_JavaScriptKit'))
-    print(`Copy bundle resources started`, LogLevel.Detailed)
+    print(`📄 Processing bundle resources`, LogLevel.Detailed)
     for (let f = 0; f < resourceFolders.length; f++) {
         const folder = resourceFolders[f]
         const dirPath = `${buildFolder}/${folder}`
@@ -21,9 +21,9 @@ export async function proceedBundledResources(options: { release: boolean }) {
             const fromFile = `${dirPath}/${item}`
             const isFolder = fs.statSync(fromFile).isDirectory()
             const toFile = `${destPath}/${item}`
-            print(`📑 Copy ${isFolder ? 'folder' : 'file'} ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Detailed)
+            print(`📑 Copy ${isFolder ? 'folder' : 'file'} ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Verbose)
             if (fs.existsSync(toFile))
-                print(`⚠️ ${item} has been overwritten`, LogLevel.Detailed)
+                print(`🚨 \`/${item}\` ${isFolder ? 'folder' : 'file'} has been overwritten`, LogLevel.Detailed)
             fs.cpSync(fromFile, toFile, { recursive: true, force: true })
             try {
                 if (isFolder) fs.rmdirSync(fromFile)
@@ -31,6 +31,6 @@ export async function proceedBundledResources(options: { release: boolean }) {
             } catch {}
         }
     }
-    timeMeasure.finish()
-    print(`Copy finished in ${timeMeasure.time}ms`, LogLevel.Detailed)
+    measure.finish()
+    print(`🎉 Finished processing bundle resources in ${measure.time}ms`, LogLevel.Detailed)
 }

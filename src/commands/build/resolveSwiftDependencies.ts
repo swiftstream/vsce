@@ -1,28 +1,40 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
-import { LogLevel, print } from "../../webber"
+import { buildStatus, LogLevel, print } from "../../webber"
 import { SwiftBuildType } from '../../swift'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
+import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function resolveSwiftDependencies(options: { type: SwiftBuildType, force: boolean, substatus: (x: string) => void }) {
+    const measure = new TimeMeasure()
     if (!doesBuildFolderExists(options.type)) {
-        print(`Swift .${options.type} dependencies never been resolved, let's do it`, LogLevel.Detailed)
+        print({
+            detailed: `🔦 Resolving Swift dependencies for ${options.type}`,
+            verbose: `🔦 Resolving Swift dependencies at \`.${options.type}\` for the first time`
+        })
+		buildStatus(`Resolving dependencies`)
         await resolveSwiftPackages(options.type)
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftPackage, options.type)
+        measure.finish()
+        print(`🎉 Finished resolving in ${measure.time}ms`, LogLevel.Detailed)
     }
     // if force == true and Package.swift was modified
     else if (options.force && wasFileModified({
         path: `${projectDirectory}/Package.swift`,
         lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.SwiftPackage, options.type)
     })) {
-        print(`Swift .${options.type} Package has been modified, let's resolve dependencies`, LogLevel.Detailed)
+        print({
+            normal: `🔦 Updating Swift dependencies for \`.${options.type}\``,
+            verbose: `🔦 Updating Swift dependencies for \`.${options.type}\` since \`Package.swift\` has been modified`
+        })
         await resolveSwiftPackages(options.type)
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftPackage, options.type)
+        print(`🎉 Finished resolving in ${measure.time}ms`, LogLevel.Detailed)
     }
 }
 function doesBuildFolderExists(type: SwiftBuildType): boolean {
 	const value = fs.existsSync(`${projectDirectory}/.build/.${type}`)
-	print(`./.build/.${type} ${value ? 'exists' : 'not exists'}`, LogLevel.Verbose)
+	print(`./.build/.${type} ${value ? 'exists' : 'not exists'}`, LogLevel.Unbearable)
 	return value
 }
 async function resolveSwiftPackages(type: SwiftBuildType) {

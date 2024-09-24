@@ -245,19 +245,19 @@ const isExtendedPrintMessage = (value: any): value is ExtendedPrintMessage => (!
 export function print(message: string | ExtendedPrintMessage, level: LogLevel = LogLevel.Normal, show: boolean | null = null) {
 	if (isExtendedPrintMessage(message)) {
 		if (currentLoggingLevel == LogLevel.Normal) {
-			if (message.normal) output.appendLine(message.normal)
+			if (message.normal) output.appendLine(`${message.normal}`)
 		} else if (currentLoggingLevel == LogLevel.Detailed) {
-			if (message.detailed) output.appendLine(message.detailed)
-			else if (message.normal) output.appendLine(message.normal)
+			if (message.detailed) output.appendLine(`${message.detailed}`)
+			else if (message.normal) output.appendLine(`${message.normal}`)
 		} else if (currentLoggingLevel == LogLevel.Verbose) {
-			if (message.verbose) output.appendLine(message.verbose)
-			else if (message.detailed) output.appendLine(message.detailed)
-			else if (message.normal) output.appendLine(message.normal)
+			if (message.verbose) output.appendLine(`${message.verbose}`)
+			else if (message.detailed) output.appendLine(`${message.detailed}`)
+			else if (message.normal) output.appendLine(`${message.normal}`)
 		} else if (currentLoggingLevel == LogLevel.Unbearable) {
-			if (message.unbearable) output.appendLine(message.unbearable)
-			else if (message.verbose) output.appendLine(message.verbose)
-			else if (message.detailed) output.appendLine(message.detailed)
-			else if (message.normal) output.appendLine(message.normal)
+			if (message.unbearable) output.appendLine(`${message.unbearable}`)
+			else if (message.verbose) output.appendLine(`${message.verbose}`)
+			else if (message.detailed) output.appendLine(`${message.detailed}`)
+			else if (message.normal) output.appendLine(`${message.normal}`)
 		}
 	} else {
 		if (level == LogLevel.Detailed && currentLoggingLevel == LogLevel.Normal)
@@ -268,11 +268,11 @@ export function print(message: string | ExtendedPrintMessage, level: LogLevel = 
 			return
 		var symbol = ''
 		if (level == LogLevel.Detailed)
-			symbol = '🟡 '
+			symbol = ''
 		else if (level == LogLevel.Verbose)
-			symbol = '🟠 '
+			symbol = ''
 		else if (level == LogLevel.Unbearable)
-			symbol = '🔘 '
+			symbol = ''
 		output.appendLine(`${symbol}${message}`)
 	}
 	if (show) output.show()

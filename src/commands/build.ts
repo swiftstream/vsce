@@ -17,14 +17,12 @@ export async function buildCommand() {
 	if (!webber) return
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
-		print(`force rebuilds everything by its nature`, LogLevel.Detailed)
+		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
 		const measure = new TimeMeasure()
 		// Phase 1: Resolve Swift dependencies for each build type
 		const types = allSwiftBuildTypes()
 		for (let i = 0; i < types.length; i++) {
 			const type = types[i]
-			print(`🔦 Resolving Swift dependencies`)
-			buildStatus(`Resolving dependencies`)
 			await resolveSwiftDependencies({
 				type: type,
 				force: true,
@@ -42,15 +40,13 @@ export async function buildCommand() {
 			print(`🙆‍♂️ ${text}`)
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 			if (result == 'Retry') {
-				print(`Going to retry debug build command`, LogLevel.Detailed)
+				print(`Going to retry debug build command`, LogLevel.Verbose)
 				buildCommand()
 			}
 			return
 		}
 		// Phase 3: Retrieve executable Swift targets
-		print(`Going to retrieve swift targets`, LogLevel.Detailed)
 		const targetsDump = await webber.swift.getTargets()
-		print(`Retrieved targets: [${targetsDump.executables.join(', ')}]`, LogLevel.Detailed)
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0

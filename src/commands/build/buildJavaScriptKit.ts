@@ -4,12 +4,14 @@ import { buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { doesJavaScriptKitCheckedOut } from './helpers'
 import { SwiftBuildType } from '../../swift'
+import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function buildJavaScriptKit(options: { force: boolean }) {
     if (!webber) throw `webber is null`
     const jsKitPath = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/checkouts/JavaScriptKit`
     var packageWasModified = false
     var packageWasCompiled = doesJavaScriptKitCompiled(jsKitPath)
+    const measure = new TimeMeasure()
     const doesPackageModulesPresent = () => fs.existsSync(`${jsKitPath}/node_modules`)
     if (doesJavaScriptKitCheckedOut(SwiftBuildType.Wasi)) {
         packageWasModified = wasFileModified({
@@ -18,15 +20,16 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
         })
     }
     if (!options.force && packageWasCompiled && !packageWasModified) {
-        print(`Skipping JavaScriptKit build since it is been compiled in past`, LogLevel.Detailed)
+        print(`🫖 Skipping JavaScriptKit build since it is been compiled in past`, LogLevel.Detailed)
         return
     }
     if (!packageWasCompiled || !doesPackageModulesPresent()) {
-        print(`Building JavaScriptKit for the first time`, LogLevel.Detailed)
+        print(`🫖 Building JavaScriptKit for the first time`, LogLevel.Detailed)
     } else if (packageWasModified) {
-        print(`Rebuilding JavaScriptKit since it's been updated`, LogLevel.Detailed)
+        print(`🫖 Rebuilding JavaScriptKit since it's been updated`, LogLevel.Detailed)
+    } else {
+        print(`🫖 Building JavaScriptKit`, LogLevel.Detailed)
     }
-    print(`🧱 Building JavaScriptKit`)
     buildStatus(`Building JavaScriptKit`)
     if (!doesPackageModulesPresent()) {
 		print(`Building JavaScriptKit: npm install`, LogLevel.Verbose)
@@ -64,10 +67,12 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
         }
 	}
     saveLastModifiedDateForKey(LastModifiedDateType.JavaScriptKitPackage)
+    measure.finish()
+    print(`🎉 Finished building JavaScriptKit in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doesJavaScriptKitCompiled(jsKitPath: string): boolean {
 	const value = fs.existsSync(`${jsKitPath}/Runtime/lib/index.d.ts`)
-	print(`JavaScriptKit ${value ? 'compiled' : 'not compiled'}`, LogLevel.Verbose)
+	print(`JavaScriptKit ${value ? 'compiled' : 'not compiled'}`, LogLevel.Unbearable)
 	return value
 }
 function readVersions(options: { projectLock: string, jsKitPackage: string }): { current: string, locked: string } {
@@ -83,6 +88,6 @@ function readVersions(options: { projectLock: string, jsKitPackage: string }): {
         current: jsKitPackage.version,
         locked: lockedPackages[lockedKeys[0]].version
     }
-    print(`JavaScriptKit: current v${result.current} locked v${result.locked}`, LogLevel.Verbose)
+    print(`JavaScriptKit: current v${result.current} locked v${result.locked}`, LogLevel.Unbearable)
     return result
 }

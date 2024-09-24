@@ -3,6 +3,7 @@ import { projectDirectory, webber } from "../../extension"
 import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from "../../helpers/filesHelper"
 import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPath } from "../../webber"
 import { WebpackMode } from '../../webpack'
+import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function buildWebSources(options: { target: string, isServiceWorker: boolean, release: boolean, force: boolean }) {
     if (!webber) throw `webber is null`
@@ -10,7 +11,8 @@ export async function buildWebSources(options: { target: string, isServiceWorker
         print(`buildWebSources skipping for ${options.target} target because force == false and nothing was modified`, LogLevel.Verbose)
         return
     }
-    print(`🧱 Building ${options.target} web target`)
+    const measure = new TimeMeasure()
+    print(`🌳 Building \`${options.target}\` web target`, LogLevel.Detailed)
     buildStatus(`Building ${options.target} web target`)
     if (!doesDependenciesPresent()) {
         options.force = true
@@ -18,26 +20,27 @@ export async function buildWebSources(options: { target: string, isServiceWorker
         buildStatus(`Building ${options.target} web target dependencies`)
         await webber.npmWeb.install()
     }
-    print(`🧱 Building ${options.target} web target sources`)
     buildStatus(`Building ${options.target} web target sources`)
     const bundlePath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
     await webber.webpack.build(WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath })) {
-        print(`🧱 Building ${options.target} web target sources (2nd attempt)`)
+        print(`🌳 Second attempt for \`${options.target}\` web target`, LogLevel.Detailed)
         buildStatus(`Building ${options.target} web target sources (2nd attempt)`)
         await webber.webpack.build(WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     }
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath }))
         throw `${options.target} web target build failed`
+    measure.finish()
+    print(`🎉 Finished building \`${options.target}\` web target in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doesDependenciesPresent(): boolean {
 	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/node_modules`)
-	print(`Web sources: node_modules ${value ? 'present' : 'not present'}`, LogLevel.Verbose)
+	print(`Web sources: node_modules ${value ? 'present' : 'not present'}`, LogLevel.Unbearable)
 	return value
 }
 function doesBundlePresent(options: { target: string, bundlePath: string }): boolean {
 	const value = fs.existsSync(`${options.bundlePath}/${options.target.toLowerCase()}.js`)
-	print(`${options.target} web target bundle ${value ? 'present' : 'not present'}`, LogLevel.Verbose)
+	print(`${options.target} web target bundle ${value ? 'present' : 'not present'}`, LogLevel.Unbearable)
 	return value
 }
 function doesModifiedAnyJSTSFile(target: string): boolean {

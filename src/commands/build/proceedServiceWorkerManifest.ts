@@ -9,10 +9,11 @@ const webManifestFile = 'site.webmanifest'
 export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }) {
     if (!webber) throw `webber is null`
     if (!options.isPWA) {
-        print(`Skipping manifest retrieval since it is not PWA app`, LogLevel.Verbose)
+        print(`💨 Skipping manifest retrieval since it is not PWA app`, LogLevel.Verbose)
         return
     }
     const timeMeasure = new TimeMeasure()
+    print(`🧱 Getting service worker manifest`, LogLevel.Detailed)
     var generatedManifest = await webber.swift.grabPWAManifest({ serviceWorkerTarget: serviceWorkerTargetName })
     const staticManifest = getStaticManifest()
     if (staticManifest) {
@@ -25,7 +26,7 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
         fs.mkdirSync(outputDir, { recursive: true })
     fs.writeFileSync(pathToSaveManifest, JSON.stringify(generatedManifest, null, '\t'))
     timeMeasure.finish()
-    print(`Service worker manifest coking finished in ${timeMeasure.time}ms`, LogLevel.Verbose)
+    print(`🎉 Finished getting service worker manifest in ${timeMeasure.time}ms`, LogLevel.Detailed)
 }
 function getStaticManifest(): any | undefined {
     if (!fs.existsSync(`${projectDirectory}/${webSourcesPath}/${webManifestFile}`))
