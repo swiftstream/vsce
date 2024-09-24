@@ -10,7 +10,7 @@ export async function proceedBundledResources(options: { release: boolean }) {
     if (!fs.existsSync(buildFolder)) throw `Unable to copy bundled resources, seems swift project hasn't been built`
     const timeMeasure = new TimeMeasure()
     const items = fs.readdirSync(buildFolder)
-    const resourceFolders = items.filter((x) => x.endsWith('.resources'))
+    const resourceFolders = items.filter((x) => x.endsWith('.resources') && !x.startsWith('JavaScriptKit_JavaScriptKit'))
     print(`Copy bundle resources started`, LogLevel.Detailed)
     for (let f = 0; f < resourceFolders.length; f++) {
         const folder = resourceFolders[f]
