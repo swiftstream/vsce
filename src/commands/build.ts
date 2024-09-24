@@ -108,10 +108,7 @@ export async function buildCommand() {
 		// Phase 10: Compile SCSS
 		await proceedSCSS({ force: true, release: false })
 		measure.finish()
-		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Default)
-		setTimeout(() => {
-			clearStatus()
-		}, 4000)
+		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
 	} catch (error: any) {
@@ -125,8 +122,5 @@ export async function buildCommand() {
 			console.error(error)
 		}
 		status('error', text, StatusType.Error)
-		setTimeout(() => {
-			clearStatus()
-		}, 5000)
 	}
 }

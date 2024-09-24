@@ -188,6 +188,15 @@ export class Webber {
 	}
 
 	registercommands() {
+		extensionContext.subscriptions.push(commands.registerCommand('clickOnErrorStatusBarItem', () => {
+			clearStatus()
+			showOutput()
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand('clickOnSuccessStatusBarItem', () => {
+			clearStatus()
+			showOutput()
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
@@ -272,10 +281,12 @@ export function print(message: string | ExtendedPrintMessage, level: LogLevel = 
 // MARK: Status
 
 export enum StatusType {
-	Default, Warning, Error
+	Default, Warning, Error, Success
 }
 
 export function clearStatus() {
+	problemStatusBarIcon.command = undefined
+	problemStatusBarItem.command = undefined
 	problemStatusBarIcon.text = ''
 	problemStatusBarItem.text = ''
 	problemStatusBarIcon.hide()
@@ -300,27 +311,31 @@ export function status(icon: string | null, message: string, type: StatusType = 
 	}
 	problemStatusBarItem.text = message
 	switch (type) {
+	case StatusType.Success:
 	case StatusType.Default:			
 		problemStatusBarIcon.backgroundColor = undefined
 		problemStatusBarIcon.color = undefined
 		problemStatusBarItem.backgroundColor = undefined
 		problemStatusBarItem.color = undefined
+		problemStatusBarItem.command = type == StatusType.Success ? 'clickOnSuccessStatusBarItem' : 'clickOnStatusBarItem'
 		break
 	case StatusType.Warning:
 		problemStatusBarIcon.backgroundColor = new ThemeColor('statusBarItem.warningBackground')
 		problemStatusBarIcon.color = undefined
 		problemStatusBarItem.backgroundColor = new ThemeColor('statusBarItem.warningBackground')
 		problemStatusBarItem.color = undefined
+		problemStatusBarItem.command = 'clickOnErrorStatusBarItem'
 		break
 	case StatusType.Error:
 		problemStatusBarIcon.backgroundColor = new ThemeColor('statusBarItem.errorBackground')
 		problemStatusBarIcon.color = new ThemeColor('errorForeground')	
 		problemStatusBarItem.backgroundColor = new ThemeColor('statusBarItem.errorBackground')
 		problemStatusBarItem.color = new ThemeColor('errorForeground')
+		problemStatusBarItem.command = 'clickOnErrorStatusBarItem'
 		break
 	}
-	problemStatusBarIcon.command = command ?? undefined
-	problemStatusBarItem.command = command ?? undefined
+	problemStatusBarIcon.command = command ?? problemStatusBarIcon.command
+	problemStatusBarItem.command = command ?? problemStatusBarItem.command
 	problemStatusBarItem.show()
 }
 export function buildStatus(text: string) {
