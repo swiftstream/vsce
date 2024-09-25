@@ -63,25 +63,24 @@ export async function buildCommand() {
 			throw `${appTargetName} is missing in the Package.swift`
 		if (isPWA && !targetsDump.serviceWorkers.includes(serviceWorkerTargetName))
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
-		// Run phases 5 and 6 in parallel
-		await Promise.all([
-			// Phase 5: Build executable targets
-			Promise.all(allSwiftBuildTypes().map(async (type) => {
-				for (let i = 0; i < targetsDump.executables.length; i++) {
-					const target = targetsDump.executables[i]
-					await buildExecutableTarget({
-						type: type,
-						target: target,
-						release: false,
-						force: true
-					})	
-				}
-			})),
-			// Phase 6: Build JavaScriptKit TypeScript sources
-			buildJavaScriptKit({
-				force: true
-			})
-		])
+		// Phase 5: Build executable targets
+		const buildTypes = allSwiftBuildTypes()
+		for (let n = 0; n < buildTypes.length; n++) {
+			const type = buildTypes[n]
+			for (let i = 0; i < targetsDump.executables.length; i++) {
+				const target = targetsDump.executables[i]
+				await buildExecutableTarget({
+					type: type,
+					target: target,
+					release: false,
+					force: true
+				})	
+			}
+		}
+		// Phase 6: Build JavaScriptKit TypeScript sources
+		buildJavaScriptKit({
+			force: true
+		})
 		// Run phases 7, 8, 9 in parallel
 		await Promise.all([
 			// Phase 7: Build all the web sources
