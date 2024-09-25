@@ -18,10 +18,10 @@ export async function buildCommand() {
 	if (isBuilding) return
 	setBuilding(true)
 	sidebarTreeView?.refresh()
+	const measure = new TimeMeasure()
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
-		const measure = new TimeMeasure()
 		// Phase 1: Resolve Swift dependencies for each build type
 		const types = allSwiftBuildTypes()
 		for (let i = 0; i < types.length; i++) {
@@ -117,6 +117,6 @@ export async function buildCommand() {
 			print(`❌ ${text}: ${error}`)
 			console.error(error)
 		}
-		status('error', text, StatusType.Error)
+		status('error', `Something went wrong during the build (${measure.time}ms)`, StatusType.Error)
 	}
 }
