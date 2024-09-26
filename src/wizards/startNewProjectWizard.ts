@@ -345,7 +345,7 @@ async function createNewProjectFiles(
 			if (!fs.existsSync(p)) {
 				fs.mkdirSync(p, { recursive: true })
 			}
-			fs.writeFileSync(`${p}/${name}.swift`, mainFile)
+			fs.writeFileSync(`${p}/App.swift`, mainFile)
 			// IndexPage file
 			var indexPage = `import Web`
 			indexPage += `\n`
