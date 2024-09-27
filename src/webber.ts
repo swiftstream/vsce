@@ -1,6 +1,5 @@
 import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession } from "vscode";
 import { Toolchain } from "./toolchain";
-import { Project } from "./project";
 import { SideTreeItem } from "./sidebarTreeView";
 import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from "./extension";
 import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
@@ -108,7 +107,6 @@ export class Webber {
 	public npmWeb: NPM
 	public npmJSKit: NPM
 	public webpack: Webpack
-    project = new Project(this)
 
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
