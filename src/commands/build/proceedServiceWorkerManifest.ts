@@ -4,8 +4,6 @@ import { buildDevPath, buildProdPath, LogLevel, print, serviceWorkerTargetName, 
 import { projectDirectory, webber } from '../../extension'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
-const webManifestFile = 'site.webmanifest'
-
 export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }) {
     if (!webber) throw `webber is null`
     if (!options.isPWA) {
@@ -15,24 +13,25 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
     const timeMeasure = new TimeMeasure()
     print(`🧱 Getting service worker manifest`, LogLevel.Detailed)
     var generatedManifest = await webber.swift.grabPWAManifest({ serviceWorkerTarget: serviceWorkerTargetName })
-    const staticManifest = getStaticManifest()
+    const webManifestFileName = generatedManifest.file_name ?? 'site'
+    const staticManifest = getStaticManifest(webManifestFileName)
     if (staticManifest) {
         // override generated manifest data with the static one
         generatedManifest = {...generatedManifest, ...staticManifest}
     }
     const outputDir = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
-    const pathToSaveManifest = `${outputDir}/${webManifestFile}`
+    const pathToSaveManifest = `${outputDir}/${webManifestFileName}.webmanifest`
     if (!fs.existsSync(outputDir))
         fs.mkdirSync(outputDir, { recursive: true })
     fs.writeFileSync(pathToSaveManifest, JSON.stringify(generatedManifest, null, '\t'))
     timeMeasure.finish()
     print(`🎉 Finished getting service worker manifest in ${timeMeasure.time}ms`, LogLevel.Detailed)
 }
-function getStaticManifest(): any | undefined {
-    if (!fs.existsSync(`${projectDirectory}/${webSourcesPath}/${webManifestFile}`))
+function getStaticManifest(fileName: string): any | undefined {
+    if (!fs.existsSync(`${projectDirectory}/${webSourcesPath}/${fileName}.webmanifest`))
         return undefined
     try {
-        return JSON5.parse(fs.readFileSync(`${projectDirectory}/${webSourcesPath}/${webManifestFile}`, 'utf8'))
+        return JSON5.parse(fs.readFileSync(`${projectDirectory}/${webSourcesPath}/${fileName}.webmanifest`, 'utf8'))
     } catch (error) {
         console.dir({parseStaticManifestError:error})
         return undefined
