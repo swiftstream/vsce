@@ -81,6 +81,7 @@ export async function buildCommand() {
 		buildJavaScriptKit({
 			force: true
 		})
+		var manifest: any | undefined
 		// Run phases 7, 8, 9 in parallel
 		await Promise.all([
 			// Phase 7: Build all the web sources
@@ -93,8 +94,8 @@ export async function buildCommand() {
 				})
 			})),
 			// Phase 8: Retrieve manifest from the Service target
-			proceedServiceWorkerManifest({ isPWA: isPWA, release: false }),
 			// Phase 9: Copy bundled resources from Swift build folder
+			async () => { manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false }) },
 			proceedBundledResources({ release: false })
 		])
 		// Phase 10: Compile SCSS

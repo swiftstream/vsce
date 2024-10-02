@@ -4,7 +4,7 @@ import { buildDevPath, buildProdPath, LogLevel, print, serviceWorkerTargetName, 
 import { projectDirectory, webber } from '../../extension'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
-export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }) {
+export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }): Promise<any> {
     if (!webber) throw `webber is null`
     if (!options.isPWA) {
         print(`💨 Skipping manifest retrieval since it is not PWA app`, LogLevel.Verbose)
@@ -26,6 +26,7 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
     fs.writeFileSync(pathToSaveManifest, JSON.stringify(generatedManifest, null, '\t'))
     timeMeasure.finish()
     print(`🎉 Finished getting service worker manifest in ${timeMeasure.time}ms`, LogLevel.Detailed)
+    return generatedManifest
 }
 function getStaticManifest(fileName: string): any | undefined {
     if (!fs.existsSync(`${projectDirectory}/${webSourcesPath}/${fileName}.webmanifest`))
