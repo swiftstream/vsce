@@ -12,6 +12,7 @@ import { buildWebSources } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedSCSS } from "./build/proceedSCSS"
+import { proceedSplash } from "./build/proceedSplash"
 
 export async function buildCommand() {
 	if (!webber) return
@@ -82,6 +83,7 @@ export async function buildCommand() {
 			force: true
 		})
 		var manifest: any | undefined
+		var splash: string | undefined
 		// Run phases 7, 8, 9 in parallel
 		await Promise.all([
 			// Phase 7: Build all the web sources
@@ -94,11 +96,13 @@ export async function buildCommand() {
 				})
 			})),
 			// Phase 8: Retrieve manifest from the Service target
-			// Phase 9: Copy bundled resources from Swift build folder
 			async () => { manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false }) },
+			// Phase 9: Retrieve manifest from the Service target
+			async () => { splash = await proceedSplash({ target: appTargetName, release: false }) },
+			// Phase 10: Copy bundled resources from Swift build folder
 			proceedBundledResources({ release: false })
 		])
-		// Phase 10: Compile SCSS
+		// Phase 11: Compile SCSS
 		await proceedSCSS({ force: true, release: false })
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
