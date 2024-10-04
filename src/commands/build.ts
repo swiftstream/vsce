@@ -12,6 +12,7 @@ import { buildWebSources } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedSCSS } from "./build/proceedSCSS"
+import { proceedHTML } from "./build/proceedHTML"
 import { proceedSplash } from "./build/proceedSplash"
 
 export async function buildCommand() {
@@ -104,6 +105,8 @@ export async function buildCommand() {
 		])
 		// Phase 11: Compile SCSS
 		await proceedSCSS({ force: true, release: false })
+		// Phase 12: Proceed HTML
+		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, splash: splash })
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
