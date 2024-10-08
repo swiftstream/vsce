@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import path from 'path'
 import { projectDirectory } from '../extension'
 
 export function isFolder(path: string) {
@@ -74,7 +75,8 @@ export enum LastModifiedDateType {
     SwiftSources = 'swiftSources',
     JavaScriptKitPackage = 'JavaScriptKitPackage',
     WebSources = 'webSources',
-    SCSS = 'SCSS'
+    SCSS = 'SCSS',
+    HTML = 'HTML'
 }
 
 export function getLastModifiedDate(key: LastModifiedDateType, subkey: string = ''): number {
@@ -85,4 +87,48 @@ export function saveLastModifiedDateForKey(key: LastModifiedDateType, subkey: st
     var data = getLastModifiedDates()
     data[`${key}${subkey.length > 0 ? '_' : ''}${subkey}`] = (new Date()).getTime()
     fs.writeFileSync(buildTimestampsPath(), JSON.stringify(data, null, '\t'))
+}
+
+export interface FoundFileItem {
+    name: string,
+    pureName: string,
+    path: string,
+    folder: string,
+    modified: boolean
+}
+export function findFilesRecursively(extensions: string[], folder: string, lastModifedTimestampMs: number): FoundFileItem[] {
+    var items: FoundFileItem[] = []
+    const excluded: string[] = ['node_modules']
+    const folderItems = fs.readdirSync(folder)
+    for (let itemIndex = 0; itemIndex < folderItems.length; itemIndex++) {
+        const item = folderItems[itemIndex]
+        if (excluded.includes(item))
+            continue
+        const itemPath = `${folder}/${item}`
+        const stat = fs.statSync(itemPath)
+        var modifiedTime = stat.ctimeMs
+        if (stat.mtimeMs > modifiedTime)
+            modifiedTime = stat.mtimeMs
+        if (stat.atimeMs > modifiedTime)
+            modifiedTime = stat.atimeMs
+        var modified = false
+        if (lastModifedTimestampMs == 0) modified = true
+        else modified = (
+            lastModifedTimestampMs < stat.mtimeMs || 
+            lastModifedTimestampMs < stat.atimeMs || 
+            lastModifedTimestampMs < stat.ctimeMs
+        )
+        if (stat.isDirectory()) {
+            items = [...items, ...findFilesRecursively(extensions, itemPath, lastModifedTimestampMs)]
+        } else if (endsWithOneOfExtensions(item, extensions)) {
+            items.push({
+                name: item,
+                pureName: path.parse(itemPath).name,
+                path: `${folder}/${item}`,
+                folder: folder,
+                modified: modified
+            })
+        }
+    }
+    return items
 }

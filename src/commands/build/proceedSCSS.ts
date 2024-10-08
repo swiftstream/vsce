@@ -1,9 +1,8 @@
 import * as fs from 'fs'
 import * as sass from 'sass'
-import path from 'path'
 import { projectDirectory, webber } from '../../extension'
 import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
-import { endsWithOneOfExtensions, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
+import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function proceedSCSS(options: { force: boolean, release: boolean }) {
@@ -12,8 +11,8 @@ export async function proceedSCSS(options: { force: boolean, release: boolean })
     const webFolder = `${projectDirectory}/${webSourcesPath}`
     const buildFolder = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
     const lastModifiedDate = getLastModifiedDate(LastModifiedDateType.SCSS)
-    const scssInBuildFolder = findSCSSFilesRecursively(buildFolder, lastModifiedDate)
-    const scssInSourcesFolder = findSCSSFilesRecursively(webFolder, lastModifiedDate)
+    const scssInBuildFolder = findFilesRecursively(['scss', 'sass'], buildFolder, lastModifiedDate)
+    const scssInSourcesFolder = findFilesRecursively(['scss', 'sass'], webFolder, lastModifiedDate)
     const doesModifiedAnyInSources = scssInSourcesFolder.filter((x) => x.modified).length > 0
     if (!options.force && scssInBuildFolder.length == 0 && !doesModifiedAnyInSources) {
         print(`💨 Skipping processing SCSS files because \`force == false\` and nothing was modified `, LogLevel.Verbose)
@@ -48,47 +47,4 @@ export async function proceedSCSS(options: { force: boolean, release: boolean })
     saveLastModifiedDateForKey(LastModifiedDateType.SCSS)
     measure.finish()
     print(`🎉 SCSS files compiled in ${measure.time}ms`, LogLevel.Detailed)
-}
-interface SCSSItem {
-    name: string,
-    pureName: string,
-    path: string,
-    folder: string,
-    modified: boolean
-}
-function findSCSSFilesRecursively(folder: string, lastModifedTimestampMs: number): SCSSItem[] {
-    var items: SCSSItem[] = []
-    const excluded: string[] = ['node_modules']
-    const folderItems = fs.readdirSync(folder)
-    for (let itemIndex = 0; itemIndex < folderItems.length; itemIndex++) {
-        const item = folderItems[itemIndex]
-        if (excluded.includes(item))
-            continue
-        const itemPath = `${folder}/${item}`
-        const stat = fs.statSync(itemPath)
-        var modifiedTime = stat.ctimeMs
-        if (stat.mtimeMs > modifiedTime)
-            modifiedTime = stat.mtimeMs
-        if (stat.atimeMs > modifiedTime)
-            modifiedTime = stat.atimeMs
-        var modified = false
-        if (lastModifedTimestampMs == 0) modified = true
-        else modified = (
-            lastModifedTimestampMs < stat.mtimeMs || 
-            lastModifedTimestampMs < stat.atimeMs || 
-            lastModifedTimestampMs < stat.ctimeMs
-        )
-        if (stat.isDirectory()) {
-            items = [...items, ...findSCSSFilesRecursively(itemPath, lastModifedTimestampMs)]
-        } else if (endsWithOneOfExtensions(item, ['scss', 'sass'])) {
-            items.push({
-                name: item,
-                pureName: path.parse(itemPath).name,
-                path: `${folder}/${item}`,
-                folder: folder,
-                modified: modified
-            })
-        }
-    }
-    return items
 }
