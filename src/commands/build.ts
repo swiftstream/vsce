@@ -4,7 +4,7 @@ import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes } from '../swift'
+import { allSwiftBuildTypes, Index } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -13,7 +13,7 @@ import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManife
 import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedSCSS } from "./build/proceedSCSS"
 import { proceedHTML } from "./build/proceedHTML"
-import { proceedSplash } from "./build/proceedSplash"
+import { proceedIndex } from "./build/proceedIndex"
 
 export async function buildCommand() {
 	if (!webber) return
@@ -25,6 +25,7 @@ export async function buildCommand() {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
 		// Phase 1: Resolve Swift dependencies for each build type
+		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
 		const types = allSwiftBuildTypes()
 		for (let i = 0; i < types.length; i++) {
 			const type = types[i]
@@ -33,11 +34,12 @@ export async function buildCommand() {
 				force: true,
 				substatus: (t) => {
 					buildStatus(`Resolving dependencies (${type}): ${t}`)
-					print(`🔦 Resolving Swift dependencies ${t}`, LogLevel.Detailed)
+					print(`🔦 Resolving Swift dependencies ${t}`, LogLevel.Verbose)
 				}
 			})
 		}
 		// Phase 2: Check if required Swift dependencies present
+		print('🔳 Phase 2: Check if required Swift dependencies present', LogLevel.Verbose)
 		const requiredDependencies = await checkRequiredDependencies()
 		if (requiredDependencies.missing.length > 0) {
 			clearStatus()
@@ -51,6 +53,7 @@ export async function buildCommand() {
 			return
 		}
 		// Phase 3: Retrieve executable Swift targets
+		print('🔳 Phase 3: Retrieve executable Swift targets', LogLevel.Verbose)
 		const targetsDump = await webber.swift.getTargets()
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
@@ -61,11 +64,13 @@ export async function buildCommand() {
 			print(`It's not PWA since ServiceWorker related targets not found`, LogLevel.Verbose)
 		}
 		// Phase 4: Check that App target name present
+		print('🔳 Phase 4: Check that App target name present', LogLevel.Verbose)
 		if (!targetsDump.executables.includes(appTargetName))
 			throw `${appTargetName} is missing in the Package.swift`
 		if (isPWA && !targetsDump.serviceWorkers.includes(serviceWorkerTargetName))
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
 		// Phase 5: Build executable targets
+		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		const buildTypes = allSwiftBuildTypes()
 		for (let n = 0; n < buildTypes.length; n++) {
 			const type = buildTypes[n]
@@ -80,33 +85,35 @@ export async function buildCommand() {
 			}
 		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
-		buildJavaScriptKit({
+		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
+		await buildJavaScriptKit({
 			force: true
 		})
-		var manifest: any | undefined
-		var splash: string | undefined
-		// Run phases 7, 8, 9 in parallel
-		await Promise.all([
-			// Phase 7: Build all the web sources
-			Promise.all(targetsDump.executables.map(async (target) => {
-				await buildWebSources({
-					target: target,
-					isServiceWorker: !(target === appTargetName),
-					release: false,
-					force: true
-				})
-			})),
-			// Phase 8: Retrieve manifest from the Service target
-			async () => { manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false }) },
-			// Phase 9: Retrieve manifest from the Service target
-			async () => { splash = await proceedSplash({ target: appTargetName, release: false }) },
-			// Phase 10: Copy bundled resources from Swift build folder
-			proceedBundledResources({ release: false })
-		])
+		// Phase 7: Build all the web sources
+		print('🔳 Phase 7: Build all the web sources', LogLevel.Verbose)
+		await Promise.all(targetsDump.executables.map(async (target) => {
+			await buildWebSources({
+				target: target,
+				isServiceWorker: !(target === appTargetName),
+				release: false,
+				force: true
+			})
+		}))
+		// Phase 8: Retrieve manifest from the Service target
+		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
+		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
+		// Phase 9: Retrieve index from the App target
+		print('🔳 Phase 9: Retrieve index from the App target', LogLevel.Verbose)
+		const index = await proceedIndex({ target: appTargetName, release: false })
+		// Phase 10: Copy bundled resources from Swift build folder
+		print('🔳 Phase 10: Copy bundled resources from Swift build folder', LogLevel.Verbose)
+		proceedBundledResources({ release: false })
 		// Phase 11: Compile SCSS
+		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
 		await proceedSCSS({ force: true, release: false })
 		// Phase 12: Proceed HTML
-		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, splash: splash })
+		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
+		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)

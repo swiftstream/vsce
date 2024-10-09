@@ -76,7 +76,7 @@ export class Swift {
     }
 
     async grabPWAManifest(options: { serviceWorkerTarget: string }): Promise<any> {
-        const executablePath = `${projectDirectory}/.build/.native/debug/${options.serviceWorkerTarget}`
+        const executablePath = `${projectDirectory}/.build/.${SwiftBuildType.Native}/debug/${options.serviceWorkerTarget}`
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
@@ -87,6 +87,33 @@ export class Swift {
                 cwd: projectDirectory
             }, [])
             return JSON.parse(result.stdout)
+        } catch (error: any) {
+            console.dir({grabServiceWorkerManifestError: error})
+            throw `Unable to grab service worker manifest`
+        }
+    }
+
+    async grabIndex(options: { target: string }): Promise<Index | undefined> {
+        const executablePath = `${projectDirectory}/.build/.${SwiftBuildType.Native}/debug/${options.target}`
+        if (!fs.existsSync(executablePath)) {
+            throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
+        }
+        try {
+            const result = await Bash.execute({
+                path: executablePath,
+                description: `grabbing Index`,
+                cwd: projectDirectory
+            }, ['--index'])
+            const startCode = '==INDEX-START=='
+            const endCode = '==INDEX-END=='
+            const stdout = result.stdout
+            print(`stdout: ${stdout}`, LogLevel.Unbearable)
+            if (stdout.includes(startCode) && stdout.includes(endCode)) {
+                const json = stdout.split(startCode)[1].split(endCode)[0]
+                return JSON.parse(json)
+            } else {
+                return undefined
+            }
         } catch (error: any) {
             console.dir({grabServiceWorkerManifestError: error})
             throw `Unable to grab service worker manifest`
@@ -126,7 +153,7 @@ export class Swift {
     }
 
     async previews(moduleName: string, previewNames: string[]): Promise<Preview[] | undefined> {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', moduleName, '--previews', ...previewNames.map((x) => `${moduleName}/${x}`), '--build-path', './.build/.live']
+        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', moduleName, '--previews', ...previewNames.map((x) => `${moduleName}/${x}`), '--build-path', `./.build/.${SwiftBuildType.Native}`]
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -140,7 +167,7 @@ export class Swift {
     }
 
     async splash(productName: string) {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', productName, '--build-path', './.build/.live']
+        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', productName, '--build-path', `./.build/.${SwiftBuildType.Native}`]
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -381,9 +408,26 @@ export interface PackageContent {
 }
 export enum SwiftBuildType {
     Native = 'native',
-    Live = 'live',
     Wasi = 'wasi'
 }
 export function allSwiftBuildTypes(): SwiftBuildType[] {
     return [SwiftBuildType.Native, SwiftBuildType.Wasi]
+}
+
+export interface SplashData {
+    styles: string[],
+    scripts: string[],
+    links: string[],
+    pathToFile?: string,
+    body?: string,
+    iframeStyle?: string
+}
+
+export interface Index {
+    title?: string,
+    lang?: string,
+    metas?: any[],
+    links?: any[],
+    scripts?: any[],
+    splash?: SplashData
 }

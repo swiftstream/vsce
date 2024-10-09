@@ -4,7 +4,7 @@ import { projectDirectory } from '../../extension'
 import { buildDevPath, buildProdPath, LogLevel, print } from '../../webber'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
-export async function proceedBundledResources(options: { release: boolean }) {
+export function proceedBundledResources(options: { release: boolean }) {
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
     if (!fs.existsSync(buildFolder)) throw `Unable to copy bundled resources, seems swift project hasn't been built`

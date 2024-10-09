@@ -1,104 +1,195 @@
 import * as fs from 'fs'
-import { projectDirectory, webber } from '../../extension'
-import { webSourcesPath } from '../../webber'
+import { projectDirectory } from '../../extension'
+import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
+import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
+import { Index, SplashData } from '../../swift'
 
 const managedBy = `managedBy="SwifWeb"`
 
-export async function proceedHTML(options: { appTargetName: string, manifest?: any, splash?: string }) {
-    const indexPath = `${projectDirectory}/${webSourcesPath}/index.html`
-    const langValue = 'en-US'
-    const titleValue = '&lrm;'
-    const charsetValue = 'utf-8'
-    const viewportValue = 'width=device-width; initial-scale=1; viewport-fit=cover, user-scalable=no'
-    const descriptionValue = ''
-    const mobileWebAppCapableValue = 'yes'
-    const appleMobileWebAppStatusBarStyleValue = options.manifest.theme_color
-    const themeColorValue = options.manifest.theme_color
-    const msApplicationNavbuttonColor = options.manifest.theme_color
+export async function proceedHTML(options: { appTargetName: string, manifest?: any, index?: Index, release: boolean }) {
+    const measure = new TimeMeasure()
+    const lastModifiedDate = getLastModifiedDate(LastModifiedDateType.HTML)
+    const webFolder = `${projectDirectory}/${webSourcesPath}`
+    const buildFolder = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const indexPath = `${webFolder}/index.html`
     const manifestFileNameValue = options.manifest?.file_name ?? 'site'
+    var isIndexChanged = false
     var lines: string[] = []
-    // generate HTML from scratch
+    print(`📃 Manifest present: ${options.manifest ? 'true' : 'false'}`, LogLevel.Unbearable)
+    // generate index.html from scratch
     if (!fs.existsSync(indexPath)) {
         lines = [
             doctype(),
-            openHTML(langValue),
+            openHTML(options.index?.lang ?? 'en-US'),
                 openHead(),
-                    title(titleValue),
-                    charset(charsetValue),
-                    meta('viewport', viewportValue),
-                    meta('description', descriptionValue),
+                    title(options.index?.title ?? '&lrm;'),
+                    ...(options.index?.metas ? options.index.metas.map((params) => tag('meta', params)) : []),
+                    ...(options.index?.links ? options.index.links.map((params) => tag('link', params)) : []),
                     ...(options.manifest ? [
-                        meta('mobile-web-app-capable', mobileWebAppCapableValue),
-                        meta('apple-mobile-web-app-capable', mobileWebAppCapableValue),
-                        // <!-- iOS Safari: possible content values: default, black or black-translucent, hex -->
-                        meta('apple-mobile-web-app-status-bar-style', `${appleMobileWebAppStatusBarStyleValue}`),
-                        // <!-- Chrome, Firefox OS and Opera -->
-                        meta('theme-color', `${themeColorValue}`),
-                        // <!-- Windows Phone -->
-                        meta('msapplication-navbutton-color', `${msApplicationNavbuttonColor}`),
-                        link('manifest', `./${manifestFileNameValue}.webmanifest`),
+                        // Points to service worker manifest
+                        tag('link', { rel: 'manifest', href: `./${manifestFileNameValue}.webmanifest` }),
                     ] : []),
-                    script('text/javascript', 'app', `/${options.appTargetName.toLowerCase()}.js`, true),
+                    ...(options.index?.scripts ? options.index.scripts.map((params) => tag('script', params)) : []),
+                    tag('script', { type: 'text/javascript', name: 'app', src: `/${options.appTargetName.toLowerCase()}.js`, async: '' }, true),
                 closeHead(),
                 openBody(),
-                    splash(options.splash),
+                    ...(options.index?.splash ? [splash(options.index.splash)] : []),
                 closeBody(),
             closeHTML()
         ]
+        isIndexChanged = true
     }
-    // change existing HTML line by line between special boundaires
+    // regenerate index.html by replacing only managed lines of code
     else {
         const htmlLines = fs.readFileSync(indexPath, 'utf8').split('\n')
-        for (let i = 0; i < htmlLines.length - 1; i++) {
+        var addedMetas = false
+        var addedLinks = false
+        var addedScripts = false
+        var scanningSplashIframe  = false
+        for (let i = 0; i < htmlLines.length; i++) {
             const htmlLine = htmlLines[i]
-            if (htmlLine.startsWith('<html') && htmlLine.includes(managedBy)) {
+            // <html lang="">
+            if (options.index?.lang && htmlLine.startsWith('<html') && htmlLine.includes(managedBy)) {
                 const firstSplit = htmlLine.split('lang="')
                 const left = firstSplit[0]
                 const oldValue = firstSplit[1].split('"')[0]
-                if (oldValue == langValue) {
+                if (oldValue == options.index.lang) {
                     lines.push(htmlLine)
                 } else {
+                    isIndexChanged = true
                     const right = firstSplit[1].split(`${oldValue}"`)[1]
-                    lines.push(`${left}lang="${langValue}"${right}`)
+                    lines.push(`${left}lang="${options.index.lang}"${right}`)
                 }
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('charset') && htmlLine.includes(managedBy)) {
-                lines.push(charset(charsetValue))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="viewport"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('viewport', viewportValue))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="description"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('description', descriptionValue))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="mobile-web-app-capable"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('mobile-web-app-capable', mobileWebAppCapableValue))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="apple-mobile-web-app-capable"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('apple-mobile-web-app-capable', mobileWebAppCapableValue))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="apple-mobile-web-app-status-bar-style"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('apple-mobile-web-app-status-bar-style', `${appleMobileWebAppStatusBarStyleValue}`))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="theme-color"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('theme-color', `${themeColorValue}`))
-            } else if (htmlLine.trimStart().startsWith('<meta') && htmlLine.includes('name="msapplication-navbutton-color"') && htmlLine.includes(managedBy)) {
-                lines.push(meta('msapplication-navbutton-color', `${msApplicationNavbuttonColor}`))
-            } else if (htmlLine.trimStart().startsWith('<link') && htmlLine.includes('rel="manifest"') && htmlLine.includes(managedBy)) {
-                lines.push(link('manifest', `./${manifestFileNameValue}`))
-            } else if (htmlLine.trimStart().startsWith('<script') && htmlLine.includes('name="app"') && htmlLine.includes(managedBy)) {
-                lines.push(script('text/javascript', 'app', `/${options.appTargetName.toLowerCase()}.js`, true))
-            } else if (htmlLine.trimStart().startsWith('<iframe') && htmlLine.includes('id="splash"') && htmlLine.includes(managedBy)) {
-                lines.push(splash(options.splash))
-            } else if (htmlLine.trimStart().startsWith('<title') && htmlLine.endsWith('</title>') && htmlLine.includes(managedBy)) {
+            }
+            // <title>
+            else if (htmlLine.trimStart().startsWith('<title') && htmlLine.endsWith('</title>') && htmlLine.includes(managedBy)) {
                 const firstSplit = htmlLine.split('>')
                 const openingTag = firstSplit[0]
                 const oldTitle = firstSplit[1].split('</title>')[0]
-                if (oldTitle == titleValue) {
+                const newTitle = options.index?.title ?? '&lrm;'
+                if (oldTitle == newTitle) {
                     lines.push(htmlLine)
                 } else {
-                    lines.push(`${openingTag}>${titleValue}</title>`)
+                    isIndexChanged = true
+                    lines.push(`${openingTag}>${newTitle}</title>`)
                 }
-            } else {
+            }
+            // <meta>
+            else if (htmlLine.trimStart().startsWith('<meta')) {
+                // Add managed metas above the others
+                if (options.index?.metas && !addedMetas) {
+                    addedMetas = true
+                    for (let m = 0; m < options.index.metas.length; m++) {
+                        lines.push(tag('meta', options.index.metas[m]))
+                    }
+                }
+                if (!htmlLine.includes(managedBy)) {
+                    lines.push(htmlLine)
+                }
+            }
+            // <link>
+            else if (htmlLine.trimStart().startsWith('<link')) {
+                // Add managed links above the others
+                if (!addedLinks) {
+                    addedLinks = true
+                    if (options.index?.links) {
+                        for (let l = 0; l < options.index.links.length; l++) {
+                            lines.push(tag('link', options.index.links[l]))
+                        }
+                    }
+                    lines.push(tag('link', { rel: 'manifest', href: `./${manifestFileNameValue}.webmanifest` }))
+                }
+                // Skip old managed links and keep custom
+                if (!htmlLine.includes(managedBy)) {
+                    lines.push(htmlLine)
+                }
+            }
+            // <script>
+            else if (htmlLine.trimStart().startsWith('<script')) {
+                // Add managed scripts above the others
+                if (!addedScripts) {
+                    addedScripts = true
+                    if (options.index?.scripts) {
+                        for (let s = 0; s < options.index.scripts.length; s++) {
+                            lines.push(tag('script', options.index.scripts[s], true))
+                        }
+                    }
+                    lines.push(tag('script', { type: 'text/javascript', name: 'app', src: `/${options.appTargetName.toLowerCase()}.js`, async: true }, true))
+                }
+                // Skip old managed links and keep custom
+                if (!htmlLine.includes(managedBy)) {
+                    lines.push(htmlLine)
+                }
+            }
+            // <iframe>
+            else if (htmlLine.trimStart().includes('iframe')) {
+                // found the right <iframe>
+                if (htmlLine.trimStart().startsWith('<iframe') && htmlLine.includes(managedBy) && htmlLine.includes('id="splash"')) {
+                    // the whole <iframe> is inline
+                    if (htmlLine.includes('/iframe') && options.index?.splash) {
+                        lines.push(splash(options.index.splash))
+                    }
+                    // the <iframe> is multiline
+                    else {
+                        scanningSplashIframe = true
+                    }
+                }
+                // skipping old lines of the <iframe>
+                else if (scanningSplashIframe) {
+                    // add new if the last line reached
+                    if (htmlLine.includes('/iframe')) {
+                        lines.push(splash(options.index?.splash))
+                    }
+                }
+                // custom <iframe>, keeping it as is
+                else {
+                    lines.push(htmlLine)
+                }
+            }
+            // any other element, keeping as is
+            else {
                 lines.push(htmlLine)
             }
         }
     }
-    const newHTML = lines.join('/n')
-    fs.writeFileSync(indexPath, newHTML)
+    // writing index.html if needed
+    if (isIndexChanged) {
+        const newHTML = lines.join('\n')
+        fs.writeFileSync(indexPath, newHTML)
+    }
+    // process html files
+    print(`🔄 HTML lastModified: ${lastModifiedDate} current: ${(new Date()).getTime()}`, LogLevel.Unbearable)
+    const htmlInSourcesFolder = findFilesRecursively(['html'], webFolder, lastModifiedDate)
+    const doesModifiedAnyInSources = htmlInSourcesFolder.filter((x) => x.modified).length > 0
+    if (!doesModifiedAnyInSources) {
+        print(`💨 Skipping processing HTML files, nothing was modified `, LogLevel.Verbose)
+        return
+    }
+    if (htmlInSourcesFolder.length == 0) {
+        measure.finish()
+        print(`💨 Skipping HTML files, nothing found in ${measure.time}ms`, LogLevel.Detailed)
+        return
+    }
+    print(`🎨 Processing HTML files`, LogLevel.Detailed)
+    for (let i = 0; i < htmlInSourcesFolder.length; i++) {
+        const item = htmlInSourcesFolder[i];
+        const relativePath = item.path.replace(webFolder, '')
+        const saveTo = `${buildFolder}${relativePath}`.replace(item.name, `${item.pureName}.html`)
+        print(`🌺 Copy HTML file: ${relativePath}`, LogLevel.Verbose)
+        buildStatus(`Copy HTML files: ${item.name}`)
+        if (indexPath == item.path) {
+            const html = fs.readFileSync(item.path, 'utf8')
+                                .replaceAll(` ${managedBy}`, '')
+                                .replace('type="text/javascript" name="app"', 'type="text/javascript"')
+            fs.writeFileSync(saveTo, html)
+        } else {
+            fs.copyFileSync(item.path, saveTo)
+        }
+    }
+    saveLastModifiedDateForKey(LastModifiedDateType.HTML)
+    measure.finish()
+    print(`🎉 HTML files copied in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doctype() {
     return '<!DOCTYPE html>'
@@ -124,19 +215,34 @@ function closeBody() {
 function title(title: string) {
     return `        <title ${managedBy}>${title}</title>`
 }
-function charset(charset: string) {
-    return `        <meta ${managedBy} charset="${charset}" />`
+function tag(name: string, params: any, closeable: boolean = false) {
+    let tag = `        <${name} ${managedBy}`
+    const keys = Object.keys(params)
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const value = params[key]
+        if (value === true) {
+            tag += ` ${key}`
+        } else {
+            tag += ` ${key}="${value}"`
+        }
+    }
+    return tag + `>` + (closeable ? `</${name}>` : '')
 }
-function meta(name: string, content: string) {
-    return `        <meta ${managedBy} name="${name}" content="${content}">`
-}
-function link(rel: string, href: string) {
-    return `        <link ${managedBy} rel="${rel}" href="${href}">`
-}
-function script(type: string, name: string, src: string, async: boolean) {
-    return `        <script ${managedBy} type="${type}" name="${name}" src="${src}"${async ? ' async' : ''}></script>`
-}
-function splash(splash: string | undefined) {
+function splash(splash: SplashData | undefined) {
     if (!splash) return ''
-    return `        <iframe ${managedBy} id="splash" style="height:100.0%;position:absolute;width:100.0%" frameBorder="0" seamless srcdoc='${splash}'></iframe>`
+    const iframeStyle = splash.iframeStyle ?? 'height:100.0%;position:absolute;width:100.0%'
+    let tag = `        <iframe ${managedBy} id="splash" style="${iframeStyle}" frameBorder="0" seamless`
+    if (splash.pathToFile) {
+        return `${tag} src='${splash.pathToFile}'></iframe>`
+    } else if (splash.body) {
+        const styles = splash.styles.map((v) => atob(v)).join('')
+        const scripts = splash.scripts.map((v) => atob(v)).join('')
+        const links = splash.links.map((v) => atob(v)).join('')
+        const decodedBody = atob(splash.body)
+        const html = `<html><head>${styles}${links}${scripts}</head><body>${decodedBody}</body></html>`
+        return `${tag} srcdoc='${html}'></iframe>`
+    } else {
+        return ''
+    }
 }
