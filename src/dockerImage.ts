@@ -3,7 +3,7 @@ export class DockerImage {
     nodeVersion: string
 
     constructor () {
-        this.version = Number(process.env.SWIFWEB_IMAGE_VERSION)
+        this.version = Number(process.env.S_IMAGE_VERSION)
         this.nodeVersion = process.env.NODE_VERSION!
     }
 }

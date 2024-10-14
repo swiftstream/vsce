@@ -36,48 +36,74 @@
 			],
 			"problemMatcher": []
 		},
+		// MARK: VSCode Extension
 		{
 			"label": "Build Dev Extension",
 			"command": "vsce",
 			"args": ["package", "-o", "extension.vsix"],
 			"type": "shell"
 		},
+		// MARK: Docker List
 		{
 			"label": "Docker List BuildX Containers (step 1)",
 			"command": "docker",
 			"args": ["buildx", "ls"],
 			"type": "shell"
 		},
+		// MARK: Docker Create BASE
 		{
-			"label": "Docker Create BuildX Container (step 2)",
+			"label": "Docker Create BuildX Container BASE (step 2)",
 			"command": "docker",
-			"args": ["buildx", "create", "--name", "webber-container", "--driver=docker-container"],
+			"args": ["buildx", "create", "--name", "swift-base-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Web
 		{
-			"label": "Docker Build and Push MultiArch Image (step 3)",
+			"label": "Docker Create BuildX Container Web (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "web-container", "--driver=docker-container"],
+			"type": "shell"
+		},
+		// MARK: Docker Push BASE
+		{
+			"label": "Docker Build and Push MultiArch BASE Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swifweb/webber:latest",
+				"--tag", "swiftstream/base:latest",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "webber-container",
+				"--builder", "swift-base-container",
 				"--push",
-				"./DockerImage"
+				"./DockerImageBase"
 			],
 			"type": "shell"
 		},
+		// MARK: Docker Push Web
 		{
-			"label": "Docker Build and Push MultiArch Image Without Cache (step 3)",
+			"label": "Docker Build and Push MultiArch Web Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/web:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "web-container",
+				"--push",
+				"./DockerImageWeb"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Web
+		{
+			"label": "Docker Build and Push MultiArch Web Image Without Cache (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swifweb/webber:latest",
+				"--tag", "swiftstream/web:latest",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "webber-container",
+				"--builder", "web-container",
 				"--push",
-				"./DockerImage"
+				"./DockerImageWeb"
 			],
 			"type": "shell"
 		}

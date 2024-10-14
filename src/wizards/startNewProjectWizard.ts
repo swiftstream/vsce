@@ -97,7 +97,7 @@ async function createNewProjectFiles(
 			fs.mkdirSync(`${path}/.devcontainer`)
 		}
 		['Dockerfile', 'devcontainer.json'].forEach(async (file) => {
-			await copyFile(`assets/.devcontainer/${file}`, `${path}/.devcontainer/${file}`)
+			await copyFile(`assets/DevcontainerWeb/${file}`, `${path}/.devcontainer/${file}`)
 		})
 		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')

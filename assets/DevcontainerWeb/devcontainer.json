@@ -8,7 +8,9 @@
 		"args": {}
     },
 	"containerEnv": {
-		"S_TOOLCHAIN": "swift-wasm-5.10.0-RELEASE"
+		"S_TOOLCHAIN": "5.10-RELEASE", // from https://www.swift.org/download
+		"S_ARTIFACT": "5.10.0-RELEASE", // from https://github.com/swiftwasm/swift/tags
+		"S_MODE": "WEB" // project mode for the swift.stream extension
 	},
 	"appPort": ["7770:443", "8880:444"],
 	"otherPortsAttributes": {"onAutoForward": "ignore"},
@@ -22,11 +24,11 @@
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
-				"swift.path": "/swift/toolchains/swift-wasm-5.10.0-RELEASE/usr/bin",
+				"swift.path": "/swift/toolchains/5.10-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
 				},
-				"lldb.library": "/swift/toolchains/swift-wasm-5.10.0-RELEASE/usr/lib/liblldb.so",
+				"lldb.library": "/swift/toolchains/5.10-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
@@ -41,6 +43,7 @@
 
 	// Adds volume for swift toolchains.
 	"mounts": [
-		{ "source": "swift-wasm-toolchains", "target": "/swift/toolchains", "type": "volume" }
+		{ "source": "swift-toolchains", "target": "/swift/toolchains", "type": "volume" },
+		{ "source": "swift-sdks", "target": "/root/.swiftpm/swift-sdks", "type": "volume" }
 	]
 }
