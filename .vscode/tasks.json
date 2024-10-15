@@ -57,6 +57,13 @@
 			"args": ["buildx", "create", "--name", "swift-base-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Android
+		{
+			"label": "Docker Create BuildX Container Android (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "android-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Web
 		{
 			"label": "Docker Create BuildX Container Web (step 2)",
@@ -78,6 +85,20 @@
 			],
 			"type": "shell"
 		},
+		// MARK: Docker Push Android
+		{
+			"label": "Docker Build and Push MultiArch Android Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/android:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "android-container",
+				"--push",
+				"./DockerImageAndroid"
+			],
+			"type": "shell"
+		},
 		// MARK: Docker Push Web
 		{
 			"label": "Docker Build and Push MultiArch Web Image (step 3)",
@@ -89,6 +110,21 @@
 				"--builder", "web-container",
 				"--push",
 				"./DockerImageWeb"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Android
+		{
+			"label": "Docker Build and Push MultiArch Android Image Without Cache (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/android:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "android-container",
+				"--push",
+				"./DockerImageAndroid"
 			],
 			"type": "shell"
 		},
