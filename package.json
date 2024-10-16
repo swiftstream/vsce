@@ -1,11 +1,11 @@
 {
-  "name": "webber",
-  "displayName": "Webber",
-  "description": "Webber by Swift for Web",
+  "name": "swiftstream",
+  "displayName": "SwiftStream",
+  "description": "SwiftStream by iMike",
   "version": "1.0.0",
-  "publisher": "SwifWeb",
+  "publisher": "SwiftStream",
   "engines": {
-    "vscode": "^1.92.0"
+    "vscode": "^1.94.0"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,14 @@
   "keywords": [
     "swift",
     "swifweb",
+    "web",
     "webber",
+    "swifdroid",
+    "android",
+    "server",
+    "docker",
+    "vapor",
+    "hummingbird",
     "live",
     "preview"
   ],
@@ -29,7 +36,7 @@
   "contributes": {
     "commands": [],
     "configuration": {
-      "title": "SwifWeb",
+      "title": "SwiftStream",
       "properties": {
         "swifweb.hotReload": {
           "order": 1,
