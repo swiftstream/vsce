@@ -1,0 +1,91 @@
+{
+	"web": [
+        {
+            "name": "6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a",
+			"mode": "artifact",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.0-branch/ubuntu2004-aarch64/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.0-branch/ubuntu2004/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04.tar.gz"
+            },
+            "artifact_urls": {
+                "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
+            }
+		},
+        {
+            "name": "DEVELOPMENT-SNAPSHOT-2024-10-08-a",
+			"mode": "artifact",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/development/ubuntu2004-aarch64/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/development/ubuntu2004/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a-ubuntu20.04.tar.gz"
+            },
+            "artifact_urls": {
+                "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a-wasm32-unknown-wasi.artifactbundle.zip",
+                "wasip1-threads": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a-wasm32-unknown-wasip1-threads.artifactbundle.zip"
+            }
+		},
+		{
+            "name": "5.10-RELEASE",
+			"mode": "standalone",
+			"toolchain_urls": {
+                "aarch64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_aarch64.tar.gz",
+                "x86_64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_x86_64.tar.gz"
+            }
+		},
+        {
+            "name": "5.9.2-RELEASE",
+			"mode": "standalone",
+			"toolchain_urls": {
+                "aarch64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.9.2-RELEASE/swift-wasm-5.9.2-RELEASE-ubuntu20.04_aarch64.tar.gz",
+                "x86_64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.9.2-RELEASE/swift-wasm-5.9.2-RELEASE-ubuntu20.04_x86_64.tar.gz"
+            }
+		}
+	],
+	"android": [
+		{
+            "name": "6.0.1-RELEASE",
+			"mode": "artifact",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.0.1-release/ubuntu2004-aarch64/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.0.1-release/ubuntu2004/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04.tar.gz"
+            },
+			"artifact_url": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.1/swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz"
+		}
+	],
+	"server": [
+		{
+            "name": "6.0.1-RELEASE",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.0.1-release/ubuntu2004-aarch64/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.0.1-release/ubuntu2004/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04.tar.gz"
+            }
+		},
+        {
+            "name": "5.10.1-RELEASE",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-5.10.1-release/ubuntu2004-aarch64/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-5.10.1-release/ubuntu2004/swift-5.10.1-RELEASE/swift-5.10.1-RELEASE-ubuntu20.04.tar.gz"
+            }
+		},
+        {
+            "name": "5.9.2-RELEASE",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-5.9.2-release/ubuntu2004-aarch64/swift-5.9.2-RELEASE/swift-5.9.2-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-5.9.2-release/ubuntu2004/swift-5.9.2-RELEASE/swift-5.9.2-RELEASE-ubuntu20.04.tar.gz"
+            }
+		},
+        {
+            "name": "5.8.1-RELEASE",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-5.8.1-release/ubuntu2004-aarch64/swift-5.8.1-RELEASE/swift-5.8.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-5.8.1-release/ubuntu2004/swift-5.8.1-RELEASE/swift-5.8.1-RELEASE-ubuntu20.04.tar.gz"
+            }
+		},
+        {
+            "name": "5.7.3-RELEASE",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-5.7.3-release/ubuntu2004-aarch64/swift-5.7.3-RELEASE/swift-5.7.3-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-5.7.3-release/ubuntu2004/swift-5.7.3-RELEASE/swift-5.7.3-RELEASE-ubuntu20.04.tar.gz"
+            }
+		}
+	]
+}
