@@ -96,9 +96,9 @@ async function createNewProjectFiles(
 		if (!fs.existsSync(`${path}/.devcontainer`)) {
 			fs.mkdirSync(`${path}/.devcontainer`)
 		}
-		['Dockerfile', 'devcontainer.json'].forEach(async (file) => {
-			await copyFile(`assets/DevcontainerWeb/${file}`, `${path}/.devcontainer/${file}`)
-		})
+		await copyFile(`assets/DevcontainerWeb/Dockerfile`, `${path}/.devcontainer/Dockerfile`)
+		// TODO: if swift 5
+		await copyFile(`assets/DevcontainerWeb/devcontainer5.json`, `${path}/.devcontainer/devcontainer.json`)
 		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {

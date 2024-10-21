@@ -1,0 +1,57 @@
+// For format details, see https://aka.ms/devcontainer.json.
+// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "webber",
+	"build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "Dockerfile",
+		"args": {}
+    },
+	"containerEnv": {
+		// project mode for the swift.stream extension
+		"S_MODE": "WEB",
+		// from https://www.swift.org/download
+		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0-branch/ubuntu2004/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0-branch/ubuntu2004-aarch64/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04-aarch64.tar.gz",
+		// semver
+		"S_VERSION_MAJOR": "6",
+		"S_VERSION_MINOR": "0",
+		"S_VERSION_PATCH": "3",
+		// from https://github.com/swiftwasm/swift/tags
+		"S_ARTIFACT_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
+	},
+	"appPort": ["7770:443", "8880:444"],
+	"otherPortsAttributes": {"onAutoForward": "ignore"},
+	"postStartCommand": "cmd.sh",
+	"customizations": {
+		"vscode": {
+    		"extensions": [
+				"SwifWeb.webber",
+				"sswg.swift-lang",
+				"ms-vscode.wasm-dwarf-debugging"
+			],
+			"settings": {
+				"extensions.ignoreRecommendations": true,
+				"swift.path": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/bin",
+				"swift.swiftEnvironmentVariables": {
+					"DEVELOPER_DIR": "public"
+				},
+				"lldb.library": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/lib/liblldb.so",
+				"lldb.launch.expressions": "native",
+				"swift.disableAutoResolve": false,
+				"swift.autoGenerateLaunchConfigurations": true,
+				"swift.backgroundCompilation": false,
+				"swift.showCreateSwiftProjectInWelcomePage": false
+			}
+		}
+	},
+
+	// Adds the `ptrace` capability required for debugger.
+	"capAdd": ["SYS_PTRACE"],
+
+	// Adds volume for swift toolchains.
+	"mounts": [
+		{ "source": "swift-toolchains", "target": "/swift/toolchains", "type": "volume" },
+		{ "source": "swift-sdks", "target": "/root/.swiftpm/swift-sdks", "type": "volume" }
+	]
+}

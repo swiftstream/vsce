@@ -8,6 +8,13 @@ import { currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewPro
 import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
 import { DockerImage } from './dockerImage'
 
+export enum ExtensionMode {
+	Android = "ANDROID",
+	Server = "SERVER",
+	Web = "WEB"
+}
+const s_mode: string = process.env.S_MODE ?? "SERVER"
+export const extensionMode: ExtensionMode = ExtensionMode[s_mode as keyof typeof ExtensionMode]
 export const defaultDevPort = 7770
 export const defaultProdPort = 8880
 export const dockerImage = new DockerImage()
