@@ -26,11 +26,11 @@
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
-				"swift.path": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/bin",
+				"swift.path": "/swift/toolchains/wasm-5.10.0-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
 				},
-				"lldb.library": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/lib/liblldb.so",
+				"lldb.library": "/swift/toolchains/wasm-5.10.0-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
