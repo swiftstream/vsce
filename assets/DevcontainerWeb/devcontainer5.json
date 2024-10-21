@@ -1,25 +1,21 @@
-// For format details, see https://aka.ms/devcontainer.json.
-// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	"name": "webber",
 	"build": {
-        // Path is relative to the devcontainer.json file.
         "dockerfile": "Dockerfile",
 		"args": {}
     },
 	"containerEnv": {
-		// project mode for the swift.stream extension
 		"S_MODE": "WEB",
-		// from https://www.swift.org/download
 		"S_TOOLCHAIN_URL_X86": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_x86_64.tar.gz",
 		"S_TOOLCHAIN_URL_ARM": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_aarch64.tar.gz",
-		// semver
 		"S_VERSION_MAJOR": "5",
 		"S_VERSION_MINOR": "10",
 		"S_VERSION_PATCH": "0"
 	},
 	"appPort": ["7770:443", "8880:444"],
-	"otherPortsAttributes": {"onAutoForward": "ignore"},
+	"otherPortsAttributes": {
+		"onAutoForward": "ignore"
+	},
 	"postStartCommand": "cmd.sh",
 	"customizations": {
 		"vscode": {
@@ -43,13 +39,17 @@
 			}
 		}
 	},
-
-	// Adds the `ptrace` capability required for debugger.
 	"capAdd": ["SYS_PTRACE"],
-
-	// Adds volume for swift toolchains.
 	"mounts": [
-		{ "source": "swift-toolchains", "target": "/swift/toolchains", "type": "volume" },
-		{ "source": "swift-sdks", "target": "/root/.swiftpm/swift-sdks", "type": "volume" }
+		{
+			"source": "swift-toolchains",
+			"target": "/swift/toolchains",
+			"type": "volume"
+		},
+		{
+			"source": "swift-sdks",
+			"target": "/root/.swiftpm/swift-sdks",
+			"type": "volume"
+		}
 	]
 }
