@@ -65,13 +65,21 @@ export var isRecompilingSCSS = false
 export var containsRecommendations = true // TODO: check if contains any recommendations
 export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be updated
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
-export var currentToolchain: string = `${process.env.S_TOOLCHAIN}`
+export var currentToolchain: string = `${getToolchainNameFromURL()}`
 export var pendingNewToolchain: string | undefined
 export var currentDevPort: string = `${defaultDevPort}`
 export var currentProdPort: string = `${defaultProdPort}`
 export var pendingNewDevPort: string | undefined
 export var pendingNewProdPort: string | undefined
 export var currentLoggingLevel: LogLevel = LogLevel.Normal
+export function getToolchainNameFromURL(url: string | undefined = undefined): string | undefined {
+	const value: string | undefined = url ?? process.env.S_TOOLCHAIN_URL_X86
+	if (!value) return 'undefined'
+	return value.split('/').pop()
+		?.replace(/^swift-/, '')
+		.replace(/(\.tar\.gz|\.zip)$/, '')
+		.replace(/(-ubuntu20\.04|-aarch64|_x86_64|_aarch64|-a)/g, '')
+}
 
 export function setPendingNewToolchain(value: string | undefined) {
 	if (!isInContainer() && value) {

@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
 import { ProgressLocation, window } from "vscode"
-import { currentToolchain, pendingNewToolchain, setPendingNewToolchain } from "../webber"
+import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from "../webber"
 import { extensionMode, ExtensionMode, projectDirectory } from "../extension"
 
 export async function toolchainCommand(selectedType?: string) {
@@ -23,7 +23,11 @@ export async function toolchainCommand(selectedType?: string) {
 	async function getTags<Tag>(mode: ExtensionMode): Promise<Tag[]> {
 		const response = await fetch(`${toolchainsURL}`)
 		if (!response.ok) throw new Error('Toolchains response was not ok')
-		return JSON.parse(await response.text())[`${mode}`.toLowerCase()]
+		const text = await response.text()
+		const json = JSON5.parse(text)
+		const key = `${mode}`.toLowerCase()
+		const filtered = json[key]
+		return filtered
 	}
 	var tags: any[] = []
 	var afterLoadingClosure = async () => {}
@@ -71,27 +75,42 @@ export async function toolchainCommand(selectedType?: string) {
 		const selectedTag = selectedTags.filter((x) => x.name == selectedToolchainName)[0]
 		if (!selectedTag)
 			return
-		const versionToReplace = pendingNewToolchain ? pendingNewToolchain : currentToolchain
-		if (selectedToolchainName == versionToReplace) return
 		const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {
-			var devContainerJson = JSON5.parse(devContainerContent)
+			let devContainerJson = JSON5.parse(devContainerContent)
+			const currentName = getToolchainNameFromURL(devContainerJson.containerEnv.S_TOOLCHAIN_URL_X86)
+			const newName = getToolchainNameFromURL(selectedTag.toolchain_urls.x86_64)
+			const versionToReplace = pendingNewToolchain ? pendingNewToolchain : currentToolchain
+			if (pendingNewToolchain && newName == versionToReplace) {
+				await window.showInformationMessage(`Reload window to start using "${newName}" toolchain`)
+				return
+			}
+			if (currentName === newName) {
+				await window.showInformationMessage(`Toolchain "${newName}" is already active`)
+				return
+			}
 			devContainerJson.containerEnv.S_TOOLCHAIN_URL_X86 = selectedTag.toolchain_urls.x86_64
 			devContainerJson.containerEnv.S_TOOLCHAIN_URL_ARM = selectedTag.toolchain_urls.aarch64
-			devContainerJson.containerEnv.S_VERSION_MAJOR = selectedTag.version.major
-			devContainerJson.containerEnv.S_VERSION_MINOR = selectedTag.version.minor
-			devContainerJson.containerEnv.S_VERSION_PATCH = selectedTag.version.patch
+			devContainerJson.containerEnv.S_VERSION_MAJOR = `${selectedTag.version.major}`
+			devContainerJson.containerEnv.S_VERSION_MINOR = `${selectedTag.version.minor}`
+			devContainerJson.containerEnv.S_VERSION_PATCH = `${selectedTag.version.patch}`
 			if (extensionMode == ExtensionMode.Web) {
-				devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = selectedTag.artifact_urls.wasi
-				devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = selectedTag.artifact_urls.wasip1_threads
+				if (selectedTag.artifact_urls) {
+					devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = selectedTag.artifact_urls.wasi
+					devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = selectedTag.artifact_urls.wasip1_threads
+				} else {
+					devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = undefined
+					devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = undefined
+				}
 			} else {
 				devContainerJson.containerEnv.S_ARTIFACT_URL = selectedTag.artifact_url
 			}
 			devContainerJson.customizations.vscode.settings['swift.path'] = `/swift/toolchains/${selectedTag.name}/usr/bin`
 			devContainerJson.customizations.vscode.settings['lldb.library'] = `/swift/toolchains/${selectedTag.name}/usr/lib/liblldb.so`
-			fs.writeFileSync(devContainerPath, JSON5.stringify(devContainerJson, null, '\t'))
-			setPendingNewToolchain(selectedToolchainName)
+			fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
+			setPendingNewToolchain(newName)
+			await window.showInformationMessage(`Pending window reload to start using "${newName}" toolchain`)
 		}
 	}
 }
