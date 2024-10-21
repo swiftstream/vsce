@@ -90,7 +90,7 @@ export async function toolchainCommand(selectedType?: string) {
 			}
 			devContainerJson.customizations.vscode.settings['swift.path'] = `/swift/toolchains/${selectedTag.name}/usr/bin`
 			devContainerJson.customizations.vscode.settings['lldb.library'] = `/swift/toolchains/${selectedTag.name}/usr/lib/liblldb.so`
-			fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
+			fs.writeFileSync(devContainerPath, JSON5.stringify(devContainerJson, null, '\t'))
 			setPendingNewToolchain(selectedToolchainName)
 		}
 	}
