@@ -1,26 +1,31 @@
 import * as fs from 'fs'
+import JSON5 from 'json5'
 import { ProgressLocation, window } from "vscode"
 import { currentToolchain, pendingNewToolchain, setPendingNewToolchain } from "../webber"
-import { projectDirectory } from "../extension"
-import { openDocumentInEditor } from "../helpers/openDocumentInEditor"
+import { extensionMode, ExtensionMode, projectDirectory } from "../extension"
 
 export async function toolchainCommand(selectedType?: string) {
-	const toolchainsURL = `https://api.github.com/repos/swiftwasm/swift/releases?per_page=100`
-	interface Tag {
-		name: string
+	const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`
+	interface AnyTag {
+		name: string,
+		version: { major: number, minor: number, patch: number },
+		toolchain_urls: { aarch64: string, x86_64: string }
 	}
-	async function getTags(page: number = 1): Promise<Tag[]> {
-		const response = await fetch(`${toolchainsURL}&page=${page}`)
+	interface TagAndroid extends AnyTag {
+		android_version: string,
+		artifact_url: string
+	}
+	interface TagServer extends AnyTag {}
+	interface TagWeb extends AnyTag {
+		mode: string,
+		artifact_url?: string
+	}
+	async function getTags<Tag>(mode: ExtensionMode): Promise<Tag[]> {
+		const response = await fetch(`${toolchainsURL}`)
 		if (!response.ok) throw new Error('Toolchains response was not ok')
-		const rawText: string = await response.text()
-		console.dir(response)
-		const rawTags: any[] = JSON.parse(rawText)
-		console.dir(rawTags)
-		return rawTags.map((x) => {
-			return { name: x.tag_name }
-		})
+		return JSON.parse(await response.text())[`${mode}`.toLowerCase()]
 	}
-	var tags: Tag[] = []
+	var tags: any[] = []
 	var afterLoadingClosure = async () => {}
 	if (!selectedType)
 		window.showQuickPick([
@@ -39,8 +44,7 @@ export async function toolchainCommand(selectedType?: string) {
 		cancellable: false
 	}, async (progress, token) => {
 		try {
-			const results = await Promise.all([await getTags(1), await getTags(2), await getTags(3)])
-			tags = [...results[0], ...results[1], ...results[2]]
+			tags = await getTags(extensionMode)
 			if (selectedType && selectedType.length > 0)
 				afterLoadingClosure()
 		} catch(error: any) {
@@ -51,7 +55,7 @@ export async function toolchainCommand(selectedType?: string) {
 		}
 	})
 	afterLoadingClosure = async () => {
-		var selectedTags: Tag[] = []
+		var selectedTags: any[] = []
 		if (selectedType == 'Release') {
 			selectedTags = tags.filter((x) => x.name.includes('-RELEASE'))
 		} else if (selectedType == 'Development') {
@@ -64,19 +68,29 @@ export async function toolchainCommand(selectedType?: string) {
 		})
 		if(!selectedToolchainName || selectedToolchainName.length == 0)
 			return
+		const selectedTag = selectedTags.filter((x) => x.name == selectedToolchainName)[0]
+		if (!selectedTag)
+			return
 		const versionToReplace = pendingNewToolchain ? pendingNewToolchain : currentToolchain
 		if (selectedToolchainName == versionToReplace) return
 		const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {
-			if (!devContainerContent.includes(versionToReplace)) {
-				const res = await window.showErrorMessage(`Toolchain doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
-				if (res == 'Edit manually')
-					await openDocumentInEditor(devContainerPath, `"S_TOOLCHAIN"`)
-				return
+			var devContainerJson = JSON5.parse(devContainerContent)
+			devContainerJson.containerEnv.S_TOOLCHAIN_URL_X86 = selectedTag.toolchain_urls.x86_64
+			devContainerJson.containerEnv.S_TOOLCHAIN_URL_ARM = selectedTag.toolchain_urls.aarch64
+			devContainerJson.containerEnv.S_VERSION_MAJOR = selectedTag.version.major
+			devContainerJson.containerEnv.S_VERSION_MINOR = selectedTag.version.minor
+			devContainerJson.containerEnv.S_VERSION_PATCH = selectedTag.version.patch
+			if (extensionMode == ExtensionMode.Web) {
+				devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = selectedTag.artifact_urls.wasi
+				devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = selectedTag.artifact_urls.wasip1_threads
+			} else {
+				devContainerJson.containerEnv.S_ARTIFACT_URL = selectedTag.artifact_url
 			}
-			devContainerContent = devContainerContent.replaceAll(versionToReplace, selectedToolchainName)
-			fs.writeFileSync(devContainerPath, devContainerContent)
+			devContainerJson.customizations.vscode.settings['swift.path'] = `/swift/toolchains/${selectedTag.name}/usr/bin`
+			devContainerJson.customizations.vscode.settings['lldb.library'] = `/swift/toolchains/${selectedTag.name}/usr/lib/liblldb.so`
+			fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
 			setPendingNewToolchain(selectedToolchainName)
 		}
 	}
