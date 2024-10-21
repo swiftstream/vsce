@@ -18,7 +18,7 @@
 		"S_VERSION_MINOR": "0",
 		"S_VERSION_PATCH": "3",
 		// from https://github.com/swiftwasm/swift/tags
-		"S_ARTIFACT_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
+		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
 	},
 	"appPort": ["7770:443", "8880:444"],
 	"otherPortsAttributes": {"onAutoForward": "ignore"},
