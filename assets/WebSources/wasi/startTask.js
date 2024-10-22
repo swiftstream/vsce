@@ -1,18 +1,9 @@
 import { SwiftRuntime } from 'javascript-kit-swift'
-import { WASI } from '@wasmer/wasi'
 
 const swift = new SwiftRuntime()
 
-const wasi = new WASI({
-    args: [],
-    env: {},
-    bindings: {
-        ...WASI.defaultBindings,
-        fs: wasmFs.fs
-    }
-})
-
-export const startWasiTask = async (target, isService) => {
+export const startWasiTask = async (wasi, target, isService) => {
+    console.dir({target: target, isService: isService})
     const fetchPromise = fetch(`/${target}.wasm`)
 
     // Fetch our Wasm File
@@ -107,7 +98,9 @@ export const startWasiTask = async (target, isService) => {
     if (instance.exports._initialize) {
         instance.exports._initialize()
         console.dir(instance.exports)
-        instance.exports.__main_argc_argv()
-        //instance.exports.main()
+        if (instance.exports.__main_argc_argv) {
+            instance.exports.main = instance.exports.__main_argc_argv
+        }
+        instance.exports.main()
     }
 }

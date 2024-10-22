@@ -1,9 +1,6 @@
-import { WasmFs } from '@wasmer/wasmfs'
+const env = _SwiftStreamEnv_
 
-// Instantiate a new WASI Instance
-const wasmFs = new WasmFs()
-
-export function overrideFS(devSocket) {
+export function overrideFS(wasmFs, devSocket) {
     // Output stdout and stderr to console
     const originalWriteSync = wasmFs.fs.writeSync
     wasmFs.fs.writeSync = (fd, buffer, offset, length, position) => {
@@ -14,7 +11,7 @@ export function overrideFS(devSocket) {
                 console.log(text)
                 break
             case 2:
-                if (process.env.NODE_ENV === 'development' && devSocket) {
+                if (env.isDevelopment && devSocket) {
                     console.error(text)
                     const prevLimit = Error.stackTraceLimit
                     Error.stackTraceLimit = 1000

@@ -1,5 +1,7 @@
+const webpack = require('webpack')
+
 module.exports = (env, argv) => {
-    return {
+    const config = {
         entry: env.app.isServiceWorker ? './serviceWorker.js' : './app.js',
         module: {
             rules: [{
@@ -8,6 +10,14 @@ module.exports = (env, argv) => {
                 exclude: /node_modules/
             }]
         },
+        plugins: [
+            new webpack.DefinePlugin({
+                '_SwiftStreamEnv_': JSON.stringify({
+                    isDevelopment: process.env.NODE_ENV === 'development',
+                    target: env.app.target
+                })
+            })
+        ],
         resolve: {
             extensions: ['.tsx', '.ts', '.js']
         },
@@ -16,4 +26,5 @@ module.exports = (env, argv) => {
             path: env.app.absoluteOutputPath
         }
     }
+    return config
 }

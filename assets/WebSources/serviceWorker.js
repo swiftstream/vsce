@@ -1,3 +1,5 @@
+import WasmFs from '@wasmer/wasmfs'
+import WASI from '@wasmer/wasi'
 import { devSocket } from './wasi/devSocket.js'
 import { overrideFS } from './wasi/overrideFS.js'
 import { startWasiTask } from './wasi/startTask.js'
@@ -53,10 +55,23 @@ self.addEventListener('sync', event => {
     self.sync(event)
 })
 
+const env = _SwiftStreamEnv_
+
+// Instantiate a new WASI Instance
+const wasmFs = new WasmFs()
+const wasi = new WASI({
+    args: [],
+    env: env,
+    bindings: {
+        ...WASI.defaultBindings,
+        fs: wasmFs.fs
+    }
+})
+
 overrideFS(devSocket)
 
 try {
-    startWasiTask(env.app.target, true).catch(wasiErrorHandler)
+    startWasiTask(wasi, env.target, false).catch(wasiErrorHandler)
 } catch (e) {
     wasiErrorHandler(e)
 }
