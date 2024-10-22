@@ -3,16 +3,20 @@ import { Bash, BashResult } from './bash'
 import { LogLevel, print, Webber } from './webber'
 
 export class NPM {
-    private binPath: string = '/root/.nvm/versions/node/v20.17.0/bin/npm'
+    private binPath?: string
 
     constructor(private webber: Webber, private cwd: string) {
 
     }
 
     private async execute(args: string[]): Promise<BashResult> {
+        if (!this.binPath)
+            this.binPath = await Bash.which('npm')
+        if (!this.binPath)
+            throw 'Path to npm is undefined'
         print(`executing npm ${args.join(' ')} at: ${this.cwd}`, LogLevel.Verbose)
         const result = await Bash.execute({
-            path: this.binPath,
+            path: this.binPath!,
             description: `get executable target`,
             cwd: this.cwd
         }, args)

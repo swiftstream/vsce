@@ -8,7 +8,7 @@ export enum WebpackMode {
 }
 
 export class Webpack {
-    private binPath: string = `/root/.nvm/versions/node/v${dockerImage.nodeVersion}/bin/webpack-cli`
+    private binPath?: string
 
     constructor(private webber: Webber) {}
 
@@ -16,8 +16,12 @@ export class Webpack {
     async createConfig(dev: boolean): Promise<void> {}
 
     private async execute(args: string[]): Promise<BashResult> {
+        if (!this.binPath)
+            this.binPath = await Bash.which('webpack-cli')
+        if (!this.binPath)
+            throw 'Path to webpack-cli is undefined'
         const result = await Bash.execute({
-            path: this.binPath,
+            path: this.binPath!,
             description: `executing webpack`,
             cwd: `${projectDirectory}/${webSourcesPath}`
         }, args)
