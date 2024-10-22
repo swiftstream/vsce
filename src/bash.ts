@@ -3,8 +3,8 @@ import { isNull } from 'util'
 import { LogLevel, print } from './webber'
 
 export class Bash {
-    static async which(program: string): Promise<string | null> {
-        return new Promise<string | null>((resolve, reject) => {
+    static async which(program: string): Promise<string | undefined> {
+        return new Promise<string | undefined>((resolve, reject) => {
             const process = spawn('/bin/bash', ['-c', `which ${program}`], { cwd: '/' })
             var errors = ''
 			var result = ''
@@ -20,7 +20,7 @@ export class Bash {
 			})
 			process.on('close', (code) => {
 				if (code != 0 || result.length <= 0) {
-                    return resolve(null)
+                    return resolve(undefined)
                 }
                 resolve(result.replace(/^\s+|\s+$/g, ''))
             })
@@ -29,7 +29,7 @@ export class Bash {
 
     static async execute(program: { path?: string | undefined, name?: string | undefined, description: string | undefined, processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined, cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined }, args: string[] = []): Promise<BashResult> {
         return new Promise(async (resolve, reject) => {
-            var path: string | null = null
+            var path: string | undefined
             if (program.path) {
                 path = program.path
             } else if (program.name) {
