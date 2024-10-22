@@ -1,6 +1,6 @@
 import { Bash, BashResult } from './bash'
 import { Webber, webSourcesPath } from './webber'
-import { dockerImage, projectDirectory } from './extension'
+import { projectDirectory } from './extension'
 
 export enum WebpackMode {
     Development = 'development',

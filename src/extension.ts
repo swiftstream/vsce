@@ -96,7 +96,7 @@ export async function activate(context: ExtensionContext) {
 	}
 
 	if (projectDirectory) {
-		window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
+		// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
 		await switchToProjectMode()
 
 

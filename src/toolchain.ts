@@ -1,6 +1,4 @@
-import { workspace } from "vscode"
-import { Swift } from "./swift"
-import { clearStatus, currentToolchain, Webber } from "./webber"
+import { currentToolchain, Webber } from "./webber"
 import { Bash } from "./bash"
 
 export class Toolchain {

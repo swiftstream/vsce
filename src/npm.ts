@@ -1,4 +1,3 @@
-import * as fs from 'fs'
 import { Bash, BashResult } from './bash'
 import { LogLevel, print, Webber } from './webber'
 
