@@ -153,12 +153,6 @@ if [[ -n "$artifactWasip1ThreadsURL" ]]; then
 fi
 
 # MARK: NGINX
-# certs path if needed
-nginxCertsPath="/etc/nginx/certs"
-# creating certs path if needed
-mkdir -p "${nginxCertsPath}"
-# creating certs
-openssl req -x509 -days 3650 -keyout "${nginxCertsPath}/selfsigned.key" -out "${nginxCertsPath}/selfsigned.crt" -newkey rsa:2048 -nodes -sha256 -subj /CN=0.0.0.0 -extensions EXT -config /etc/nginx/openssl.cnf
 # prepare the config
 export DOLLAR="$"
 if grep -q "DOLLAR" "/etc/nginx/sites-available/default"; then

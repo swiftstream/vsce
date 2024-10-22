@@ -20,9 +20,10 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     && npm install -g webpack-cli@^5.1.4 --quiet --no-progress
 # copy required files
 COPY cmd.sh /usr/local/bin/
+COPY nginx/selfsigned.crt /etc/nginx/dev-certs/
+COPY nginx/selfsigned.key /etc/nginx/dev-certs/
 COPY nginx/default /etc/nginx/sites-available/
 COPY nginx/mime.types /etc/nginx/
-COPY nginx/openssl.cnf /etc/nginx/
 
 RUN ["chmod", "+x", "/usr/local/bin/cmd.sh"]
 CMD ["cmd.sh"]
