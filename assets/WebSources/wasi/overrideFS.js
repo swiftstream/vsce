@@ -4,7 +4,7 @@ export function overrideFS(wasmFs, devSocket) {
     // Output stdout and stderr to console
     const originalWriteSync = wasmFs.fs.writeSync
     wasmFs.fs.writeSync = (fd, buffer, offset, length, position) => {
-        const text = new TextDecoder("utf-8").decode(buffer)
+        const text = new TextDecoder('utf-8').decode(buffer)
         if (text !== "\\n") {
             switch (fd) {
             case 1:
@@ -17,7 +17,7 @@ export function overrideFS(wasmFs, devSocket) {
                     Error.stackTraceLimit = 1000
                     devSocket.send(
                         JSON.stringify({
-                            kind: "stackTrace",
+                            kind: 'stackTrace',
                             stackTrace: new Error().stack
                         })
                     )

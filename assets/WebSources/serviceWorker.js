@@ -1,5 +1,5 @@
-import WasmFs from '@wasmer/wasmfs'
-import WASI from '@wasmer/wasi'
+import { WasmFs } from '@wasmer/wasmfs'
+import { WASI } from '@wasmer/wasi'
 import { devSocket } from './wasi/devSocket.js'
 import { overrideFS } from './wasi/overrideFS.js'
 import { startWasiTask } from './wasi/startTask.js'
