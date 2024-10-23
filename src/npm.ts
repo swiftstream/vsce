@@ -1,4 +1,4 @@
-import { Bash, BashResult } from './bash'
+import { BashResult } from './bash'
 import { LogLevel, print, Webber } from './webber'
 
 export class NPM {
@@ -10,11 +10,11 @@ export class NPM {
 
     private async execute(args: string[]): Promise<BashResult> {
         if (!this.binPath)
-            this.binPath = await Bash.which('npm')
+            this.binPath = await this.webber.bash.which('npm')
         if (!this.binPath)
             throw 'Path to npm is undefined'
         print(`executing npm ${args.join(' ')} at: ${this.cwd}`, LogLevel.Verbose)
-        const result = await Bash.execute({
+        const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `get executable target`,
             cwd: this.cwd

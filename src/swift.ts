@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import { Bash } from './bash'
 import { LogLevel, print, Webber } from './webber'
 import { projectDirectory } from './extension'
 import { isString } from './helpers/isString'
@@ -10,7 +9,7 @@ export class Swift {
     private async execute(args: string[]): Promise<string> {
         var env = process.env
         env.WEBBER = 'TRUE'
-        const result = await Bash.execute({
+        const result = await this.webber.bash.execute({
             path: this.webber.toolchain.swiftPath,
             description: `get executable target`,
             cwd: projectDirectory,
@@ -81,7 +80,7 @@ export class Swift {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
         try {
-            const result = await Bash.execute({
+            const result = await this.webber.bash.execute({
                 path: executablePath,
                 description: `grabbing PWA manifest`,
                 cwd: projectDirectory
@@ -99,7 +98,7 @@ export class Swift {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
         }
         try {
-            const result = await Bash.execute({
+            const result = await this.webber.bash.execute({
                 path: executablePath,
                 description: `grabbing Index`,
                 cwd: projectDirectory
@@ -126,7 +125,7 @@ export class Swift {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const result = await Bash.execute({
+            const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
                 description: `resolving dependencies for ${type}`,
                 cwd: projectDirectory
@@ -214,7 +213,7 @@ export class Swift {
         var env = process.env
         try {
             print(`🧰 ${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
-            const result = await Bash.execute({
+            const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
                 description: `Building swift`,
                 cwd: projectDirectory,

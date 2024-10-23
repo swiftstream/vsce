@@ -1,5 +1,4 @@
 import { currentToolchain, Webber } from "./webber"
-import { Bash } from "./bash"
 
 export class Toolchain {
     private path: string = `/swift/toolchains/${currentToolchain}`
@@ -15,7 +14,7 @@ export class Toolchain {
     }
 
     async checkVersion() {
-        const result = await Bash.execute({
+        const result = await this.webber.bash.execute({
             path: this.swiftPath,
             description: 'check swift toolchain version'
         }, ['--version'])

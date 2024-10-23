@@ -1,52 +1,48 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process'
 import { isNull } from 'util'
 import { LogLevel, print } from './webber'
+import { TimeMeasure } from './helpers/timeMeasureHelper'
 
 export class Bash {
-    static async which(program: string): Promise<string | undefined> {
+    whichCache: {} = {}
+    
+    async which(program: string): Promise<string | undefined> {
         return new Promise<string | undefined>((resolve, reject) => {
-            const process = spawn('/bin/bash', ['-c', `which ${program}`], { cwd: '/' })
-            var errors = ''
-			var result = ''
-            process.stdout.on('data', function(msg) {
-                // print(`stdout: ${msg}`)
-				result += msg.toString()
-			})
-			process.stderr.on('data', function(msg) {
-                errors += msg.toString()
-			})
-			process.on('error', (error) => {
-                reject(error)
-			})
-			process.on('close', (code) => {
-				if (code != 0 || result.length <= 0) {
+            const cachedPath = this.whichCache[program]
+            if (cachedPath && cachedPath.length > 0) {
+                return resolve(cachedPath)
+            }
+            exec(`/usr/bin/which ${program}`, (error, stdout, stderr) => {
+                if (error) {
+                    // console.error(`Error: ${error.message}`)
+                    // console.error(`Exit code: ${error.code}`)
+                    // console.error(`stderr: ${stderr}`)
                     return resolve(undefined)
                 }
-                resolve(result.replace(/^\s+|\s+$/g, ''))
+                resolve(stdout.replace(/^\s+|\s+$/g, ''))
             })
         })
     }
 
-    static async execute(program: { path?: string | undefined, name?: string | undefined, description: string | undefined, processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined, cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined }, args: string[] = []): Promise<BashResult> {
+    async execute(program: { path?: string | undefined, name?: string | undefined, description: string | undefined, processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined, cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined }, args: string[] = []): Promise<BashResult> {
         return new Promise(async (resolve, reject) => {
             var path: string | undefined
             if (program.path) {
                 path = program.path
             } else if (program.name) {
-                path = await Bash.which(program.name)
+                path = await this.which(program.name)
                 if (!path) {
                     const bashError = new BashError({ error: `${program.name} is not available` })
                     print(bashError.description)
                     return reject(bashError)
                 }
             }
-            const startTime = new Date().getTime()
+            const measure = new TimeMeasure()
             const options: { cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined } = {}
             if (program.cwd)
                 options.cwd = program.cwd
             if (program.env)
                 options.env = program.env
-            // print(`spawn: ${path!} ${args.join(' ')} cwd: ${options.cwd || 'null'}`)
             const process = spawn(path!, args, options)
             if (program.processInstanceHandler)
                 program.processInstanceHandler(process)
@@ -63,17 +59,15 @@ export class Bash {
 				stderr += m
 			})
 			process.on('error', (error: any) => {
-                const endTime = new Date().getTime()
-                const executionTime = Math.round((endTime - startTime) / 1000)
-                const bashError = new BashError({ error: error, executionTime: executionTime, description: program.description, stderr: stderr.replace(/^\s+|\s+$/g, ''), stdout: stdout.replace(/^\s+|\s+$/g, '') })
-                print(bashError.description) // Don't comment out
+                measure.finish()
+                const bashError = new BashError({ error: error, executionTime: measure.time, description: program.description, stderr: stderr.replace(/^\s+|\s+$/g, ''), stdout: stdout.replace(/^\s+|\s+$/g, '') })
+                print(bashError.description, LogLevel.Unbearable) // Don't comment out
                 return reject(bashError)
 			})
 			process.on('close', (_exitCode) => {
-                const endTime = new Date().getTime()
-                const executionTime = Math.round((endTime - startTime) / 1000)
+                measure.finish()
                 const code = _exitCode || 0
-				const result = new BashResult(path!, executionTime, code, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)
+				const result = new BashResult(path!, measure.time, code, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)
                 if (code === null || (code != null && code != 0)) {
                     const bashError = new BashError({ result: result })
                     print(bashError.description) // Don't comment out

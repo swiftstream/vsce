@@ -1,4 +1,4 @@
-import { Bash, BashResult } from './bash'
+import { BashResult } from './bash'
 import { Webber, webSourcesPath } from './webber'
 import { projectDirectory } from './extension'
 
@@ -17,10 +17,10 @@ export class Webpack {
 
     private async execute(args: string[]): Promise<BashResult> {
         if (!this.binPath)
-            this.binPath = await Bash.which('webpack-cli')
+            this.binPath = await this.webber.bash.which('webpack-cli')
         if (!this.binPath)
             throw 'Path to webpack-cli is undefined'
-        const result = await Bash.execute({
+        const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `executing webpack`,
             cwd: `${projectDirectory}/${webSourcesPath}`

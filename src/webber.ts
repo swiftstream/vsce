@@ -26,6 +26,7 @@ import { recompileServiceCommand } from "./commands/recompileService";
 import { updateSwifWebCommand, updateJSKitCommand } from "./commands/suggestions";
 import { documentationCommand, repositoryCommand, discussionsCommand, submitAnIssueCommand } from "./commands/support";
 import { toolchainCommand } from "./commands/toolchain";
+import { Bash } from "./bash";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -110,7 +111,8 @@ export function setPendingNewProdPort(value: string | undefined) {
 }
 
 export class Webber {
-    public toolchain: Toolchain
+    public bash: Bash
+	public toolchain: Toolchain
 	public swift: Swift
 	public npmWeb: NPM
 	public npmJSKit: NPM
@@ -123,6 +125,7 @@ export class Webber {
 				sidebarTreeView?.refresh()
 			}
 		}))
+		this.bash = new Bash()
 		this.toolchain = new Toolchain(this)
 		this.swift = new Swift(this)
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
