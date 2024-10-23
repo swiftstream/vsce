@@ -4,9 +4,7 @@ import { LogLevel, print, Webber } from './webber'
 export class NPM {
     private binPath?: string
 
-    constructor(private webber: Webber, private cwd: string) {
-
-    }
+    constructor(private webber: Webber, private cwd: string) {}
 
     private async execute(args: string[]): Promise<BashResult> {
         if (!this.binPath)

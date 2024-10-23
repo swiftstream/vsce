@@ -24,7 +24,7 @@ export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 export let webber: Webber | undefined
 export let sidebarTreeView: SidebarTreeView | undefined
- 
+
 export function isInContainer(): boolean {
 	return vsEnv.remoteName?.includes('container') == true
 }
