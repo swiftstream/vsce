@@ -4,7 +4,7 @@ import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes } from '../swift'
+import { allSwiftBuildTypes, SwiftBuildType } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -14,7 +14,7 @@ import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedSCSS } from "./build/proceedSCSS"
 import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
-import { proceedWasmFiles } from "./build/proceedWasmFiles"
+import { proceedWasmFile } from "./build/proceedWasmFile"
 
 export async function buildCommand() {
 	if (!webber) return
@@ -82,7 +82,12 @@ export async function buildCommand() {
 					target: target,
 					release: false,
 					force: true
-				})	
+				})
+				if (type == SwiftBuildType.Wasi) {
+					// Phase 5.1: Proceed WASM file
+					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
+					await proceedWasmFile({ target: target, release: false })
+				}
 			}
 		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
@@ -106,17 +111,14 @@ export async function buildCommand() {
 		// Phase 9: Retrieve index from the App target
 		print('🔳 Phase 9: Retrieve index from the App target', LogLevel.Verbose)
 		const index = await proceedIndex({ target: appTargetName, release: false })
-		// Phase 10: Proceed WASM files
-		print('🔳 Phase 10: Proceed WASM files', LogLevel.Verbose)
-		await proceedWasmFiles({ targets: targetsDump.executables, release: false })
-		// Phase 11: Copy bundled resources from Swift build folder
-		print('🔳 Phase 11: Copy bundled resources from Swift build folder', LogLevel.Verbose)
+		// Phase 10: Copy bundled resources from Swift build folder
+		print('🔳 Phase 10: Copy bundled resources from Swift build folder', LogLevel.Verbose)
 		proceedBundledResources({ release: false })
-		// Phase 12: Compile SCSS
-		print('🔳 Phase 12: Compile SCSS', LogLevel.Verbose)
+		// Phase 11: Compile SCSS
+		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
 		await proceedSCSS({ force: true, release: false })
-		// Phase 13: Proceed HTML
-		print('🔳 Phase 13: Proceed HTML', LogLevel.Verbose)
+		// Phase 12: Proceed HTML
+		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
