@@ -26,6 +26,7 @@ import { recompileServiceCommand } from "./commands/recompileService";
 import { updateSwifWebCommand, updateJSKitCommand } from "./commands/suggestions";
 import { documentationCommand, repositoryCommand, discussionsCommand, submitAnIssueCommand } from "./commands/support";
 import { toolchainCommand } from "./commands/toolchain";
+import { Gzip } from "./gzip";
 import { Bash } from "./bash";
 
 let output = window.createOutputChannel('SwifWeb')
@@ -117,6 +118,7 @@ export class Webber {
 	public npmWeb: NPM
 	public npmJSKit: NPM
 	public webpack: Webpack
+	public gzip: Gzip
 
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
@@ -131,6 +133,7 @@ export class Webber {
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
+		this.gzip = new Gzip(this)
 		this._configure()
 	}
 
