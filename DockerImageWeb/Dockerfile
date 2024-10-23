@@ -11,7 +11,7 @@ RUN apt-get install -y nginx
 RUN apt-get -y install gettext-base
 # install node and all required packages
 ENV NVM_DIR="/root/.nvm"
-ENV NODE_VERSION="20.17.0"
+ENV NODE_VERSION="20.18.0"
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION \
