@@ -14,7 +14,7 @@ export class NPM {
         print(`executing npm ${args.join(' ')} at: ${this.cwd}`, LogLevel.Verbose)
         const result = await this.webber.bash.execute({
             path: this.binPath!,
-            description: `get executable target`,
+            description: `npm`,
             cwd: this.cwd
         }, args)
         return result
