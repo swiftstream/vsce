@@ -158,5 +158,5 @@ export DOLLAR="$"
 if grep -q "DOLLAR" "/etc/nginx/sites-available/default"; then
     echo "$(envsubst < "/etc/nginx/sites-available/default")" > /etc/nginx/sites-available/default
 fi
-# apply config
+# apply the config
 /etc/init.d/nginx restart
