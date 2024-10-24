@@ -16,7 +16,7 @@ export async function buildExecutableTarget(options: { type: SwiftBuildType, tar
             verbose: `🧱 Building \`${options.target}\` swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode`
         })
         buildStatus(`\`${options.target}\` swift target: building`)
-        await buildSwiftTarget({ type: options.type, targetName: options.target, release: false, progressHandler: (p) => {
+        await buildSwiftTarget({ type: options.type, targetName: options.target, release: options.release , progressHandler: (p) => {
             buildStatus(`\`${options.target}\` swift target: building ${p}`)
         } })
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftSources, options.type)
