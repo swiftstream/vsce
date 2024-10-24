@@ -48,6 +48,7 @@ export function setDebugging(active: boolean) { isDebugging = active }
 export var isHotReloadEnabled = false
 export var isHotRebuildEnabled = false
 export var isBuildingRelease = false
+export function setBuildingRelease(active: boolean) { isBuildingRelease = active }
 export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
 export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
