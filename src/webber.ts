@@ -28,6 +28,7 @@ import { documentationCommand, repositoryCommand, discussionsCommand, submitAnIs
 import { toolchainCommand } from "./commands/toolchain";
 import { Gzip } from "./gzip";
 import { Bash } from "./bash";
+import { Wasm } from "./wasm";
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -118,6 +119,7 @@ export class Webber {
 	public npmWeb: NPM
 	public npmJSKit: NPM
 	public webpack: Webpack
+	public wasm: Wasm
 	public gzip: Gzip
 
     constructor() {
@@ -133,6 +135,7 @@ export class Webber {
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
+		this.wasm = new Wasm(this)
 		this.gzip = new Gzip(this)
 		this._configure()
 	}
