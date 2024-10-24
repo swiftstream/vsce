@@ -10,13 +10,13 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     const destPath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
     if (!fs.existsSync(buildFolder)) throw `Unable to process WASM files, seems swift project hasn't been built`
     const timeMeasure = new TimeMeasure()
-    print(`🎞️ Processing wasm files`, LogLevel.Detailed)
     if (options.release) {
         // TODO: optimizeForOldSafari -> lowerI64Imports
         // TODO: stripDebugInfo
         // TODO: wasm-opt
     }
     const lowercasedTarget = options.target.toLowerCase()
+    print(`🧮 Processing ${lowercasedTarget}.wasm file`, LogLevel.Detailed)
     fs.cpSync(`${buildFolder}/${options.target}.wasm`, `${destPath}/${lowercasedTarget}.wasm`)
     timeMeasure.finish()
     const gzipTimeMeasure = new TimeMeasure()
@@ -27,5 +27,5 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     }, () => {
         print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
     })
-    print(`🎞️ Finished processing wasm files in ${timeMeasure.time}ms`, LogLevel.Detailed)
+    print(`🧮 Processed wasm file in ${timeMeasure.time}ms`, LogLevel.Detailed)
 }

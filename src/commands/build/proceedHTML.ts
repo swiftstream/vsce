@@ -16,7 +16,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     const manifestFileNameValue = options.manifest?.file_name ?? 'site'
     var isIndexChanged = false
     var lines: string[] = []
-    print(`📃 Manifest present: ${options.manifest ? 'true' : 'false'}`, LogLevel.Unbearable)
+    print(`📜 Manifest present: ${options.manifest ? 'true' : 'false'}`, LogLevel.Unbearable)
     // generate index.html from scratch
     if (!fs.existsSync(indexPath)) {
         lines = [
@@ -171,7 +171,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
         print(`💨 Skipping HTML files, nothing found in ${measure.time}ms`, LogLevel.Detailed)
         return
     }
-    print(`🎨 Processing HTML files`, LogLevel.Detailed)
+    print(`🌎 Processing HTML files`, LogLevel.Detailed)
     for (let i = 0; i < htmlInSourcesFolder.length; i++) {
         const item = htmlInSourcesFolder[i];
         const relativePath = item.path.replace(webFolder, '')
@@ -189,7 +189,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     }
     saveLastModifiedDateForKey(LastModifiedDateType.HTML)
     measure.finish()
-    print(`🎉 HTML files copied in ${measure.time}ms`, LogLevel.Detailed)
+    print(`🌎 Copied HTML files in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doctype() {
     return '<!DOCTYPE html>'

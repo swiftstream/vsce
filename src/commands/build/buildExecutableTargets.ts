@@ -23,8 +23,8 @@ export async function buildExecutableTarget(options: { type: SwiftBuildType, tar
         // TODO: if dependencies tracking enabled then save timestamp for it as well
         measure.finish()
         print({
-            detailed: `🎉 Finished building \`${options.target}\` swift target for \`.${options.type}\` in ${measure.time}ms`,
-            verbose: `🎉 Finished building swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode in ${measure.time}ms`
+            detailed: `🧱 Built \`${options.target}\` swift target for \`.${options.type}\` in ${measure.time}ms`,
+            verbose: `🧱 Built swift target for \`.${options.type}\` in ${options.release ? 'release' : 'debug'} mode in ${measure.time}ms`
         })
 }
 

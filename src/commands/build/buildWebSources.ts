@@ -31,7 +31,7 @@ export async function buildWebSources(options: { target: string, isServiceWorker
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath }))
         throw `${options.target} web target build failed`
     measure.finish()
-    print(`🎉 Finished building \`${options.target}\` web target in ${measure.time}ms`, LogLevel.Detailed)
+    print(`🌳 Built \`${options.target}\` web target in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doesDependenciesPresent(): boolean {
 	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/node_modules`)

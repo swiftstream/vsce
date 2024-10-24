@@ -135,7 +135,7 @@ export async function buildCommand() {
 			print(`❌ ${text}`)
 		} else {
 			text = `Something went wrong during the build`
-			print(`❌ ${text}: ${error}`)
+			print(`❌ ${text}: ${JSON.stringify(error)}`)
 			console.error(error)
 		}
 		status('error', `Something went wrong during the build (${measure.time}ms)`, StatusType.Error)

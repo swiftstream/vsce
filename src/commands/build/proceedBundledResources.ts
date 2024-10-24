@@ -32,5 +32,5 @@ export function proceedBundledResources(options: { release: boolean }) {
         }
     }
     measure.finish()
-    print(`🎉 Finished processing bundle resources in ${measure.time}ms`, LogLevel.Detailed)
+    print(`📄 Processed bundle resources in ${measure.time}ms`, LogLevel.Detailed)
 }

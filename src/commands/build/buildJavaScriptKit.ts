@@ -68,7 +68,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
 	}
     saveLastModifiedDateForKey(LastModifiedDateType.JavaScriptKitPackage)
     measure.finish()
-    print(`🎉 Finished building JavaScriptKit in ${measure.time}ms`, LogLevel.Detailed)
+    print(`🫖 Built JavaScriptKit in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doesJavaScriptKitCompiled(jsKitPath: string): boolean {
 	const value = fs.existsSync(`${jsKitPath}/Runtime/lib/index.d.ts`)

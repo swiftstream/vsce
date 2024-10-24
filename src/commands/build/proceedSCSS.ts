@@ -46,5 +46,5 @@ export async function proceedSCSS(options: { force: boolean, release: boolean })
     }
     saveLastModifiedDateForKey(LastModifiedDateType.SCSS)
     measure.finish()
-    print(`🎉 SCSS files compiled in ${measure.time}ms`, LogLevel.Detailed)
+    print(`🎨 Compiled SCSS in ${measure.time}ms`, LogLevel.Detailed)
 }
