@@ -72,6 +72,7 @@ export async function buildCommand() {
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
+		let gzippedExecutableTargets: string[] = []
 		const buildTypes = allSwiftBuildTypes()
 		for (let n = 0; n < buildTypes.length; n++) {
 			const type = buildTypes[n]
@@ -86,7 +87,9 @@ export async function buildCommand() {
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
 					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
-					await proceedWasmFile({ target: target, release: false })
+					await proceedWasmFile({ target: target, release: false, gzipCallback: () => {
+						gzippedExecutableTargets.push(target)
+					}})
 				}
 			}
 		}
@@ -120,6 +123,10 @@ export async function buildCommand() {
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		if (gzippedExecutableTargets.length != targetsDump.executables.length) {
+			print('🔳 Phase 13: Await gzipping', LogLevel.Detailed)
+			while (gzippedExecutableTargets.length != targetsDump.executables.length) {}
+		}
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
