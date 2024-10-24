@@ -75,7 +75,7 @@ export class Swift {
     }
 
     async grabPWAManifest(options: { serviceWorkerTarget: string }): Promise<any> {
-        const executablePath = `${projectDirectory}/.build/.${SwiftBuildType.Native}/debug/${options.serviceWorkerTarget}`
+        const executablePath = `${projectDirectory}/.build/debug/${options.serviceWorkerTarget}`
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
@@ -93,7 +93,7 @@ export class Swift {
     }
 
     async grabIndex(options: { target: string }): Promise<Index | undefined> {
-        const executablePath = `${projectDirectory}/.build/.${SwiftBuildType.Native}/debug/${options.target}`
+        const executablePath = `${projectDirectory}/.build/debug/${options.target}`
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
         }
@@ -120,7 +120,7 @@ export class Swift {
     }
 
     async packageResolve(type: SwiftBuildType): Promise<void> {
-        const args: string[] = ['package', 'resolve', "--build-path", `./.build/.${type}`]
+        const args: string[] = ['package', 'resolve', "--build-path", type == SwiftBuildType.Native ? './.build' : `./.build/.${type}`]
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -152,7 +152,7 @@ export class Swift {
     }
 
     async previews(moduleName: string, previewNames: string[]): Promise<Preview[] | undefined> {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', moduleName, '--previews', ...previewNames.map((x) => `${moduleName}/${x}`), '--build-path', `./.build/.${SwiftBuildType.Native}`]
+        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', moduleName, '--previews', ...previewNames.map((x) => `${moduleName}/${x}`), '--build-path', './.build']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -166,7 +166,7 @@ export class Swift {
     }
 
     async splash(productName: string) {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', productName, '--build-path', `./.build/.${SwiftBuildType.Native}`]
+        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', productName, '--build-path', './.build']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -190,7 +190,7 @@ export class Swift {
             'build',
             '-c', options.release ? 'release' : 'debug',
             '--product', options.targetName,
-            '--build-path', `./.build/.${options.type}`
+            '--build-path', options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`
         ]
         if (options.type == SwiftBuildType.Wasi) {
             args = [...args,
