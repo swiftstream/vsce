@@ -20,13 +20,13 @@ export class Swift {
         return result.stdout
     }
 
-    async getTargets(): Promise<{ executables: string[], serviceWorkers: string[] }> {
+    async getTargets(): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Verbose)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
-            var result: { executables: string[], serviceWorkers: string[] } = {
+            var result: SwiftTargets = {
                 executables: [],
                 serviceWorkers: []
             }
@@ -429,4 +429,9 @@ export interface Index {
     links?: any[],
     scripts?: any[],
     splash?: SplashData
+}
+
+export interface SwiftTargets {
+    executables: string[],
+    serviceWorkers: string[]
 }
