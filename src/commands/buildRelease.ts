@@ -73,20 +73,25 @@ export async function buildReleaseCommand() {
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
-		const type = SwiftBuildType.Wasi
-		for (let i = 0; i < targetsDump.executables.length; i++) {
-			const target = targetsDump.executables[i]
-			await buildExecutableTarget({
-				type: type,
-				target: target,
-				release: true,
-				force: true
-			})
-			// Phase 5.1: Proceed WASM file
-			print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
-			await proceedWasmFile({ target: target, release: true, gzipCallback: () => {
-				gzippedExecutableTargets.push(target)
-			}})
+		const buildTypes = allSwiftBuildTypes()
+		for (let n = 0; n < buildTypes.length; n++) {
+			const type = buildTypes[n]
+			for (let i = 0; i < targetsDump.executables.length; i++) {
+				const target = targetsDump.executables[i]
+				await buildExecutableTarget({
+					type: type,
+					target: target,
+					release: type != SwiftBuildType.Wasi,
+					force: true
+				})
+				if (type != SwiftBuildType.Wasi) {
+					// Phase 5.1: Proceed WASM file
+					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
+					await proceedWasmFile({ target: target, release: true, gzipCallback: () => {
+						gzippedExecutableTargets.push(target)
+					}})
+				}
+			}
 		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
 		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
