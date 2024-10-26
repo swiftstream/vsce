@@ -4,7 +4,7 @@ import { buildDevPath, buildProdPath, LogLevel, print } from '../../webber'
 import { projectDirectory, webber } from '../../extension'
 import { SwiftBuildType } from '../../swift'
 
-export async function proceedWasmFile(options: { target: string, release: boolean, gzipCallback: () => void }): Promise<any> {
+export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void }): Promise<any> {
     if (!webber) throw `webber is null`
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
@@ -26,12 +26,13 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     const gzipOptions = { path: destPath, filename: `${lowercasedTarget}.wasm`, level: options.release ? 9 : undefined }
     if (options.release) {
         await webber?.gzip.compress(gzipOptions)
-        options.gzipCallback()
+        options.gzipSuccess()
     } else {
         webber?.gzip.compress(gzipOptions).then(() => {
-            options.gzipCallback()
-        }, () => {
+            options.gzipSuccess()
+        }, (error) => {
             print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
+            options.gzipFail(error)
         })
     }
     print(`🧮 Processed wasm file in ${timeMeasure.time}ms`, LogLevel.Detailed)

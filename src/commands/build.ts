@@ -15,6 +15,7 @@ import { proceedSCSS } from "./build/proceedSCSS"
 import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
+import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
 
 export async function buildCommand() {
 	if (!webber) return
@@ -22,6 +23,7 @@ export async function buildCommand() {
 	setBuilding(true)
 	sidebarTreeView?.refresh()
 	const measure = new TimeMeasure()
+	var gzipFail: any | undefined
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
@@ -87,8 +89,10 @@ export async function buildCommand() {
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
 					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
-					await proceedWasmFile({ target: target, release: false, gzipCallback: () => {
+					await proceedWasmFile({ target: target, release: false, gzipSuccess: () => {
 						gzippedExecutableTargets.push(target)
+					}, gzipFail: (reason) => {
+						gzipFail = reason
 					}})
 				}
 			}
@@ -123,9 +127,11 @@ export async function buildCommand() {
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
-		if (gzippedExecutableTargets.length != targetsDump.executables.length) {
-			print('🔳 Phase 13: Await gzipping', LogLevel.Detailed)
-			while (gzippedExecutableTargets.length != targetsDump.executables.length) {}
+		// Phase 13: Await Gzipping
+		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
+		if (shouldAwaitGzipping(awaitGzippingParams)) {
+			print('⏳ Phase 13: Await gzipping', LogLevel.Detailed)
+			await awaitGzipping(awaitGzippingParams)
 		}
 		measure.finish()
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
