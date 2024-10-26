@@ -42,20 +42,31 @@ export enum LogLevel {
 }
 
 export var isBuilding = false
-export function setBuilding(active: boolean) { isBuilding = active }
 export var abortBuilding: (() => void) | undefined
 export function setAbortBuilding(handler: () => void | undefined) {
 	abortBuilding = handler
 }
+export function setBuilding(active: boolean) {
+	if (!active) abortBuilding = undefined
+	isBuilding = active
+	commands.executeCommand('setContext', 'isBuilding', active)
+}
 export var isDebugging = false
-export function setDebugging(active: boolean) { isDebugging = active }
+export function setDebugging(active: boolean) {
+	isDebugging = active
+	commands.executeCommand('setContext', 'isDebugging', active)
+}
 export var isHotReloadEnabled = false
 export var isHotRebuildEnabled = false
 export var isBuildingRelease = false
-export function setBuildingRelease(active: boolean) { isBuildingRelease = active }
 export var abortBuildingRelease: (() => void) | undefined
 export function setAbortBuildingRelease(handler: () => void | undefined) {
 	abortBuildingRelease = handler
+}
+export function setBuildingRelease(active: boolean) {
+	if (!active) abortBuildingRelease = undefined
+	isBuildingRelease = active
+	commands.executeCommand('setContext', 'isBuildingRelease', active)
 }
 export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
@@ -134,7 +145,7 @@ export class Webber {
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			if (e.configuration.type.includes('chrome')) {
-				isDebugging = false
+				setDebugging(false)
 				sidebarTreeView?.refresh()
 			}
 		}))
