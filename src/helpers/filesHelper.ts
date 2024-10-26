@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as crypto from 'crypto'
 import path from 'path'
 import { projectDirectory } from '../extension'
 
@@ -149,4 +150,12 @@ export function humanFileSize(bytes: number, si: boolean = false, dp: number = 1
         ++u
     } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
     return bytes.toFixed(dp) + ' ' + units[u]
+}
+
+/// Credits to https://gist.github.com/zfael/a1a6913944c55843ed3e999b16350b50
+export function generateChecksum(str: string): string {
+    return crypto
+        .createHash('md5')
+        .update(str, 'utf8')
+        .digest('hex')
 }
