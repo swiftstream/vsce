@@ -68,7 +68,7 @@ const wasi = new WASI({
     }
 })
 
-overrideFS(devSocket)
+overrideFS(wasmFs, devSocket)
 
 try {
     startWasiTask(wasi, env.target, false).catch(wasiErrorHandler)
