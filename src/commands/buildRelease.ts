@@ -142,15 +142,14 @@ export async function buildReleaseCommand() {
 	} catch (error: any) {
 		setBuildingRelease(false)
 		sidebarTreeView?.refresh()
-		var text = ''
+		const text = `Release Build Failed`
 		if (isString(error)) {
-			text = error
-			print(`❌ ${text}`)
+			print(`🧯 ${error}`)
 		} else {
-			text = `Something went wrong during the release build`
-			print(`❌ ${text}: ${JSON.stringify(error)}`)
+			const json = JSON.stringify(error)
+			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
 			console.error(error)
 		}
-		status('error', `Something went wrong during the release build (${measure.time}ms)`, StatusType.Error)
+		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
 	}
 }

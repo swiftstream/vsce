@@ -142,15 +142,14 @@ export async function buildCommand() {
 	} catch (error: any) {
 		setBuilding(false)
 		sidebarTreeView?.refresh()
-		var text = ''
+		const text = `Debug Build Failed`
 		if (isString(error)) {
-			text = error
-			print(`❌ ${text}`)
+			print(`🧯 ${error}`)
 		} else {
-			text = `Something went wrong during the build`
-			print(`❌ ${text}: ${JSON.stringify(error)}`)
+			const json = JSON.stringify(error)
+			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
 			console.error(error)
 		}
-		status('error', `Something went wrong during the build (${measure.time}ms)`, StatusType.Error)
+		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
 	}
 }
