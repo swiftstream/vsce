@@ -17,6 +17,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     var isIndexChanged = false
     var lines: string[] = []
     print(`📜 Manifest present: ${options.manifest ? 'true' : 'false'}`, LogLevel.Unbearable)
+    buildStatus(`Processing HTML files`)
     // generate index.html from scratch
     if (!fs.existsSync(indexPath)) {
         lines = [
@@ -42,11 +43,11 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     }
     // regenerate index.html by replacing only managed lines of code
     else {
-        const htmlLines = fs.readFileSync(indexPath, 'utf8').split('\n')
+        const htmlString = fs.readFileSync(indexPath, 'utf8')
+        const htmlLines = htmlString.split('\n')
         var addedMetas = false
         var addedLinks = false
         var addedScripts = false
-        var scanningSplashIframe  = false
         for (let i = 0; i < htmlLines.length; i++) {
             const htmlLine = htmlLines[i]
             // <html lang="">
@@ -63,16 +64,48 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                 }
             }
             // <title>
-            else if (htmlLine.trimStart().startsWith('<title') && htmlLine.endsWith('</title>') && htmlLine.includes(managedBy)) {
-                const firstSplit = htmlLine.split('>')
-                const openingTag = firstSplit[0]
-                const oldTitle = firstSplit[1].split('</title>')[0]
-                const newTitle = options.index?.title ?? '&lrm;'
-                if (oldTitle == newTitle) {
-                    lines.push(htmlLine)
-                } else {
-                    isIndexChanged = true
-                    lines.push(`${openingTag}>${newTitle}</title>`)
+            else if (htmlLine.trimStart().startsWith('<title')) {
+                // check if it is one-line iframe
+                if (htmlLine.trimStart().startsWith('<title') && htmlLine.includes('/title')) {
+                    // check if it is managed
+                    if (htmlLine.includes(managedBy)) {
+                        isIndexChanged = true
+                        lines.push(title(options.index?.title ?? '&lrm;'))
+                    }
+                    // keeping custom title as-is
+                    else {
+                        lines.push(htmlLine)
+                    }
+                }
+                // scanning multi-line title
+                else {
+                    var scannedLines: string[] = []
+                    var isManaged = false
+                    function scan() {
+                        // caching line and increasing i variable
+                        const htmlLine = htmlLines[i++]
+                        scannedLines.push(htmlLine)
+                        if (htmlLine.includes(managedBy)) {
+                            isManaged = true
+                        }
+                        // going through scan cycle
+                        if (!htmlLine.includes('/title')) {
+                            scan()
+                        } else {
+                            i -= 1
+                        }
+                    }
+                    // start scanning all the lines
+                    scan()
+                    // if it is managed
+                    if (isManaged) {
+                        isIndexChanged = true
+                        lines.push(title(options.index?.title ?? '&lrm;'))
+                    }
+                    // keeping custom title as-is
+                    else {
+                        lines.push(...scannedLines)
+                    }
                 }
             }
             // <meta>
@@ -81,7 +114,30 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                 if (options.index?.metas && !addedMetas) {
                     addedMetas = true
                     for (let m = 0; m < options.index.metas.length; m++) {
-                        lines.push(tag('meta', options.index.metas[m]))
+                        // check if same `meta` already present
+                        const newMeta = options.index.metas[m]
+                        const keys = Object.keys(newMeta)
+                        const isCharset = keys.includes('charset')
+                        const isViewport = keys.includes('viewport')
+                        const isDescription = keys.includes('description')
+                        if (isCharset || isViewport || isDescription) {
+                            const isManualManaged = htmlLines.filter((x) => {
+                                if (!x.trimStart().startsWith('<meta')) return false
+                                if (x.includes(managedBy)) return false
+                                if (isCharset && x.includes('charset=')) return true
+                                if (isViewport && x.includes('viewport=')) return true
+                                if (isDescription && x.includes('description=')) return true
+                                return false
+                            }).length > 0
+                            if (!isManualManaged) {
+                                lines.push(tag('meta', newMeta))
+                            } else {
+                                const name = isCharset ? 'charset' : isViewport ? 'viewport' : isDescription ? 'description' : ''
+                                print(`💨 index.html skipping <meta ${name}> since it is set manually`, LogLevel.Verbose)
+                            }
+                        } else {
+                            lines.push(tag('meta', newMeta))
+                        }
                     }
                 }
                 if (!htmlLine.includes(managedBy)) {
@@ -124,26 +180,66 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             }
             // <iframe>
             else if (htmlLine.trimStart().includes('iframe')) {
-                // found the right <iframe>
-                if (htmlLine.trimStart().startsWith('<iframe') && htmlLine.includes(managedBy) && htmlLine.includes('id="splash"')) {
-                    // the whole <iframe> is inline
-                    if (htmlLine.includes('/iframe') && options.index?.splash) {
-                        lines.push(splash(options.index.splash))
+                // check if it is one-line iframe
+                if (htmlLine.trimStart().startsWith('<iframe') && htmlLine.includes('/iframe')) {
+                    // check if it is splash
+                    if (htmlLine.includes(managedBy) && htmlLine.includes('id="splash"')) {
+                        if (options.index?.splash) {
+                            lines.push(splash(options.index.splash))
+                        }
                     }
-                    // the <iframe> is multiline
+                    // keeping custom iframe as-is
                     else {
-                        scanningSplashIframe = true
+                        lines.push(htmlLine)
                     }
                 }
-                // skipping old lines of the <iframe>
-                else if (scanningSplashIframe) {
-                    // add new if the last line reached
-                    if (htmlLine.includes('/iframe')) {
+                // scanning multi-line iframe
+                else {
+                    var scannedLines: string[] = []
+                    var isManaged = false
+                    var isSplash = false
+                    function scan() {
+                        // caching line and increasing i variable
+                        const htmlLine = htmlLines[i++]
+                        scannedLines.push(htmlLine)
+                        if (htmlLine.includes(managedBy)) {
+                            isManaged = true
+                        }
+                        if (htmlLine.includes('id="splash"')) {
+                            isSplash = true
+                        }
+                        // going through scan cycle
+                        if (!htmlLine.includes('/iframe')) {
+                            scan()
+                        } else {
+                            i -= 1
+                        }
+                    }
+                    // start scanning all the lines
+                    scan()
+                    // if it is custom iframe then leave it as-is
+                    if (!isManaged) {
+                        lines.push(...scannedLines)
+                    }
+                    // work with managed splash iframe
+                    else if (isSplash) {
+                        if (options.index?.splash) {
+                            lines.push(splash(options.index.splash))
+                        }
+                    }
+                }
+            }
+            else if (htmlLine.trimStart().startsWith('<body')) {
+                if (!htmlString.includes(`id="splash"`)) {
+                    if (htmlLine.includes(closeBody().trimStart())) {
+                        lines.push(htmlLine.replace(closeBody().trimStart(), ''))
+                        lines.push(splash(options.index?.splash))
+                        lines.push(closeBody())
+                    } else {
+                        lines.push(htmlLine)
                         lines.push(splash(options.index?.splash))
                     }
-                }
-                // custom <iframe>, keeping it as is
-                else {
+                } else {
                     lines.push(htmlLine)
                 }
             }
