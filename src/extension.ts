@@ -4,7 +4,7 @@ import { WebberState } from './enums/WebberStateEnum'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
-import { currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
+import { abortBuilding, abortBuildingRelease, currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
 import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
 import { DockerImage } from './dockerImage'
 
@@ -105,7 +105,17 @@ export async function activate(context: ExtensionContext) {
 
 function registerCommands() {
 	extensionContext.subscriptions.push(commands.registerCommand('startNewProjectWizard', startNewProjectWizard))
-	extensionContext.subscriptions.push(commands.registerCommand('openProject', openProjectCommand))
+	extensionContext.subscriptions.push(commands.registerCommand('runDebugging', debugInChromeCommand))
+	extensionContext.subscriptions.push(commands.registerCommand('stopDebugging', async () => {
+		await commands.executeCommand('workbench.action.debug.stop')
+	}))
+	extensionContext.subscriptions.push(commands.registerCommand('buildDebug', buildCommand))
+	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingDebug', () => {
+		if (abortBuilding) abortBuilding()
+	}))
+	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingRelease', () => {
+		if (abortBuildingRelease) abortBuildingRelease()
+	}))
 	webber?.registercommands()
 }
 

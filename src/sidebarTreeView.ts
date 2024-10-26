@@ -1,5 +1,5 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, containsSCSS, containsJS, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, containsSCSS, containsJS, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding } from "./webber"
 import { env } from "process"
 import { isInContainer } from "./extension"
 
@@ -35,30 +35,30 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			return items
 		}
 		if (element == null) {
-			items.push(new Dependency(SideTreeItem.Project, 'Project', `${workspace.name}`, TreeItemCollapsibleState.Expanded, 'terminal-bash', false))
-			items.push(new Dependency(SideTreeItem.Deploy, 'Deploy', '', TreeItemCollapsibleState.Expanded, 'cloud-upload', false))
+			items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, TreeItemCollapsibleState.Expanded, 'coffee', false))
+			items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Expanded, 'cloud-upload', false))
+			items.push(new Dependency(SideTreeItem.Project, 'Project', '', TreeItemCollapsibleState.Collapsed, 'package', false))
 			items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
 			items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
 			items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
 			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Expanded, 'heart', false))
-		} else if (element?.id == SideTreeItem.Project) {
+		} else if (element?.id == SideTreeItem.Debug) {
 			items = [
-				new Dependency(SideTreeItem.Build, isBuilding ? 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding ? 'sync~spin::charts.green' : 'run::charts.green'),
+				new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : 'run::charts.green'),
 				new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
 				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
-				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
-				new Dependency(SideTreeItem.NewFile, 'New', '', TreeItemCollapsibleState.Collapsed, 'gist', false)
+				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red')
 			]
-		} else if (element?.id == SideTreeItem.NewFile) {
-			items = [
-				new Dependency(SideTreeItem.NewFilePage, 'Page', '', TreeItemCollapsibleState.None, 'file-add'),
-				new Dependency(SideTreeItem.NewFileClass, 'Class', '', TreeItemCollapsibleState.None, 'file-code'),
-				new Dependency(SideTreeItem.NewFileJS, 'JS', '', TreeItemCollapsibleState.None, 'file-code'),
-				new Dependency(SideTreeItem.NewFileSCSS, 'SCSS', '', TreeItemCollapsibleState.None, 'file-code')
-			]
-		} else if (element.id == SideTreeItem.Deploy) {
+		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
 			items.push(new Dependency(SideTreeItem.DeployToFirebase, isDeployingToFirebase ? 'Deploying to Firebase' : 'Deploy to Firebase', '', TreeItemCollapsibleState.None, isDeployingToFirebase ? 'sync~spin::charts.orange' : 'flame::charts.orange'))
+		} else if (element?.id == SideTreeItem.Project) {
+			items = [
+				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
+				new Dependency(SideTreeItem.NewFileClass, 'New Class', '', TreeItemCollapsibleState.None, 'file-code'),
+				new Dependency(SideTreeItem.NewFileJS, 'New JS', '', TreeItemCollapsibleState.None, 'file-code'),
+				new Dependency(SideTreeItem.NewFileSCSS, 'New SCSS', '', TreeItemCollapsibleState.None, 'file-code')
+			]
 		} else if (element.id == SideTreeItem.Maintenance) {
 			items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
 			items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', 'App', TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
@@ -111,6 +111,7 @@ export class Dependency extends TreeItem {
 	) {
 		super(label, collapsibleState)
 		this.id = id
+		this.contextValue = id
 		this.tooltip = label
 		this.description = this.version
 		if (typeof iconPath === 'string' || iconPath instanceof String) {
@@ -133,25 +134,23 @@ export class Dependency extends TreeItem {
 	// 	light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
 	// 	dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
 	// }
-
-	contextValue = 'dependency'
 }
 
 export enum SideTreeItem {
-	Project = 'Project',
+	Debug = 'Debug',
 		ReopenInContainer = 'ReopenInContainer',
 		Build = 'Build',
 		DebugInChrome = 'DebugInChrome',
 		HotReload = 'HotReload',
 		HotRebuild = 'HotRebuild',
-		NewFile = 'NewFile',
-			NewFilePage = 'NewFilePage',
-			NewFileClass = 'NewFileClass',
-			NewFileJS = 'NewFileJS',
-			NewFileSCSS = 'NewFileCSS',
-	Deploy = 'Deploy',
+	Release = 'Release',
 		BuildRelease = 'BuildRelease',
 		DeployToFirebase = 'DeployToFirebase',
+	Project = 'Project',
+		NewFilePage = 'NewFilePage',
+		NewFileClass = 'NewFileClass',
+		NewFileJS = 'NewFileJS',
+		NewFileSCSS = 'NewFileCSS',
 	Maintenance = 'Maintenance',
 		ClearBuildCache = 'ClearBuildCache',
 		RecompileApp = 'RecompileApp',

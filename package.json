@@ -34,7 +34,6 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [],
     "configuration": {
       "title": "SwiftStream",
       "properties": {
@@ -83,8 +82,74 @@
         }
       }
     },
+    "commands": [
+      {
+        "command": "runDebugging",
+        "title": "Debug in Chrome",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "stopDebugging",
+        "title": "Stop Debugging",
+        "icon": {
+          "dark": "assets/icons/debug-stop.svg",
+          "light": "assets/icons/debug-stop.svg"
+        }
+      },
+      {
+        "command": "stopBuildingDebug",
+        "title": "Stop Building",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "buildDebug",
+        "title": "Build in Debug",
+        "icon": {
+          "dark": "assets/icons/hammer.svg",
+          "light": "assets/icons/hammer.svg"
+        }
+      },
+      {
+        "command": "stopBuildingRelease",
+        "title": "Stop Building",
+        "icon": "$(debug-stop)"
+      }
+    ],
     "menus": {
-      "view/title": []
+      "view/title": [
+        {
+          "group": "navigation@1",
+		      "command": "runDebugging",
+		      "when": "view == workbench.view.explorer && !isDebugging"
+		    },
+        {
+          "group": "navigation@1",
+		      "command": "stopDebugging",
+		      "when": "view == workbench.view.explorer && isDebugging"
+		    },
+        {
+          "group": "navigation@2",
+		      "command": "buildDebug",
+		      "when": "view == workbench.view.explorer && !isBuilding"
+		    },
+        {
+          "group": "navigation@2",
+		      "command": "stopBuildingDebug",
+		      "when": "view == workbench.view.explorer && isBuilding"
+		    }
+      ],
+      "view/item/context": [
+        {
+          "group": "inline",
+		      "command": "stopBuildingDebug",
+		      "when": "view == webberSidebar && viewItem == Build && isBuilding"
+		    },
+        {
+          "group": "inline",
+		      "command": "stopBuildingRelease",
+		      "when": "view == webberSidebar && viewItem == BuildRelease && isBuildingRelease"
+		    }
+		  ]
     },
     "views": {
       "explorer": [

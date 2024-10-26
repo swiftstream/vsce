@@ -43,12 +43,20 @@ export enum LogLevel {
 
 export var isBuilding = false
 export function setBuilding(active: boolean) { isBuilding = active }
+export var abortBuilding: (() => void) | undefined
+export function setAbortBuilding(handler: () => void | undefined) {
+	abortBuilding = handler
+}
 export var isDebugging = false
 export function setDebugging(active: boolean) { isDebugging = active }
 export var isHotReloadEnabled = false
 export var isHotRebuildEnabled = false
 export var isBuildingRelease = false
 export function setBuildingRelease(active: boolean) { isBuildingRelease = active }
+export var abortBuildingRelease: (() => void) | undefined
+export function setAbortBuildingRelease(handler: () => void | undefined) {
+	abortBuildingRelease = handler
+}
 export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
 export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
