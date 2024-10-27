@@ -152,17 +152,7 @@
       ]
     },
     "views": {
-      "explorer": [
-        {
-          "id": "emptyProjectActions",
-          "name": "Empty Project Actions"
-        },
-        {
-          "type": "webview",
-          "id": "swiftstream.webpreview",
-          "name": "Live Preview"
-        }
-      ],
+      "explorer": [],
       "webber-sidebar": [
         {
           "id": "webberSidebar",
