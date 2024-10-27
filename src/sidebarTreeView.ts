@@ -7,8 +7,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private _onDidChangeTreeData: EventEmitter<Dependency | undefined | void> = new EventEmitter<Dependency | undefined | void>()
 	readonly onDidChangeTreeData: Event<Dependency | undefined | void> = this._onDidChangeTreeData.event
 
-	constructor() {
-	}
+	constructor() {}
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire()

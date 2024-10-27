@@ -159,8 +159,8 @@
         },
         {
           "type": "webview",
-          "id": "calicoColors.colorsView",
-          "name": "Calico Colors"
+          "id": "swiftstream.webpreview",
+          "name": "Live Preview"
         }
       ],
       "webber-sidebar": [
