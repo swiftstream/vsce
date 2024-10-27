@@ -1,6 +1,5 @@
 import { WasmFs } from '@wasmer/wasmfs'
 import { WASI } from '@wasmer/wasi'
-import { devSocket } from './wasi/devSocket.js'
 import { overrideFS } from './wasi/overrideFS.js'
 import { startWasiTask } from './wasi/startTask.js'
 import { wasiErrorHandler } from './wasi/errorHandler.js'
@@ -68,10 +67,10 @@ const wasi = new WASI({
     }
 })
 
-overrideFS(wasmFs, devSocket)
+overrideFS(wasmFs, undefined)
 
 try {
-    startWasiTask(wasi, env.target, false).catch(wasiErrorHandler)
+    startWasiTask(wasi, env.target, true).catch(wasiErrorHandler)
 } catch (e) {
     wasiErrorHandler(e)
 }
