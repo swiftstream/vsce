@@ -7,6 +7,7 @@ import { Dependency, SidebarTreeView } from './sidebarTreeView'
 import { abortBuilding, abortBuildingRelease, currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
 import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
 import { DockerImage } from './dockerImage'
+import { onDidSaveTextDocument } from './commands/onDidSaveTextDocument'
 
 export enum ExtensionMode {
 	Android = "ANDROID",
@@ -33,26 +34,7 @@ export async function activate(context: ExtensionContext) {
     projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
 		? workspace.workspaceFolders[0].uri.fsPath : undefined
 	
-	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
-	workspace.onDidSaveTextDocument(async (document: TextDocument) => {
-		if (document.languageId === "swift" && document.uri.scheme === "file") {
-			
-		} else if (document.languageId === "jsonc" && document.uri.scheme === "file") {
-			if (document.uri.path == devContainerPath) {
-				const readPorts = await readPortsFromDevContainer()
-				if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
-					setPendingNewDevPort(`${readPorts.devPort}`)
-				} else {
-					setPendingNewDevPort(undefined)
-				}
-				if (readPorts.prodPortPresent && `${readPorts.prodPort}` != currentProdPort) {
-					setPendingNewProdPort(`${readPorts.prodPort}`)
-				} else {
-					setPendingNewProdPort(undefined)
-				}
-			}
-		}
-	})
+	workspace.onDidSaveTextDocument(onDidSaveTextDocument)
 	workspace.onDidChangeTextDocument((e: TextDocumentChangeEvent) => {
 		// window.showInformationMessage(`document changed`)
 	})

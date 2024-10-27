@@ -46,11 +46,22 @@ export var abortBuilding: (() => void) | undefined
 export function setAbortBuilding(handler: () => void | undefined) {
 	abortBuilding = handler
 }
+export var isHotBuildingCSS = false
+export var isHotBuildingJS = false
+export var isHotBuildingHTML = false
+export var isHotBuildingSwift = false
+export var isAnyHotBuilding: () => boolean = () => {
+	return isHotBuildingCSS || isHotBuildingJS || isHotBuildingHTML || isHotBuildingSwift
+}
 export function setBuilding(active: boolean) {
 	if (!active) abortBuilding = undefined
 	isBuilding = active
 	commands.executeCommand('setContext', 'isBuilding', active)
 }
+export function setHotBuildingCSS(active: boolean) { isHotBuildingCSS = active }
+export function setHotBuildingJS(active: boolean) { isHotBuildingJS = active }
+export function setHotBuildingHTML(active: boolean) { isHotBuildingHTML = active }
+export function setHotBuildingSwift(active: boolean) { isHotBuildingSwift = active }
 export var isDebugging = false
 export function setDebugging(active: boolean) {
 	isDebugging = active
