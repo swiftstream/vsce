@@ -32,9 +32,9 @@ export async function buildCommand() {
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
 		// Phase 1: Resolve Swift dependencies for each build type
 		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
-		const types = allSwiftBuildTypes()
-		for (let i = 0; i < types.length; i++) {
-			const type = types[i]
+		const buildTypes = allSwiftBuildTypes()
+		for (let i = 0; i < buildTypes.length; i++) {
+			const type = buildTypes[i]
 			await resolveSwiftDependencies({
 				type: type,
 				force: true,
@@ -80,7 +80,6 @@ export async function buildCommand() {
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
-		const buildTypes = allSwiftBuildTypes()
 		for (let n = 0; n < buildTypes.length; n++) {
 			const type = buildTypes[n]
 			for (let i = 0; i < targetsDump.executables.length; i++) {
