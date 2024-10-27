@@ -1,12 +1,13 @@
 import * as fs from 'fs'
-import { ExtensionContext, TextDocument, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
+import { ExtensionContext, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
 import { WebberState } from './enums/WebberStateEnum'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
-import { abortBuilding, abortBuildingRelease, currentDevPort, currentProdPort, setPendingNewDevPort, setPendingNewProdPort, Webber } from './webber'
-import { readPortsFromDevContainer } from './helpers/readPortsFromDevContainer'
+import { abortBuilding, abortBuildingRelease, Webber } from './webber'
 import { DockerImage } from './dockerImage'
+import { buildCommand } from './commands/build'
+import { debugInChromeCommand } from './commands/debugInChrome'
 import { onDidSaveTextDocument } from './commands/onDidSaveTextDocument'
 
 export enum ExtensionMode {
