@@ -82,10 +82,10 @@ export async function buildReleaseCommand() {
 				await buildExecutableTarget({
 					type: type,
 					target: target,
-					release: type != SwiftBuildType.Wasi,
+					release: type == SwiftBuildType.Wasi,
 					force: true
 				})
-				if (type != SwiftBuildType.Wasi) {
+				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
 					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
 					await proceedWasmFile({ target: target, release: true, gzipSuccess: () => {
