@@ -1,6 +1,6 @@
 import { TextDocument } from "vscode";
 import { isInContainer, projectDirectory } from "../extension";
-import { currentDevPort, currentProdPort, LogLevel, print, setPendingNewDevPort, setPendingNewProdPort, webSourcesPath } from "../webber";
+import { currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevPort, setPendingNewProdPort, webSourcesPath } from "../webber";
 import { generateChecksum } from "../helpers/filesHelper";
 import { hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./build";
 import { readPortsFromDevContainer } from "../helpers/readPortsFromDevContainer";
@@ -9,6 +9,7 @@ var hotReloadHashes: any = {}
 
 export async function onDidSaveTextDocument(document: TextDocument) {
     if (!isInContainer) return
+    if (!isHotRebuildEnabled) return
     // if (document.isDirty) return
     if (document.uri.scheme === 'file') {
         const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
