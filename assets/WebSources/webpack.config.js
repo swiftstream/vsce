@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 
 module.exports = (env, argv) => {
+    const isDevelopment = process.env.NODE_ENV === 'development'
     const config = {
         entry: env.app.isServiceWorker ? './serviceWorker.js' : './app.js',
         module: {
@@ -13,7 +14,7 @@ module.exports = (env, argv) => {
         plugins: [
             new webpack.DefinePlugin({
                 '_SwiftStreamEnv_': JSON.stringify({
-                    isDevelopment: process.env.NODE_ENV === 'development',
+                    isDevelopment: isDevelopment,
                     target: env.app.target
                 })
             })
@@ -25,6 +26,9 @@ module.exports = (env, argv) => {
             filename: `${env.app.target}.js`,
             path: env.app.absoluteOutputPath
         }
+    }
+    if (isDevelopment) {
+        config.devtool = 'source-map'
     }
     return config
 }
