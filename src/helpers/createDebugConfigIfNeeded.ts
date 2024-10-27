@@ -26,6 +26,16 @@ export async function createDebugConfigIfNeeded(): Promise<any> {
             '--user-data-dir=/tmp',
             '--ignore-certificate-errors',
             `--unsafely-treat-insecure-origin-as-secure=https://localhost:${currentDevPort}`
+        ],
+        outFiles: [
+            '${workspaceFolder}/BuildDev/*.js'
+        ],
+        skipFiles: [
+            '${workspaceFolder}/Sources/**',
+            '${workspaceFolder}/.build/**',
+            '**/node_modules/**',
+            '**/BuildProd/**',
+            '**/WebSources/**'
         ]
     }
     const vscodePath = `${projectDirectory}/.vscode`
