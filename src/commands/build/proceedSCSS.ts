@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as sass from 'sass'
 import { projectDirectory, webber } from '../../extension'
 import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
-import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
+import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function proceedSCSS(options: { force: boolean, release: boolean }) {
@@ -24,26 +24,25 @@ export async function proceedSCSS(options: { force: boolean, release: boolean })
         return
     }
     print(`🎨 Processing CSS files`, LogLevel.Detailed)
-    for (let i = 0; i < scssInBuildFolder.length; i++) {
-        const item = scssInBuildFolder[i];
-        const relativePath = item.path.replace(buildFolder, '')
-        const saveTo = `${item.folder}/${item.pureName}.css`
-        print(`🌺 Compile CSS file: ${relativePath}`, LogLevel.Verbose)
-        buildStatus(`Compile CSS files: ${item.name}`)
-        const result = sass.compile(item.path, { style: options.release ? 'compressed' : 'expanded' })
-        fs.writeFileSync(saveTo, result.css)
-        // Remove original file to avoid recompilation
-        fs.rmSync(item.path)
+    function processArray(items: FoundFileItem[], folder: string) {
+        const isBuildFolder = folder === buildFolder
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            const relativePath = item.path.replace(folder, '')
+            const saveTo = (isBuildFolder)
+                ? `${item.folder}/${item.pureName}.css`
+                : `${buildFolder}${relativePath}`.replace(item.name, `${item.pureName}.css`)
+            print(`🌺 Compile CSS file: ${relativePath}`, LogLevel.Verbose)
+            buildStatus(`Compile CSS files: ${item.name}`)
+            const result = sass.compile(item.path, { style: options.release ? 'compressed' : 'expanded' })
+            const saveToFolderPath = saveTo.split('/').slice(0, -1).join('/')
+            if (!fs.existsSync(saveToFolderPath))
+                fs.mkdirSync(saveToFolderPath, { recursive: true })
+            fs.writeFileSync(saveTo, result.css)
+        }
     }
-    for (let i = 0; i < scssInSourcesFolder.length; i++) {
-        const item = scssInSourcesFolder[i];
-        const relativePath = item.path.replace(webFolder, '')
-        const saveTo = `${buildFolder}${relativePath}`.replace(item.name, `${item.pureName}.css`)
-        print(`🌺 Compile CSS file: ${relativePath}`, LogLevel.Verbose)
-        buildStatus(`Compile CSS files: ${item.name}`)
-        const result = sass.compile(item.path, { style: options.release ? 'compressed' : 'expanded' })
-        fs.writeFileSync(saveTo, result.css)
-    }
+    processArray(scssInBuildFolder, buildFolder)
+    processArray(scssInSourcesFolder, webFolder)
     saveLastModifiedDateForKey(LastModifiedDateType.SCSS)
     measure.finish()
     print(`🎨 Processed CSS in ${measure.time}ms`, LogLevel.Detailed)
