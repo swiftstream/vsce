@@ -19,6 +19,9 @@ export function proceedBundledResources(options: { release: boolean }) {
         for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
             const item = items[itemIndex]
             const fromFile = `${dirPath}/${item}`
+            // skip .map files for production
+            if (options.release && fromFile.endsWith('.map'))
+                continue
             const isFolder = fs.statSync(fromFile).isDirectory()
             const toFile = `${destPath}/${item}`
             print(`📑 Copy ${isFolder ? 'folder' : 'file'} ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdPath : buildDevPath}/${item}`, LogLevel.Verbose)
