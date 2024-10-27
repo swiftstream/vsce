@@ -151,6 +151,25 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "-runDebugging",
+        "key": "ctrl+r",
+        "mac": "cmd+r",
+        "when": "true"
+      },
+      {
+        "command": "-stopDebugging",
+        "key": "ctrl+.",
+        "mac": "cmd+.",
+        "when": "true"
+      },
+      {
+        "command": "-buildDebug",
+        "key": "ctrl+b",
+        "mac": "cmd+b"
+      }
+    ],
     "views": {
       "explorer": [],
       "webber-sidebar": [
