@@ -9,6 +9,7 @@ import { DockerImage } from './dockerImage'
 import { buildCommand } from './commands/build'
 import { debugInChromeCommand } from './commands/debugInChrome'
 import { onDidSaveTextDocument } from './commands/onDidSaveTextDocument'
+import { startWebsocketServer } from './commands/websocketServer'
 
 export enum ExtensionMode {
 	Android = "ANDROID",
@@ -81,8 +82,7 @@ export async function activate(context: ExtensionContext) {
 	if (projectDirectory) {
 		// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
 		await switchToProjectMode()
-
-
+		startWebsocketServer()
 	}
 }
 

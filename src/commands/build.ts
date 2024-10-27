@@ -16,6 +16,7 @@ import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
+import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./websocketServer"
 
 let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
@@ -25,11 +26,13 @@ export async function buildCommand() {
 	if (isBuilding || isAnyHotBuilding()) { return }
 	setBuilding(true)
 	sidebarTreeView?.refresh()
+	wsSendBuildStarted(false)
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
+		wsSendBuildProgress(1)
 		// Phase 1: Resolve Swift dependencies for each build type
 		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
 		const buildTypes = allSwiftBuildTypes()
@@ -44,6 +47,7 @@ export async function buildCommand() {
 				}
 			})
 		}
+		wsSendBuildProgress(10)
 		// Phase 2: Check if required Swift dependencies present
 		print('🔳 Phase 2: Check if required Swift dependencies present', LogLevel.Verbose)
 		const requiredDependencies = await checkRequiredDependencies()
@@ -58,6 +62,7 @@ export async function buildCommand() {
 			}
 			return
 		}
+		wsSendBuildProgress(15)
 		// Phase 3: Retrieve Swift targets
 		print('🔳 Phase 3: Retrieve Swift targets', LogLevel.Verbose)
 		const targetsDump = await webber.swift.getTargets()
@@ -71,12 +76,14 @@ export async function buildCommand() {
 		} else {
 			print(`It's not PWA since ServiceWorker related targets not found`, LogLevel.Verbose)
 		}
+		wsSendBuildProgress(20)
 		// Phase 4: Check that App target name present
 		print('🔳 Phase 4: Check that App target name present', LogLevel.Verbose)
 		if (!targetsDump.executables.includes(appTargetName))
 			throw `${appTargetName} is missing in the Package.swift`
 		if (isPWA && !targetsDump.serviceWorkers.includes(serviceWorkerTargetName))
 			throw `${serviceWorkerTargetName} is missing in the Package.swift`
+		wsSendBuildProgress(25)
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
@@ -101,11 +108,13 @@ export async function buildCommand() {
 				}
 			}
 		}
+		wsSendBuildProgress(50)
 		// Phase 6: Build JavaScriptKit TypeScript sources
 		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
 		await buildJavaScriptKit({
 			force: true
 		})
+		wsSendBuildProgress(60)
 		// Phase 7: Build all the web sources
 		print('🔳 Phase 7: Build all the web sources', LogLevel.Verbose)
 		await Promise.all(targetsDump.executables.map(async (target) => {
@@ -116,21 +125,27 @@ export async function buildCommand() {
 				force: true
 			})
 		}))
+		wsSendBuildProgress(65)
 		// Phase 8: Retrieve manifest from the Service target
 		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
 		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
+		wsSendBuildProgress(70)
 		// Phase 9: Retrieve index from the App target
 		print('🔳 Phase 9: Retrieve index from the App target', LogLevel.Verbose)
 		const index = await proceedIndex({ target: appTargetName, release: false })
+		wsSendBuildProgress(75)
 		// Phase 10: Copy bundled resources from Swift build folder
 		print('🔳 Phase 10: Copy bundled resources from Swift build folder', LogLevel.Verbose)
 		proceedBundledResources({ release: false })
+		wsSendBuildProgress(80)
 		// Phase 11: Compile SCSS
 		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
 		await proceedSCSS({ force: true, release: false })
+		wsSendBuildProgress(90)
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		wsSendBuildProgress(95)
 		// Phase 13: Await Gzipping
 		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
@@ -138,20 +153,25 @@ export async function buildCommand() {
 			await awaitGzipping(awaitGzippingParams)
 		}
 		measure.finish()
+		wsSendBuildProgress(100)
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
 		setBuilding(false)
 		sidebarTreeView?.refresh()
+		wsSendHotReload()
 	} catch (error: any) {
 		setBuilding(false)
 		sidebarTreeView?.refresh()
 		const text = `Debug Build Failed`
 		if (isString(error)) {
 			print(`🧯 ${error}`)
+			wsSendBuildError(`${error}`)
 		} else {
 			const json = JSON.stringify(error)
-			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
+			const errorText = `${json === '{}' ? error : json}`
+			print(`🧯 ${text}: ${errorText}`)
+			wsSendBuildError(`${errorText}`)
 			console.error(error)
 		}
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
@@ -180,6 +200,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	setBuilding(true)
 	setHotBuildingSwift(true)
 	sidebarTreeView?.refresh()
+	wsSendBuildStarted(true)
 	print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
@@ -269,6 +290,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		setBuilding(false)
 		setHotBuildingSwift(false)
 		sidebarTreeView?.refresh()
+		wsSendHotReload()
 		const awaitingParams = awaitingHotRebuildSwift.pop()
 		if (awaitingParams) {
 			print(`👉 Passing to delayed Swift hot rebuild call`, LogLevel.Verbose)
@@ -281,9 +303,12 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		const text = `Hot Rebuild Swift Failed`
 		if (isString(error)) {
 			print(`🧯 ${error}`)
+			wsSendBuildError(`${error}`)
 		} else {
 			const json = JSON.stringify(error)
-			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
+			const errorText = `${json === '{}' ? error : json}`
+			print(`🧯 ${text}: ${errorText}`)
+			wsSendBuildError(`${errorText}`)
 			console.error(error)
 		}
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
@@ -304,6 +329,7 @@ export async function hotRebuildCSS() {
 	setBuilding(true)
 	setHotBuildingCSS(true)
 	sidebarTreeView?.refresh()
+	wsSendBuildStarted(true)
 	const measure = new TimeMeasure()
 	try {
 		print('🔥 Hot Rebuilding CSS', LogLevel.Detailed)
@@ -315,6 +341,7 @@ export async function hotRebuildCSS() {
 		setBuilding(false)
 		setHotBuildingCSS(false)
 		sidebarTreeView?.refresh()
+		wsSendHotReload()
 		if (awaitingHotRebuildCSS) {
 			awaitingHotRebuildCSS = false
 			print(`👉 Passing to delayed CSS hot rebuild call`, LogLevel.Verbose)
@@ -327,9 +354,12 @@ export async function hotRebuildCSS() {
 		const text = `Hot Rebuild CSS Failed`
 		if (isString(error)) {
 			print(`🧯 ${error}`)
+			wsSendBuildError(`${error}`)
 		} else {
 			const json = JSON.stringify(error)
-			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
+			const errorText = `${json === '{}' ? error : json}`
+			print(`🧯 ${text}: ${errorText}`)
+			wsSendBuildError(`${errorText}`)
 			console.error(error)
 		}
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
@@ -350,6 +380,7 @@ export async function hotRebuildJS() {
 	setBuilding(true)
 	setHotBuildingJS(true)
 	sidebarTreeView?.refresh()
+	wsSendBuildStarted(true)
 	const measure = new TimeMeasure()
 	try {
 		print('🔥 Hot Rebuilding JS', LogLevel.Detailed)
@@ -374,6 +405,7 @@ export async function hotRebuildJS() {
 		setBuilding(false)
 		setHotBuildingJS(false)
 		sidebarTreeView?.refresh()
+		wsSendHotReload()
 		if (awaitingHotRebuildJS) {
 			awaitingHotRebuildJS = false
 			print(`👉 Passing to delayed JS hot rebuild call`, LogLevel.Verbose)
@@ -386,9 +418,12 @@ export async function hotRebuildJS() {
 		const text = `Hot Rebuild JS Failed`
 		if (isString(error)) {
 			print(`🧯 ${error}`)
+			wsSendBuildError(`${error}`)
 		} else {
 			const json = JSON.stringify(error)
-			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
+			const errorText = `${json === '{}' ? error : json}`
+			print(`🧯 ${text}: ${errorText}`)
+			wsSendBuildError(`${errorText}`)
 			console.error(error)
 		}
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
@@ -419,6 +454,7 @@ export async function hotRebuildHTML() {
 		setBuilding(true)
 		setHotBuildingHTML(true)
 		sidebarTreeView?.refresh()
+		wsSendBuildStarted(true)
 		print('🔥 Hot Rebuilding HTML', LogLevel.Detailed)
 		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
 		const index = await proceedIndex({ target: appTargetName, release: false })
@@ -430,6 +466,7 @@ export async function hotRebuildHTML() {
 		setBuilding(false)
 		setHotBuildingHTML(false)
 		sidebarTreeView?.refresh()
+		wsSendHotReload()
 		if (awaitingHotRebuildHTML) {
 			awaitingHotRebuildHTML = false
 			print(`👉 Passing to delayed HTML hot rebuild call`, LogLevel.Verbose)
@@ -442,9 +479,12 @@ export async function hotRebuildHTML() {
 		const text = `Hot Rebuild HTML Failed`
 		if (isString(error)) {
 			print(`🧯 ${error}`)
+			wsSendBuildError(`${error}`)
 		} else {
 			const json = JSON.stringify(error)
-			print(`🧯 ${text}: ${json === '{}' ? error : json}`)
+			const errorText = `${json === '{}' ? error : json}`
+			print(`🧯 ${text}: ${errorText}`)
+			wsSendBuildError(`${errorText}`)
 			console.error(error)
 		}
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
