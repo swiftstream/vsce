@@ -116,40 +116,40 @@
       }
     ],
     "menus": {
-      "view/title": [
+      "editor/title": [
+        {
+          "group": "navigation@0",
+          "command": "runDebugging",
+          "when": "!isDebugging"
+        },
+        {
+          "group": "navigation@0",
+          "command": "stopDebugging",
+          "when": "isDebugging"
+        },
         {
           "group": "navigation@1",
-		      "command": "runDebugging",
-		      "when": "view == workbench.view.explorer && !isDebugging"
-		    },
+          "command": "buildDebug",
+          "when": "!isBuilding"
+        },
         {
           "group": "navigation@1",
-		      "command": "stopDebugging",
-		      "when": "view == workbench.view.explorer && isDebugging"
-		    },
-        {
-          "group": "navigation@2",
-		      "command": "buildDebug",
-		      "when": "view == workbench.view.explorer && !isBuilding"
-		    },
-        {
-          "group": "navigation@2",
-		      "command": "stopBuildingDebug",
-		      "when": "view == workbench.view.explorer && isBuilding"
-		    }
+          "command": "stopBuildingDebug",
+          "when": "isBuilding"
+        }
       ],
       "view/item/context": [
         {
           "group": "inline",
-		      "command": "stopBuildingDebug",
-		      "when": "view == webberSidebar && viewItem == Build && isBuilding"
-		    },
+          "command": "stopBuildingDebug",
+          "when": "view == webberSidebar && viewItem == Build && isBuilding"
+        },
         {
           "group": "inline",
-		      "command": "stopBuildingRelease",
-		      "when": "view == webberSidebar && viewItem == BuildRelease && isBuildingRelease"
-		    }
-		  ]
+          "command": "stopBuildingRelease",
+          "when": "view == webberSidebar && viewItem == BuildRelease && isBuildingRelease"
+        }
+      ]
     },
     "views": {
       "explorer": [
