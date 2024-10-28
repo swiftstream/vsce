@@ -1,5 +1,5 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingSCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, containsSCSS, containsJS, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsService, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding } from "./webber"
 import { env } from "process"
 import { isInContainer } from "./extension"
 
@@ -56,17 +56,15 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
 				new Dependency(SideTreeItem.NewFileClass, 'New Class', '', TreeItemCollapsibleState.None, 'file-code'),
 				new Dependency(SideTreeItem.NewFileJS, 'New JS', '', TreeItemCollapsibleState.None, 'file-code'),
-				new Dependency(SideTreeItem.NewFileSCSS, 'New SCSS', '', TreeItemCollapsibleState.None, 'file-code')
+				new Dependency(SideTreeItem.NewFileSCSS, 'New CSS', '', TreeItemCollapsibleState.None, 'file-code')
 			]
 		} else if (element.id == SideTreeItem.Maintenance) {
 			items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
 			items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', 'App', TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
 			if (containsService)
 				items.push(new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', 'Service', TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'))
-			if (containsJS)
-				items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
-			if (containsSCSS)
-				items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingSCSS ? 'Recompiling' : 'Recompile', 'SCSS', TreeItemCollapsibleState.None, isRecompilingSCSS ? 'sync~spin' : 'symbol-color'))
+			items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
+			items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingCSS ? 'sync~spin' : 'symbol-color'))
 		} else if (element.id == SideTreeItem.Settings) {
 			items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
 			items.push(new Dependency(SideTreeItem.DevPort, 'Port (debug)', `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))

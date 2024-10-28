@@ -11,7 +11,7 @@ import { buildJavaScriptKit } from './build/buildJavaScriptKit'
 import { buildWebSources } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
-import { proceedSCSS } from "./build/proceedSCSS"
+import { proceedCSS } from "./build/proceedCSS"
 import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
@@ -122,7 +122,7 @@ export async function buildReleaseCommand() {
 		proceedBundledResources({ release: true })
 		// Phase 11: Compile SCSS
 		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
-		await proceedSCSS({ force: true, release: true })
+		await proceedCSS({ force: true, release: true })
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: true })

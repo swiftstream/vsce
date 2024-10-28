@@ -5,7 +5,7 @@ import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPa
 import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
-export async function proceedSCSS(options: { force: boolean, release: boolean }) {
+export async function proceedCSS(options: { force: boolean, release: boolean }) {
     if (!webber) throw `webber is null`
     const measure = new TimeMeasure()
     const webFolder = `${projectDirectory}/${webSourcesPath}`
