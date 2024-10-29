@@ -53,8 +53,12 @@ export async function buildCommand() {
 		print('🔳 Phase 2: Check if required Swift dependencies present', LogLevel.Verbose)
 		const requiredDependencies = await checkRequiredDependencies()
 		if (requiredDependencies.missing.length > 0) {
-			clearStatus()
+			measure.finish()
+			setBuilding(false)
+			sidebarTreeView?.refresh()
 			const text = `Missing ${requiredDependencies.missing.map((x) => `\`${x}\``).join(', ')} package${requiredDependencies.missing.length > 1 ? 's' : ''}`
+			const error = `Debug Build Failed: ${text}`
+			status('error', `${text} (${measure.time}ms)`, StatusType.Error)
 			print(`🙆‍♂️ ${text}`)
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 			if (result == 'Retry') {
