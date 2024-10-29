@@ -4,7 +4,7 @@ import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, SwiftBuildType, SwiftTargets } from '../swift'
+import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -30,6 +30,7 @@ export async function buildReleaseCommand() {
 		// Phase 1: Resolve Swift dependencies for each build type
 		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
 		const buildTypes = allSwiftBuildTypes()
+		createSymlinkFoldersIfNeeded()
 		for (let i = 0; i < buildTypes.length; i++) {
 			const type = buildTypes[i]
 			await resolveSwiftDependencies({

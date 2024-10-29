@@ -410,7 +410,41 @@ export enum SwiftBuildType {
     Wasi = 'wasi'
 }
 export function allSwiftBuildTypes(): SwiftBuildType[] {
+    /// Really important to have Native first!
     return [SwiftBuildType.Native, SwiftBuildType.Wasi]
+}
+
+export function createSymlinkFoldersIfNeeded() {
+    const buildPath = `${projectDirectory}/.build`
+    function createFolderIfNeeded(path) {
+        if (!fs.existsSync(path))
+            fs.mkdirSync(path)
+    }
+    createFolderIfNeeded(buildPath)
+    createFolderIfNeeded(`${buildPath}/checkouts`)
+    createFolderIfNeeded(`${buildPath}/repositories`)
+    const buildTypes = allSwiftBuildTypes().filter((x) => x != SwiftBuildType.Native)
+    for (let i = 0; i < buildTypes.length; i++) {
+        const type = buildTypes[i]
+        const typeBuildPath = `${buildPath}/.${type}`
+        if (!fs.existsSync(typeBuildPath))
+            fs.mkdirSync(typeBuildPath)
+        function createSymlink(name: string) {
+            let pathTarget = `${buildPath}/${name}`
+            let pathSymlink = `${typeBuildPath}/${name}`
+            if (fs.existsSync(pathSymlink)) {
+                if (fs.lstatSync(pathSymlink).isSymbolicLink()) {}
+                else if (fs.lstatSync(pathSymlink).isDirectory()) {
+                    fs.rmdirSync(pathSymlink, { recursive: true })
+                    fs.symlinkSync(pathTarget, pathSymlink)
+                }
+            } else {
+                fs.symlinkSync(pathTarget, pathSymlink)
+            }
+        }
+        createSymlink('checkouts')
+        createSymlink('repositories')
+    }
 }
 
 export interface SplashData {
