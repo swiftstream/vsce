@@ -1,14 +1,15 @@
+import * as fs from 'fs'
 import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession } from "vscode";
 import { Toolchain } from "./toolchain";
 import { SideTreeItem } from "./sidebarTreeView";
-import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from "./extension";
+import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { Swift } from "./swift";
 import { NPM } from "./npm";
 import { Webpack } from "./webpack";
 import { reopenInContainerCommand } from "./commands/reopenInContainer";
-import { buildCommand } from "./commands/build";
+import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./commands/build";
 import { debugInChromeCommand } from "./commands/debugInChrome";
 import { hotReloadCommand } from "./commands/hotReload";
 import { hotRebuildCommand } from "./commands/hotRebuild";
@@ -19,10 +20,6 @@ import { loggingLevelCommand } from "./commands/loggingLevel";
 import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCommand } from "./commands/newFile";
 import { portDevCommand } from "./commands/portDev";
 import { portProdCommand } from "./commands/portProd";
-import { recompileAppCommand } from "./commands/recompileApp";
-import { recompileCSSCommand } from "./commands/recompileCSS";
-import { recompileJSCommand } from "./commands/recompileJS";
-import { recompileServiceCommand } from "./commands/recompileService";
 import { updateSwifWebCommand, updateJSKitCommand } from "./commands/suggestions";
 import { documentationCommand, repositoryCommand, discussionsCommand, submitAnIssueCommand } from "./commands/support";
 import { toolchainCommand } from "./commands/toolchain";
@@ -58,10 +55,25 @@ export function setBuilding(active: boolean) {
 	isBuilding = active
 	commands.executeCommand('setContext', 'isBuilding', active)
 }
-export function setHotBuildingCSS(active: boolean) { isHotBuildingCSS = active }
-export function setHotBuildingJS(active: boolean) { isHotBuildingJS = active }
-export function setHotBuildingHTML(active: boolean) { isHotBuildingHTML = active }
-export function setHotBuildingSwift(active: boolean) { isHotBuildingSwift = active }
+export function setHotBuildingCSS(active: boolean) {
+	isHotBuildingCSS = active
+	isRecompilingCSS = active
+}
+export function setHotBuildingJS(active: boolean) {
+	isHotBuildingJS = active
+	isRecompilingJS = active
+}
+export function setHotBuildingHTML(active: boolean) {
+	isHotBuildingHTML = active
+	isRecompilingHTML = active
+}
+export function setHotBuildingSwift(active: boolean) {
+	isHotBuildingSwift = active
+	if (!active) {
+		isRecompilingApp = false
+		isRecompilingService = false
+	}
+}
 export var isDebugging = false
 export function setDebugging(active: boolean) {
 	isDebugging = active
@@ -84,16 +96,34 @@ export var isClearingBuildCache = false
 export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
 export var isClearedBuildCache = false
 export function setClearedBuildCache(active: boolean) { isClearedBuildCache = active }
-export var isRecompilingApp = false
 export var webSourcesPath = 'WebSources'
 export var appTargetName = 'App'
 export var serviceWorkerTargetName = 'Service'
 export var buildDevPath = 'BuildDev'
 export var buildProdPath = 'BuildProd'
-export var containsService = true // TODO: check if contains service
+export var containsAppTarget = async () => {
+	if (!webber) return false
+	const targetsDump = cachedSwiftTargets ?? await webber.swift.getTargets()
+	return targetsDump.executables.includes(appTargetName)
+}
+export var canRecompileAppTarget = () => {
+	return fs.existsSync(`${projectDirectory}/.build/debug/${appTargetName}`)
+}
+export var containsServiceTarget = async () => {
+	if (!webber) return false
+	const targetsDump = cachedSwiftTargets ?? await webber.swift.getTargets()
+	return targetsDump.serviceWorkers.includes(serviceWorkerTargetName)
+}
+export var canRecompileServiceTarget = () => {
+	return fs.existsSync(`${projectDirectory}/.build/debug/${serviceWorkerTargetName}`)
+}
+export var isRecompilingApp = false
+export function setRecompilingApp(active: boolean) { isRecompilingApp = active }
 export var isRecompilingService = false
+export function setRecompilingService(active: boolean) { isRecompilingService = active }
 export var isRecompilingJS = false
 export var isRecompilingCSS = false
+export var isRecompilingHTML = false
 export var containsRecommendations = true // TODO: check if contains any recommendations
 export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be updated
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
@@ -254,10 +284,15 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, buildReleaseCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DeployToFirebase, deployToFirebaseCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileApp, recompileAppCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileService, recompileServiceCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, recompileJSCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, recompileCSSCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileApp, () => {
+			hotRebuildSwift({ target: appTargetName })
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileService, () => {
+			hotRebuildSwift({ target: serviceWorkerTargetName })
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, hotRebuildJS))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, hotRebuildCSS))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileHTML, hotRebuildHTML))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))

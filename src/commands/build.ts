@@ -199,6 +199,8 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	}
 	setBuilding(true)
 	setHotBuildingSwift(true)
+	setRecompilingApp(params.target == appTargetName)
+	setRecompilingService(params.target == serviceWorkerTargetName)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
 	print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
