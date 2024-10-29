@@ -96,6 +96,7 @@ export var isClearingBuildCache = false
 export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
 export var isClearedBuildCache = false
 export function setClearedBuildCache(active: boolean) { isClearedBuildCache = active }
+export var indexFile = 'index.html'
 export var webSourcesPath = 'WebSources'
 export var appTargetName = 'App'
 export var serviceWorkerTargetName = 'Service'
@@ -208,6 +209,7 @@ export class Webber {
 			this.setHotReload()
 			this.setHotRebuild()
 			this.setLoggingLevel()
+			this.setIndexFile()
 			this.setWebSourcesPath()
 			workspace.onDidChangeConfiguration(event => {
 				if (event.affectsConfiguration('swifweb.hotReload'))
@@ -216,6 +218,8 @@ export class Webber {
 					this.setHotRebuild()
 				if (event.affectsConfiguration('swifweb.loggingLevel'))
 					this.setLoggingLevel()
+				if (event.affectsConfiguration('swifweb.indexFile'))
+					this.setIndexFile()
 				if (event.affectsConfiguration('swifweb.webSourcesPath'))
 					this.setWebSourcesPath()
 				if (event.affectsConfiguration('swifweb.appTargetName'))
@@ -241,6 +245,12 @@ export class Webber {
 	setLoggingLevel(value?: LogLevel) {
 		currentLoggingLevel = value ?? workspace.getConfiguration().get('swifweb.loggingLevel') as LogLevel
 		if (value) workspace.getConfiguration().update('swifweb.loggingLevel', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setIndexFile(value?: string) {
+		indexFile = value ?? workspace.getConfiguration().get('swifweb.indexFile') as string
+		if (value) workspace.getConfiguration().update('swifweb.indexFile', value)
 		sidebarTreeView?.refresh()
 	}
 

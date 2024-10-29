@@ -62,20 +62,26 @@
           "default": "Normal",
           "uniqueItems": true
         },
-        "swifweb.webSourcesPath": {
+        "swifweb.indexFile": {
           "order": 4,
+          "type": "string",
+          "description": "Name of the index HTML file",
+          "default": "index.html"
+        },
+        "swifweb.webSourcesPath": {
+          "order": 5,
           "type": "string",
           "description": "Relative path to folder with web source files including node package.json",
           "default": "WebSources"
         },
         "swifweb.appTargetName": {
-          "order": 5,
+          "order": 6,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "swifweb.serviceWorkerTargetName": {
-          "order": 6,
+          "order": 7,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
