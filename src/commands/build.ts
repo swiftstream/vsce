@@ -58,6 +58,7 @@ export async function buildCommand() {
 			sidebarTreeView?.refresh()
 			const text = `Missing ${requiredDependencies.missing.map((x) => `\`${x}\``).join(', ')} package${requiredDependencies.missing.length > 1 ? 's' : ''}`
 			const error = `Debug Build Failed: ${text}`
+			wsSendBuildError(`${error}`)
 			status('error', `${text} (${measure.time}ms)`, StatusType.Error)
 			print(`🙆‍♂️ ${text}`)
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
@@ -146,7 +147,7 @@ export async function buildCommand() {
 		// Phase 11: Compile SCSS
 		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
 		await proceedCSS({ force: true, release: false })
-		wsSendBuildProgress(90)
+		wsSendBuildProgress(85)
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
