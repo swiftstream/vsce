@@ -1,5 +1,5 @@
 import { sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildStatus, clearStatus, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, status, StatusType } from "../webber"
+import { appTargetName, buildStatus, clearStatus, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -18,7 +18,7 @@ import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
 import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./websocketServer"
 
-let cachedSwiftTargets: SwiftTargets | undefined
+export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
 
 export async function buildCommand() {
