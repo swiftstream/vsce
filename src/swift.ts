@@ -21,7 +21,7 @@ export class Swift {
     }
 
     async getTargets(): Promise<SwiftTargets> {
-        print(`Going to retrieve swift targets`, LogLevel.Verbose)
+        print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
@@ -41,7 +41,7 @@ export class Swift {
                     }
                 }
             }
-            print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Verbose)
+            print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Unbearable)
             return result
         } catch (error: any) {
             console.dir({getTargetsError: error})
@@ -82,7 +82,7 @@ export class Swift {
         try {
             const result = await this.webber.bash.execute({
                 path: executablePath,
-                description: `grabbing PWA manifest`,
+                description: `grab PWA manifest`,
                 cwd: projectDirectory
             }, [])
             return JSON.parse(result.stdout)
@@ -100,7 +100,7 @@ export class Swift {
         try {
             const result = await this.webber.bash.execute({
                 path: executablePath,
-                description: `grabbing Index`,
+                description: `grab Index`,
                 cwd: projectDirectory
             }, ['--index'])
             const startCode = '==INDEX-START=='
@@ -127,7 +127,7 @@ export class Swift {
         try {
             const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
-                description: `resolving dependencies for ${type}`,
+                description: `resolve dependencies for ${type}`,
                 cwd: projectDirectory
             }, args)
             if (result.code != 0) {
@@ -192,6 +192,7 @@ export class Swift {
             '--product', options.targetName,
             '--build-path', options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`
         ]
+        // TODO: check swift version, it is different for >=6.0.0 because of SDK
         if (options.type == SwiftBuildType.Wasi) {
             args = [...args,
                 '--enable-test-discovery',
@@ -215,10 +216,11 @@ export class Swift {
             print(`🧰 ${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
             const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
-                description: `Building swift`,
+                description: `build swift`,
                 cwd: projectDirectory,
                 env: env,
                 processInstanceHandler: (process) => {
+                    // TODO: process.kill('SIGKILL')
                     if (!options.progressHandler) return
                     process.stdout.on('data', function(msg) {
                         const m = msg.toString()
