@@ -306,6 +306,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 			hotRebuildSwift(awaitingParams)
 		}
 	} catch (error) {
+		awaitingHotRebuildSwift = []
 		setBuilding(false)
 		setHotBuildingSwift(false)
 		sidebarTreeView?.refresh()
@@ -357,6 +358,7 @@ export async function hotRebuildCSS() {
 			hotRebuildCSS()
 		}
 	} catch (error) {
+		awaitingHotRebuildCSS = false
 		setBuilding(false)
 		setHotBuildingCSS(false)
 		sidebarTreeView?.refresh()
@@ -482,6 +484,7 @@ export async function hotRebuildHTML() {
 			hotRebuildHTML()
 		}
 	} catch (error) {
+		awaitingHotRebuildHTML = false
 		setBuilding(false)
 		setHotBuildingHTML(false)
 		sidebarTreeView?.refresh()
