@@ -7,7 +7,7 @@ server {
 
 	server_name _;
 	
-	root ${PWD}/BuildDev;
+	root ${PWD}/DevPublic;
 
 	error_page 404 /custom_404.html;
     location = /custom_404.html {
@@ -33,7 +33,7 @@ server {
 	proxy_set_header Host ${DOLLAR}host;
 	proxy_set_header X-Forwarded-For ${DOLLAR}remote_addr;
 
-	root ${PWD}/BuildDev;
+	root ${PWD}/DevPublic;
 
     gzip on;
 	gzip_comp_level 6;
@@ -89,7 +89,7 @@ server {
 	proxy_set_header Host ${DOLLAR}host;
 	proxy_set_header X-Forwarded-For ${DOLLAR}remote_addr;
 
-	root ${PWD}/BuildProd;
+	root ${PWD}/DistPublic;
 
     gzip on;
 	gzip_comp_level 6;
