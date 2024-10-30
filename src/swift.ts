@@ -437,7 +437,7 @@ export function createSymlinkFoldersIfNeeded() {
             if (fs.existsSync(pathSymlink)) {
                 if (fs.lstatSync(pathSymlink).isSymbolicLink()) {}
                 else if (fs.lstatSync(pathSymlink).isDirectory()) {
-                    fs.rmdirSync(pathSymlink, { recursive: true })
+                    fs.rmSync(pathSymlink, { recursive: true, force: true })
                     fs.symlinkSync(pathTarget, pathSymlink)
                 }
             } else {

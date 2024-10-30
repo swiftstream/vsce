@@ -471,7 +471,7 @@ async function createNewProjectFiles(
 		window.showErrorMessage(`Unable to create project: ${error}`)
 		if (!pathWasExists) {
 			try {
-				fs.rmdirSync(path, { recursive: true })
+				fs.rmSync(path, { recursive: true })
 			} catch (error) {
 				window.showErrorMessage(`Unable to delete: ${error}`)
 			}

@@ -29,7 +29,7 @@ export function proceedBundledResources(options: { release: boolean }) {
                 print(`🚨 \`/${item}\` ${isFolder ? 'folder' : 'file'} has been overwritten`, LogLevel.Detailed)
             fs.cpSync(fromFile, toFile, { recursive: true, force: true })
             try {
-                if (isFolder) fs.rmdirSync(fromFile)
+                if (isFolder) fs.rmSync(fromFile, { recursive: true, force: true })
                 else fs.rmSync(fromFile)
             } catch {}
         }
