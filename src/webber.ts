@@ -209,7 +209,6 @@ export class Webber {
 			this.setHotReload()
 			this.setHotRebuild()
 			this.setLoggingLevel()
-			this.setIndexFile()
 			this.setWebSourcesPath()
 			workspace.onDidChangeConfiguration(event => {
 				if (event.affectsConfiguration('web.hotReload'))
@@ -218,8 +217,6 @@ export class Webber {
 					this.setHotRebuild()
 				if (event.affectsConfiguration('web.loggingLevel'))
 					this.setLoggingLevel()
-				if (event.affectsConfiguration('web.indexFile'))
-					this.setIndexFile()
 				if (event.affectsConfiguration('web.webSourcesPath'))
 					this.setWebSourcesPath()
 				if (event.affectsConfiguration('web.appTargetName'))
@@ -245,12 +242,6 @@ export class Webber {
 	setLoggingLevel(value?: LogLevel) {
 		currentLoggingLevel = value ?? workspace.getConfiguration().get('web.loggingLevel') as LogLevel
 		if (value) workspace.getConfiguration().update('web.loggingLevel', value)
-		sidebarTreeView?.refresh()
-	}
-
-	setIndexFile(value?: string) {
-		indexFile = value ?? workspace.getConfiguration().get('web.indexFile') as string
-		if (value) workspace.getConfiguration().update('web.indexFile', value)
 		sidebarTreeView?.refresh()
 	}
 

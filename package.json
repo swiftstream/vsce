@@ -62,26 +62,20 @@
           "default": "Normal",
           "uniqueItems": true
         },
-        "web.indexFile": {
-          "order": 4,
-          "type": "string",
-          "description": "Name of the index HTML file",
-          "default": "index.html"
-        },
         "web.appTargetName": {
-          "order": 5,
+          "order": 4,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "web.serviceWorkerTargetName": {
-          "order": 6,
+          "order": 5,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
         },
         "web.webSourcesPath": {
-          "order": 7,
+          "order": 6,
           "type": "string",
           "description": "Relative path to folder with web source files and package.json",
           "default": "WebSources"
