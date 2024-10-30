@@ -1,7 +1,9 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
 import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget } from "./webber"
 import { env } from "process"
-import { isInContainer } from "./extension"
+import { ExtensionMode, extensionMode, isInContainer } from "./extension"
+import { SwiftBuildType } from "./swift"
+import { doesPackageCheckedOut, KnownPackage } from "./commands/build/helpers"
 
 export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private _onDidChangeTreeData: EventEmitter<Dependency | undefined | void> = new EventEmitter<Dependency | undefined | void>()
@@ -80,12 +82,22 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			if (items.length == 0)
 				items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
 		} else if (element?.id == SideTreeItem.Support) {
-			items = [
-				new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'),
-				new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'),
-				new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'),
-				new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange')
-			]
+			if (extensionMode == ExtensionMode.Web) {
+				items.push(new Dependency(SideTreeItem.WebDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+			} else if (extensionMode == ExtensionMode.Android) {
+				items.push(new Dependency(SideTreeItem.AndroidDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+			} else if (extensionMode == ExtensionMode.Server) {
+				if (doesPackageCheckedOut(KnownPackage.Vapor)) {
+					items.push(new Dependency(SideTreeItem.VaporDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				} else if (doesPackageCheckedOut(KnownPackage.Hummingbird)) {
+					items.push(new Dependency(SideTreeItem.HummingbirdDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				} else {
+					items.push(new Dependency(SideTreeItem.ServerDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				}
+			}
+			items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
+			items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
+			items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
 		}
 		return items
 	}
@@ -166,7 +178,11 @@ export enum SideTreeItem {
 		UpdateSwifWeb = 'UpdateSwifWeb',
 		UpdateJSKit = 'UpdateJSKit',
 	Support = 'Support',
-		Documentation = 'Documentation',
+		WebDocumentation = 'Documentation',
+		AndroidDocumentation = 'Documentation',
+		VaporDocumentation = 'Documentation',
+		HummingbirdDocumentation = 'Documentation',
+		ServerDocumentation = 'Documentation',
 		Repository = 'Repository',
 		Discussions = 'Discussions',
 		SubmitAnIssue = 'SubmitAnIssue'
