@@ -8,13 +8,19 @@
 		"args": {}
     },
 	"containerEnv": {
-		// official tags are cutting the last digit if it is 0, e.g. 5.9, 5.10
-		"S_TOOLCHAIN": "swift-6.0.1-RELEASE", // from https://www.swift.org/download
-		// artifacts may have full version string, e.g. 5.9.0, 5.10.0
-		// so please be carefull with that
-		"S_ARTIFACT": "swift-6.0.1-RELEASE", // >=6.0.1 from https://github.com/finagolfin/swift-android-sdk/releases
-		"S_ANDROID": "24-0.1", // part of the artifact bundle name
-		"S_MODE": "ANDROID" // project mode for the swift.stream extension
+		// project mode for the swift.stream extension
+		"S_MODE": "ANDROID",
+		// from https://www.swift.org/download
+		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0.1-release/ubuntu2004/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0.1-release/ubuntu2004-aarch64/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+		// from https://github.com/finagolfin/swift-android-sdk/releases
+		"S_ARTIFACT_URL": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.1/swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz",
+		// part of the artifact bundle name
+		"S_ANDROID_VERSION": "24-0.1",
+		// semver
+		"S_VERSION_MAJOR": "6",
+		"S_VERSION_MINOR": "0",
+		"S_VERSION_PATCH": "1"
 	},
 	"postStartCommand": "cmd.sh",
 	"customizations": {
