@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
 import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from "../../helpers/filesHelper"
-import { buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesPath } from "../../webber"
+import { buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesFolder } from "../../webber"
 import { WebpackMode } from '../../webpack'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
@@ -34,7 +34,7 @@ export async function buildWebSources(options: { target: string, isServiceWorker
     print(`🌳 Built \`${options.target}\` web target in ${measure.time}ms`, LogLevel.Detailed)
 }
 function doesDependenciesPresent(): boolean {
-	const value = fs.existsSync(`${projectDirectory}/${webSourcesPath}/node_modules`)
+	const value = fs.existsSync(`${projectDirectory}/${webSourcesFolder}/node_modules`)
 	print(`Web sources: node_modules ${value ? 'present' : 'not present'}`, LogLevel.Unbearable)
 	return value
 }
@@ -45,11 +45,11 @@ function doesBundlePresent(options: { target: string, bundlePath: string }): boo
 }
 function doesModifiedAnyJSTSFile(target: string): boolean {
     if (wasFileModified({
-        path: `${projectDirectory}/${webSourcesPath}/package.json`,
+        path: `${projectDirectory}/${webSourcesFolder}/package.json`,
         lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.WebSources, target)
     })) return true
     if (wasPathModified({
-        path: `${projectDirectory}/${webSourcesPath}`,
+        path: `${projectDirectory}/${webSourcesFolder}`,
         recursive: true,
         specificExtensions: ['js', 'ts'],
         lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.WebSources, target)

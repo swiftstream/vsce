@@ -2,10 +2,10 @@ import * as fs from 'fs'
 import { JSDOM } from 'jsdom'
 import { TimeMeasure } from "../../helpers/timeMeasureHelper"
 import { projectDirectory } from '../../extension'
-import { buildDevFolder, buildProdFolder, buildStatus, indexFile, LogLevel, print, webSourcesPath } from '../../webber'
+import { buildDevFolder, buildProdFolder, buildStatus, indexFile, LogLevel, print, webSourcesFolder } from '../../webber'
 
 export async function proceedAdditionalJS(options: { release: boolean, executableTargets: string[], exactFile?: string }) {
-    const webFolder = `${projectDirectory}/${webSourcesPath}`
+    const webFolder = `${projectDirectory}/${webSourcesFolder}`
     const buildFolder = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     function processItem(pathFrom: string): boolean {
         if (!fs.existsSync(pathFrom))
@@ -63,7 +63,7 @@ export async function proceedAdditionalJS(options: { release: boolean, executabl
 }
 
 export function listOfAdditionalJSFiles(options: { release: boolean, executableTargets: string[] }): string[] {
-    const webFolder = `${projectDirectory}/${webSourcesPath}`
+    const webFolder = `${projectDirectory}/${webSourcesFolder}`
     const indexPath = `${webFolder}/${indexFile}`
     if (!fs.existsSync(indexPath))
         return []
@@ -85,7 +85,7 @@ export function listOfAdditionalJSFiles(options: { release: boolean, executableT
         // avoid rewriting target files since they are managed by webpack
         if (options.executableTargets.map(x => x.toLowerCase()).includes(path.replace('.js', '')))
             continue
-        const pathFrom = `${projectDirectory}/${webSourcesPath}/${path}`
+        const pathFrom = `${projectDirectory}/${webSourcesFolder}/${path}`
         if (!fs.existsSync(pathFrom))
             continue
         result.push(pathFrom)

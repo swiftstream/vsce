@@ -6,7 +6,7 @@ import { defaultDevPort, defaultProdPort, extensionContext } from '../extension'
 import { copyFile } from '../helpers/copyFile'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
-import { webSourcesPath } from '../webber'
+import { webSourcesFolder } from '../webber'
 
 let webViewPanel: WebviewPanel | undefined
 
@@ -447,7 +447,7 @@ async function createNewProjectFiles(
 			}
 		}
 		// MARK: PACKAGE.json
-		const wSourcesPath = `${path}/${webSourcesPath}`
+		const wSourcesPath = `${path}/${webSourcesFolder}`
 		if (!fs.existsSync(wSourcesPath)) {
 			fs.mkdirSync(wSourcesPath, { recursive: true })
 		}

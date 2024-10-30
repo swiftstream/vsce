@@ -1,5 +1,5 @@
 import { BashResult } from './bash'
-import { Webber, webSourcesPath } from './webber'
+import { Webber, webSourcesFolder } from './webber'
 import { projectDirectory } from './extension'
 
 export enum WebpackMode {
@@ -23,7 +23,7 @@ export class Webpack {
         const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `executing webpack`,
-            cwd: `${projectDirectory}/${webSourcesPath}`
+            cwd: `${projectDirectory}/${webSourcesFolder}`
         }, args)
         return result
     }

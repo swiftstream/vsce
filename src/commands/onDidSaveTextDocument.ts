@@ -1,6 +1,6 @@
 import { TextDocument } from "vscode";
 import { isInContainer, projectDirectory } from "../extension";
-import { currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevPort, setPendingNewProdPort, webSourcesPath } from "../webber";
+import { currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevPort, setPendingNewProdPort, webSourcesFolder } from "../webber";
 import { generateChecksum } from "../helpers/filesHelper";
 import { hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./build";
 import { readPortsFromDevContainer } from "../helpers/readPortsFromDevContainer";
@@ -49,7 +49,7 @@ export async function onDidSaveTextDocument(document: TextDocument) {
             }
         }
         // Web sources
-        else if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesPath}`)) {
+        else if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesFolder}`)) {
             // CSS
             if (['css', 'scss', 'sass'].includes(document.languageId)) {
                 await goThroughHashCheck(async () => {
@@ -57,7 +57,7 @@ export async function onDidSaveTextDocument(document: TextDocument) {
                 })
             }
             // JavaScript
-            else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesPath}/tsconfig.json`) {
+            else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesFolder}/tsconfig.json`) {
                 await goThroughHashCheck(async () => {
                     await hotRebuildJS({ path: document.uri.path })
                 })

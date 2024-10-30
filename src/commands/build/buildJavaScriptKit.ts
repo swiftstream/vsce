@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
-import { buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
+import { buildStatus, LogLevel, print, webSourcesFolder } from '../../webber'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { SwiftBuildType } from '../../swift'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
@@ -46,7 +46,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
 		}
 	} else {
 		print(`Building JavaScriptKit: checking versions`, LogLevel.Verbose)
-		const projectPackageLockPath = `${projectDirectory}/${webSourcesPath}/package-lock.json`
+		const projectPackageLockPath = `${projectDirectory}/${webSourcesFolder}/package-lock.json`
 		const jsKitPackagePath = `${jsKitPath}/package.json`
 		if (fs.existsSync(projectPackageLockPath)) {
 			const versions = readVersions({ projectLock: projectPackageLockPath, jsKitPackage: jsKitPackagePath })

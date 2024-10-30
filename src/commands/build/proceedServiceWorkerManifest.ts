@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { buildDevFolder, buildProdFolder, LogLevel, print, serviceWorkerTargetName, webSourcesPath } from "../../webber"
+import { buildDevFolder, buildProdFolder, LogLevel, print, serviceWorkerTargetName, webSourcesFolder } from "../../webber"
 import { projectDirectory, webber } from '../../extension'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
@@ -29,10 +29,10 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
     return generatedManifest
 }
 function getStaticManifest(fileName: string): any | undefined {
-    if (!fs.existsSync(`${projectDirectory}/${webSourcesPath}/${fileName}.webmanifest`))
+    if (!fs.existsSync(`${projectDirectory}/${webSourcesFolder}/${fileName}.webmanifest`))
         return undefined
     try {
-        return JSON5.parse(fs.readFileSync(`${projectDirectory}/${webSourcesPath}/${fileName}.webmanifest`, 'utf8'))
+        return JSON5.parse(fs.readFileSync(`${projectDirectory}/${webSourcesFolder}/${fileName}.webmanifest`, 'utf8'))
     } catch (error) {
         console.dir({parseStaticManifestError:error})
         return undefined
