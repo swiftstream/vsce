@@ -108,6 +108,8 @@ async function createNewProjectFiles(
 			devContainerContent = devContainerContent.replace(`${defaultProdPort}:444`, `${availableProdPort}:444`)
 			fs.writeFileSync(devContainerPath, devContainerContent)
 		}
+		// Copy .gitignore
+		await copyFile(`assets/WebSources/.gitignore`, `${path}/.gitignore`)
 		// Copy WebSources
 		if (!fs.existsSync(`${path}/WebSources`)) {
 			fs.mkdirSync(`${path}/WebSources`)

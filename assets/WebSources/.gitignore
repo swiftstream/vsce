@@ -1,0 +1,8 @@
+.DS_Store
+.build
+.swiftpm
+.env
+DevPublic
+DistPublic
+WebSources/dist
+WebSources/node_modules
