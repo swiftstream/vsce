@@ -59,7 +59,7 @@ export async function onDidSaveTextDocument(document: TextDocument) {
             // JavaScript
             else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesPath}/tsconfig.json`) {
                 await goThroughHashCheck(async () => {
-                    await hotRebuildJS()
+                    await hotRebuildJS({ path: document.uri.path })
                 })
             }
             // HTML

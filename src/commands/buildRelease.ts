@@ -16,6 +16,7 @@ import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
+import { proceedAdditionalJS } from "./build/proceedAdditionalJS"
 
 export async function buildReleaseCommand() {
 	if (!webber) return
@@ -127,10 +128,13 @@ export async function buildReleaseCommand() {
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: true })
-		// Phase 13: Await Gzipping
+		// Phase 13: Process additional JS
+		print('🔳 Phase 13: Process additional JS', LogLevel.Verbose)
+		proceedAdditionalJS({ release: true, executableTargets: targetsDump.executables })
+		// Phase 14: Await Gzipping
 		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
-			print('⏳ Phase 13: Await gzipping', LogLevel.Detailed)
+			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
 		}
 		measure.finish()

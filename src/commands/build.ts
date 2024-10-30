@@ -16,7 +16,8 @@ import { proceedHTML } from "./build/proceedHTML"
 import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
-import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./websocketServer"
+import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./webSocketServer"
+import { listOfAdditionalJSFiles, proceedAdditionalJS } from "./build/proceedAdditionalJS"
 
 export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
@@ -151,11 +152,15 @@ export async function buildCommand() {
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		wsSendBuildProgress(90)
+		// Phase 13: Process additional JS
+		print('🔳 Phase 13: Process additional JS', LogLevel.Verbose)
+		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
 		wsSendBuildProgress(95)
-		// Phase 13: Await Gzipping
+		// Phase 14: Await Gzipping
 		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
-			print('⏳ Phase 13: Await gzipping', LogLevel.Detailed)
+			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
 		}
 		measure.finish()
@@ -194,7 +199,7 @@ let awaitingHotRebuildSwift: HotRebuildSwiftParams[] = []
 
 export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	if (!webber) return
-	if (isBuilding || isHotBuildingHTML || isHotBuildingSwift) {
+	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
 		if (!isBuilding) {
 			if (awaitingHotRebuildSwift.filter((x) => x.target == params.target).length == 0) {
 				print(`👉 Delay Swift hot rebuild call`, LogLevel.Verbose)
@@ -215,7 +220,11 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	try {
 		// Retrieve Swift targets
 		print('🔳 Retrieve Swift targets', LogLevel.Verbose)
-		const targetsDump = cachedSwiftTargets ?? await webber.swift.getTargets()
+		let targetsDump = cachedSwiftTargets
+		if (!targetsDump) {
+			targetsDump = await webber.swift.getTargets()
+			cachedSwiftTargets = targetsDump
+		}
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0
@@ -287,6 +296,9 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		} catch (error) {
 			print(`😳 Failed building HTML`)
 		}
+		// Process additional JS
+		print('🔳 Process additional JS', LogLevel.Verbose)
+		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
 		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsToRebuild, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Await gzipping', LogLevel.Detailed)
@@ -377,14 +389,20 @@ export async function hotRebuildCSS() {
 	}
 }
 
-let awaitingHotRebuildJS = false
+interface HotRebuildJSParams {
+	path: string
+}
 
-export async function hotRebuildJS() {
+let awaitingHotRebuildJS: HotRebuildJSParams[] = []
+
+export async function hotRebuildJS(params: HotRebuildJSParams) {
 	if (!webber) return
-	if (isBuilding || isHotBuildingJS) {
+	if (isBuilding || isHotBuildingHTML || isHotBuildingSwift || isHotBuildingJS) {
 		if (!isBuilding) {
-			print(`👉 Delay JS hot rebuild call`, LogLevel.Verbose)
-			awaitingHotRebuildJS = true
+			if (awaitingHotRebuildJS.filter((x) => x.path == params.path).length == 0) {
+				print(`👉 Delay JS hot rebuild call`, LogLevel.Verbose)
+				awaitingHotRebuildJS.push(params)
+			}
 		}
 		return
 	}
@@ -393,13 +411,37 @@ export async function hotRebuildJS() {
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
 	const measure = new TimeMeasure()
+	function finishHotRebuild() {
+		measure.finish()
+		status('flame', `Hot Rebuilt JS in ${measure.time}ms`, StatusType.Success)
+		print(`🔥 Hot Rebuilt JS in ${measure.time}ms`)
+		console.log(`Hot Rebuilt JS in ${measure.time}ms`)
+		setBuilding(false)
+		setHotBuildingJS(false)
+		sidebarTreeView?.refresh()
+		wsSendHotReload()
+		const awaitingParams = awaitingHotRebuildJS.pop()
+		if (awaitingParams) {
+			print(`👉 Passing to delayed JS hot rebuild call`, LogLevel.Verbose)
+			hotRebuildJS(awaitingParams)
+		}
+	}
 	try {
 		print('🔥 Hot Rebuilding JS', LogLevel.Detailed)
 		let targetsDump = cachedSwiftTargets
-		if (targetsDump === undefined) {
+		if (!targetsDump) {
 			targetsDump = await webber.swift.getTargets()
-			if (targetsDump.executables.length == 0)
-				throw `No targets to build`
+			cachedSwiftTargets = targetsDump
+		}
+		if (targetsDump.executables.length == 0)
+			throw `No targets to build`
+		const additionalFiles = listOfAdditionalJSFiles({ release: false, executableTargets: targetsDump.executables })
+		print(`changed file: ${params.path}`)
+		print(`additionalFiles: \n${additionalFiles.join('\n')}`)
+		if (additionalFiles.includes(params.path)) {
+			proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables, exactFile: params.path })
+			finishHotRebuild()
+			return
 		}
 		await Promise.all(targetsDump.executables.map(async (target) => {
 			await buildWebSources({
@@ -409,20 +451,9 @@ export async function hotRebuildJS() {
 				force: true
 			})
 		}))
-		measure.finish()
-		status('flame', `Hot Rebuilt JS in ${measure.time}ms`, StatusType.Success)
-		print(`🔥 Hot Rebuilt JS in ${measure.time}ms`)
-		console.log(`Hot Rebuilt JS in ${measure.time}ms`)
-		setBuilding(false)
-		setHotBuildingJS(false)
-		sidebarTreeView?.refresh()
-		wsSendHotReload()
-		if (awaitingHotRebuildJS) {
-			awaitingHotRebuildJS = false
-			print(`👉 Passing to delayed JS hot rebuild call`, LogLevel.Verbose)
-			hotRebuildJS()
-		}
+		finishHotRebuild()
 	} catch (error) {
+		awaitingHotRebuildJS = []
 		setBuilding(false)
 		setHotBuildingJS(false)
 		sidebarTreeView?.refresh()
@@ -445,7 +476,7 @@ let awaitingHotRebuildHTML = false
 
 export async function hotRebuildHTML() {
 	if (!webber) return
-	if (isBuilding || isHotBuildingHTML || isHotBuildingSwift) {
+	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
 		if (!isBuilding) {
 			print(`👉 Delay HTML hot rebuild call`, LogLevel.Verbose)
 			awaitingHotRebuildHTML = true
@@ -455,10 +486,14 @@ export async function hotRebuildHTML() {
 	const measure = new TimeMeasure()
 	try {
 		let isPWA = cachedIsPWA
+		let targetsDump = cachedSwiftTargets
+		if (!targetsDump) {
+			targetsDump = await webber.swift.getTargets()
+			cachedSwiftTargets = targetsDump
+		}
+		if (targetsDump.executables.length == 0)
+			throw `No targets to build`
 		if (isPWA === undefined) {
-			const targetsDump = cachedSwiftTargets ?? await webber.swift.getTargets()
-			if (targetsDump.executables.length == 0)
-				throw `No targets to build`
 			isPWA = targetsDump.serviceWorkers.length > 0
 			cachedIsPWA = isPWA
 		}
@@ -470,6 +505,9 @@ export async function hotRebuildHTML() {
 		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
 		const index = await proceedIndex({ target: appTargetName, release: false })
 		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		// Process additional JS
+		print('🔳 Process additional JS', LogLevel.Verbose)
+		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
 		measure.finish()
 		status('flame', `Hot Rebuilt HTML in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt HTML in ${measure.time}ms`)
