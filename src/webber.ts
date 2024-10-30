@@ -212,63 +212,63 @@ export class Webber {
 			this.setIndexFile()
 			this.setWebSourcesPath()
 			workspace.onDidChangeConfiguration(event => {
-				if (event.affectsConfiguration('swifweb.hotReload'))
+				if (event.affectsConfiguration('web.hotReload'))
 					this.setHotReload()
-				if (event.affectsConfiguration('swifweb.hotRebuild'))
+				if (event.affectsConfiguration('web.hotRebuild'))
 					this.setHotRebuild()
-				if (event.affectsConfiguration('swifweb.loggingLevel'))
+				if (event.affectsConfiguration('web.loggingLevel'))
 					this.setLoggingLevel()
-				if (event.affectsConfiguration('swifweb.indexFile'))
+				if (event.affectsConfiguration('web.indexFile'))
 					this.setIndexFile()
-				if (event.affectsConfiguration('swifweb.webSourcesPath'))
+				if (event.affectsConfiguration('web.webSourcesPath'))
 					this.setWebSourcesPath()
-				if (event.affectsConfiguration('swifweb.appTargetName'))
+				if (event.affectsConfiguration('web.appTargetName'))
 					this.setAppTargetName()
-				if (event.affectsConfiguration('swifweb.serviceWorkerTargetName'))
+				if (event.affectsConfiguration('web.serviceWorkerTargetName'))
 					this.setServiceWorkerTargetName()
 			})
 		}
 	}
 
 	setHotReload(value?: boolean) {
-		isHotReloadEnabled = value ?? workspace.getConfiguration().get('swifweb.hotReload') as boolean
-		if (value === true || value === false) workspace.getConfiguration().update('swifweb.hotReload', value)
+		isHotReloadEnabled = value ?? workspace.getConfiguration().get('web.hotReload') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('web.hotReload', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setHotRebuild(value?: boolean) {
-		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swifweb.hotRebuild') as boolean
-		if (value === true || value === false) workspace.getConfiguration().update('swifweb.hotRebuild', value)
+		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('web.hotRebuild') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('web.hotRebuild', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setLoggingLevel(value?: LogLevel) {
-		currentLoggingLevel = value ?? workspace.getConfiguration().get('swifweb.loggingLevel') as LogLevel
-		if (value) workspace.getConfiguration().update('swifweb.loggingLevel', value)
+		currentLoggingLevel = value ?? workspace.getConfiguration().get('web.loggingLevel') as LogLevel
+		if (value) workspace.getConfiguration().update('web.loggingLevel', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setIndexFile(value?: string) {
-		indexFile = value ?? workspace.getConfiguration().get('swifweb.indexFile') as string
-		if (value) workspace.getConfiguration().update('swifweb.indexFile', value)
+		indexFile = value ?? workspace.getConfiguration().get('web.indexFile') as string
+		if (value) workspace.getConfiguration().update('web.indexFile', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setWebSourcesPath(value?: string) {
-		webSourcesPath = value ?? workspace.getConfiguration().get('swifweb.webSourcesPath') as string
-		if (value) workspace.getConfiguration().update('swifweb.webSourcesPath', value)
+		webSourcesPath = value ?? workspace.getConfiguration().get('web.webSourcesPath') as string
+		if (value) workspace.getConfiguration().update('web.webSourcesPath', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setAppTargetName(value?: string) {
-		appTargetName = value ?? workspace.getConfiguration().get('swifweb.appTargetName') as string
-		if (value) workspace.getConfiguration().update('swifweb.appTargetName', value)
+		appTargetName = value ?? workspace.getConfiguration().get('web.appTargetName') as string
+		if (value) workspace.getConfiguration().update('web.appTargetName', value)
 		sidebarTreeView?.refresh()
 	}
 
 	setServiceWorkerTargetName(value?: string) {
-		serviceWorkerTargetName = value ?? workspace.getConfiguration().get('swifweb.serviceWorkerTargetName') as string
-		if (value) workspace.getConfiguration().update('swifweb.serviceWorkerTargetName', value)
+		serviceWorkerTargetName = value ?? workspace.getConfiguration().get('web.serviceWorkerTargetName') as string
+		if (value) workspace.getConfiguration().update('web.serviceWorkerTargetName', value)
 		sidebarTreeView?.refresh()
 	}
 

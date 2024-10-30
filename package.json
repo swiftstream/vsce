@@ -35,21 +35,21 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "title": "SwiftStream",
+      "title": "Swift Stream",
       "properties": {
-        "swifweb.hotReload": {
+        "web.hotReload": {
           "order": 1,
           "type": "boolean",
           "default": true,
           "description": "Hot reload in the browser whenever any file saved"
         },
-        "swifweb.hotRebuild": {
+        "web.hotRebuild": {
           "order": 2,
           "type": "boolean",
           "default": true,
           "description": "Hot rebuild whenever any file saved"
         },
-        "swifweb.loggingLevel": {
+        "web.loggingLevel": {
           "order": 3,
           "type": "string",
           "description": "Building process log level",
@@ -62,29 +62,29 @@
           "default": "Normal",
           "uniqueItems": true
         },
-        "swifweb.indexFile": {
+        "web.indexFile": {
           "order": 4,
           "type": "string",
           "description": "Name of the index HTML file",
           "default": "index.html"
         },
-        "swifweb.webSourcesPath": {
+        "web.appTargetName": {
           "order": 5,
-          "type": "string",
-          "description": "Relative path to folder with web source files including node package.json",
-          "default": "WebSources"
-        },
-        "swifweb.appTargetName": {
-          "order": 6,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
-        "swifweb.serviceWorkerTargetName": {
-          "order": 7,
+        "web.serviceWorkerTargetName": {
+          "order": 6,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
+        },
+        "web.webSourcesPath": {
+          "order": 7,
+          "type": "string",
+          "description": "Relative path to folder with web source files and package.json",
+          "default": "WebSources"
         }
       }
     },
