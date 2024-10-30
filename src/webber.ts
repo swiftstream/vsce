@@ -97,7 +97,7 @@ export function setClearingBuildCache(active: boolean) { isClearingBuildCache = 
 export var isClearedBuildCache = false
 export function setClearedBuildCache(active: boolean) { isClearedBuildCache = active }
 export var indexFile = 'index.html'
-export var webSourcesPath = 'WebSources'
+export var webSourcesFolder = 'WebSources'
 export var appTargetName = 'App'
 export var serviceWorkerTargetName = 'Service'
 export var buildDevFolder = 'DevPublic'
@@ -192,7 +192,7 @@ export class Webber {
 		this.bash = new Bash()
 		this.toolchain = new Toolchain(this)
 		this.swift = new Swift(this)
-		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesPath}`)
+		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesFolder}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
 		this.wasm = new Wasm(this)
