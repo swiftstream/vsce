@@ -1,5 +1,6 @@
-import { sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildStatus, clearStatus, isBuildingRelease, LogLevel, print, serviceWorkerTargetName, setBuildingRelease, status, StatusType } from "../webber"
+import * as fs from 'fs'
+import { projectDirectory, sidebarTreeView, webber } from "../extension"
+import { appTargetName, buildProdFolder, buildStatus, clearStatus, isBuildingRelease, LogLevel, print, serviceWorkerTargetName, setBuildingRelease, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -28,6 +29,10 @@ export async function buildReleaseCommand() {
 	try {
 		print(`🏗️ Started building release`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
+		// Phase 0: Remove DistPublic folder
+		print('🔳 Phase 0: Remove DistPublic folder', LogLevel.Verbose)
+		const destPath = `${projectDirectory}/${buildProdFolder}`
+		fs.rmSync(destPath, { recursive: true, force: true })
 		// Phase 1: Resolve Swift dependencies for each build type
 		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
 		const buildTypes = allSwiftBuildTypes()
