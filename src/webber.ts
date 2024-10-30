@@ -21,7 +21,7 @@ import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCo
 import { portDevCommand } from "./commands/portDev";
 import { portProdCommand } from "./commands/portProd";
 import { updateSwifWebCommand, updateJSKitCommand } from "./commands/suggestions";
-import { documentationCommand, repositoryCommand, discussionsCommand, submitAnIssueCommand } from "./commands/support";
+import { repositoryCommand, discussionsCommand, submitAnIssueCommand, webDocumentationCommand, androidDocumentationCommand, vaporDocumentationCommand, hummingbirdDocumentationCommand, serverDocumentationCommand } from "./commands/support";
 import { toolchainCommand } from "./commands/toolchain";
 import { Gzip } from "./gzip";
 import { Bash } from "./bash";
