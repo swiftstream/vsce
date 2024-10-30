@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from "../extension"
-import { buildDevPath, isBuilding, isClearedBuildCache, isClearingBuildCache, LogLevel, print, setClearedBuildCache, setClearingBuildCache, status, StatusType } from "../webber"
+import { buildDevFolder, isBuilding, isClearedBuildCache, isClearingBuildCache, LogLevel, print, setClearedBuildCache, setClearingBuildCache, status, StatusType } from "../webber"
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { createSymlinkFoldersIfNeeded } from '../swift'
 
@@ -11,15 +11,15 @@ export function clearBuildCacheCommand() {
 	sidebarTreeView?.refresh()
 	const swiftPMCache = `/root/.cache/org.swift.swiftpm`
 	const buildCacheFolder = `${projectDirectory}/.build`
-	const buildDevFolder = `${projectDirectory}/${buildDevPath}`
+	const buildDevFolderPath = `${projectDirectory}/${buildDevFolder}`
 	print(`🧹 Clearing Build Cache`, LogLevel.Detailed)
 	const measure = new TimeMeasure()
 	if (fs.existsSync(swiftPMCache))
 		fs.rmdirSync(swiftPMCache, { recursive: true })
 	if (fs.existsSync(buildCacheFolder))
 		fs.rmdirSync(buildCacheFolder, { recursive: true })
-	if (fs.existsSync(buildDevFolder))
-		fs.rmdirSync(buildDevFolder, { recursive: true })
+	if (fs.existsSync(buildDevFolderPath))
+		fs.rmdirSync(buildDevFolderPath, { recursive: true })
 	createSymlinkFoldersIfNeeded()
 	measure.finish()
 	function afterClearing() {

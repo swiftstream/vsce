@@ -1,13 +1,13 @@
 import * as fs from 'fs'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { buildDevPath, buildProdPath, LogLevel, print } from '../../webber'
+import { buildDevFolder, buildProdFolder, LogLevel, print } from '../../webber'
 import { projectDirectory, webber } from '../../extension'
 import { SwiftBuildType } from '../../swift'
 
 export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void }): Promise<any> {
     if (!webber) throw `webber is null`
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
-    const destPath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const destPath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     if (!fs.existsSync(buildFolder)) throw `Unable to process WASM files, seems swift project hasn't been built`
     const timeMeasure = new TimeMeasure()
     const lowercasedTarget = options.target.toLowerCase()

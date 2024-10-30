@@ -100,8 +100,8 @@ export var indexFile = 'index.html'
 export var webSourcesPath = 'WebSources'
 export var appTargetName = 'App'
 export var serviceWorkerTargetName = 'Service'
-export var buildDevPath = 'BuildDev'
-export var buildProdPath = 'BuildProd'
+export var buildDevFolder = 'DevPublic'
+export var buildProdFolder = 'DistPublic'
 export var containsAppTarget = async () => {
 	if (!webber) return false
 	const targetsDump = cachedSwiftTargets ?? await webber.swift.getTargets()

@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { buildDevPath, buildProdPath, LogLevel, print, serviceWorkerTargetName, webSourcesPath } from "../../webber"
+import { buildDevFolder, buildProdFolder, LogLevel, print, serviceWorkerTargetName, webSourcesPath } from "../../webber"
 import { projectDirectory, webber } from '../../extension'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
@@ -19,7 +19,7 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
         // override generated manifest data with the static one
         generatedManifest = {...generatedManifest, ...staticManifest}
     }
-    const outputDir = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const outputDir = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     const pathToSaveManifest = `${outputDir}/${webManifestFileName}.webmanifest`
     if (!fs.existsSync(outputDir))
         fs.mkdirSync(outputDir, { recursive: true })

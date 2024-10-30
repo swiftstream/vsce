@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
 import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from "../../helpers/filesHelper"
-import { buildDevPath, buildProdPath, buildStatus, LogLevel, print, webSourcesPath } from "../../webber"
+import { buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesPath } from "../../webber"
 import { WebpackMode } from '../../webpack'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
@@ -21,7 +21,7 @@ export async function buildWebSources(options: { target: string, isServiceWorker
         await webber.npmWeb.install()
     }
     buildStatus(`Building ${options.target} web target sources`)
-    const bundlePath = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const bundlePath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     await webber.webpack.build(WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath })) {
         print(`🌳 Second attempt for \`${options.target}\` web target`, LogLevel.Detailed)

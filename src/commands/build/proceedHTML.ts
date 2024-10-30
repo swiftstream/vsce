@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory } from '../../extension'
-import { buildDevPath, buildProdPath, buildStatus, indexFile, LogLevel, print, webSourcesPath } from '../../webber'
+import { buildDevFolder, buildProdFolder, buildStatus, indexFile, LogLevel, print, webSourcesPath } from '../../webber'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { Index, SplashData } from '../../swift'
@@ -11,7 +11,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     const measure = new TimeMeasure()
     const lastModifiedDate = getLastModifiedDate(LastModifiedDateType.HTML)
     const webFolder = `${projectDirectory}/${webSourcesPath}`
-    const buildFolder = `${projectDirectory}/${options.release ? buildProdPath : buildDevPath}`
+    const buildFolder = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     const indexPath = `${webFolder}/${indexFile}`
     const manifestFileNameValue = options.manifest?.file_name ?? 'site'
     var isIndexChanged = false
