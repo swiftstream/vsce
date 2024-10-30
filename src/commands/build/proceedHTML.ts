@@ -272,16 +272,53 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
         const item = htmlInSourcesFolder[i];
         const relativePath = item.path.replace(webFolder, '')
         const saveTo = `${buildFolder}${relativePath}`.replace(item.name, `${item.pureName}.html`)
+        const saveToFolderPath = saveTo.split('/').slice(0, -1).join('/')
+        if (!fs.existsSync(saveToFolderPath))
+            fs.mkdirSync(saveToFolderPath, { recursive: true })
         print(`🌺 Copy HTML file: ${relativePath}`, LogLevel.Verbose)
         buildStatus(`Copy HTML files: ${item.name}`)
-        if (indexPath == item.path) {
-            const html = fs.readFileSync(item.path, 'utf8')
-                                .replaceAll(` ${managedBy}`, '')
-                                .replace('type="text/javascript" name="app"', 'type="text/javascript"')
-            fs.writeFileSync(saveTo, html)
-        } else {
-            fs.copyFileSync(item.path, saveTo)
+        const htmlString = fs.readFileSync(item.path, 'utf8')
+        const htmlLines = htmlString.split('\n')
+        var lines: string[] = []
+        function checkAndReplaceAttribute(line: string, attribute: string): string {
+            const toKeep = options.release ? `${attribute}Prod` : `${attribute}Dev`
+            const toRemove = options.release ? `${attribute}Dev` : `${attribute}Prod`
+            if (line.includes(`${attribute}="`) && line.includes(`${toKeep}="`)) {
+                const srcToKeep = line.split(`${toKeep}="`)[1].split('"')[0]
+                const src = line.split(`${attribute}="`)[1].split('"')[0]
+                line = line.replace(` ${toKeep}="${srcToKeep}"`, '').replace(`${attribute}="${src}"`, `${attribute}="${srcToKeep}"`)
+            }
+            if (line.includes(`${attribute}="`) && line.includes(`${toRemove}="`)) {
+                const path = line.split(`${toRemove}="`)[1].split('"')[0]
+                line = line.replace(` ${toRemove}="${path}"`, '')
+            }
+            return line
         }
+        for (let i = 0; i < htmlLines.length; i++) {
+            const htmlLine = htmlLines[i]
+            // Skip managed lines, proceed only custom
+            if (htmlLine.includes(managedBy)) {
+                lines.push(htmlLine)
+                continue
+            }
+            // <link>
+            if (htmlLine.trimStart().startsWith('<link')) {
+                lines.push(checkAndReplaceAttribute(htmlLine, 'href'))
+            }
+            // <script>
+            else if (htmlLine.trimStart().startsWith('<script')) {
+                lines.push(checkAndReplaceAttribute(htmlLine, 'src'))
+            }
+            // keep the rest
+            else {
+                lines.push(htmlLine)
+            }
+        }
+        let newHTML = lines.join('\n')
+        if (indexPath == item.path) {
+            newHTML = newHTML.replaceAll(` ${managedBy}`, '').replace('type="text/javascript" name="app"', 'type="text/javascript"')
+        }
+        fs.writeFileSync(saveTo, newHTML)
     }
     saveLastModifiedDateForKey(LastModifiedDateType.HTML)
     measure.finish()
