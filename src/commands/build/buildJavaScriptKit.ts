@@ -2,9 +2,9 @@ import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
 import { buildStatus, LogLevel, print, webSourcesPath } from '../../webber'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
-import { doesJavaScriptKitCheckedOut } from './helpers'
 import { SwiftBuildType } from '../../swift'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { doesPackageCheckedOut, KnownPackage } from './helpers'
 
 export async function buildJavaScriptKit(options: { force: boolean }) {
     if (!webber) throw `webber is null`
@@ -13,7 +13,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
     var packageWasCompiled = doesJavaScriptKitCompiled(jsKitPath)
     const measure = new TimeMeasure()
     const doesPackageModulesPresent = () => fs.existsSync(`${jsKitPath}/node_modules`)
-    if (doesJavaScriptKitCheckedOut(SwiftBuildType.Wasi)) {
+    if (doesPackageCheckedOut(KnownPackage.JavaScriptKit)) {
         packageWasModified = wasFileModified({
             path: `${jsKitPath}/package.json`,
             lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.JavaScriptKitPackage)

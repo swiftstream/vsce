@@ -1,11 +1,10 @@
-import { SwiftBuildType } from "../../swift"
-import { doesJavaScriptKitCheckedOut, doesWebCheckedOut } from "./helpers"
+import { doesPackageCheckedOut, KnownPackage } from "./helpers"
 
 export async function checkRequiredDependencies() {
     var result: { missing: string[] } = { missing: [] }
-    if (!doesJavaScriptKitCheckedOut(SwiftBuildType.Wasi))
+    if (!doesPackageCheckedOut(KnownPackage.JavaScriptKit))
         result.missing.push('JavaScriptKit')
-    if (!doesWebCheckedOut(SwiftBuildType.Wasi))
+    if (!doesPackageCheckedOut(KnownPackage.Web))
         result.missing.push('web')
     return result
 }
