@@ -39,7 +39,8 @@
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
 				"swift.backgroundCompilation": false,
-				"swift.showCreateSwiftProjectInWelcomePage": false
+				"swift.showCreateSwiftProjectInWelcomePage": false,
+				"editor.semanticHighlighting.enabled": true
 			}
 		}
 	},
