@@ -8,7 +8,7 @@ import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, Index, SwiftBuildType
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
-import { buildWebSources } from './build/buildWebSources'
+import { buildWebSourcesForAllTargets } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedCSS } from "./build/proceedCSS"
@@ -124,14 +124,12 @@ export async function buildCommand() {
 		wsSendBuildProgress(60)
 		// Phase 7: Build all the web sources
 		print('🔳 Phase 7: Build all the web sources', LogLevel.Verbose)
-		await Promise.all(targetsDump.executables.map(async (target) => {
-			await buildWebSources({
-				target: target,
-				isServiceWorker: !(target === appTargetName),
-				release: false,
-				force: true
-			})
-		}))
+		await buildWebSourcesForAllTargets({
+			targets: targetsDump.executables,
+			release: false,
+			force: true,
+			parallel: false
+		})
 		wsSendBuildProgress(65)
 		// Phase 8: Retrieve manifest from the Service target
 		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
@@ -443,14 +441,12 @@ export async function hotRebuildJS(params: HotRebuildJSParams) {
 			finishHotRebuild()
 			return
 		}
-		await Promise.all(targetsDump.executables.map(async (target) => {
-			await buildWebSources({
-				target: target,
-				isServiceWorker: !(target === appTargetName),
-				release: false,
-				force: true
-			})
-		}))
+		await buildWebSourcesForAllTargets({
+			targets: targetsDump.executables,
+			release: false,
+			force: true,
+			parallel: false
+		})
 		finishHotRebuild()
 	} catch (error) {
 		awaitingHotRebuildJS = []

@@ -1,11 +1,35 @@
 import * as fs from 'fs'
 import { projectDirectory, webber } from "../../extension"
 import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from "../../helpers/filesHelper"
-import { buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesFolder } from "../../webber"
+import { appTargetName, buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesFolder } from "../../webber"
 import { WebpackMode } from '../../webpack'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
-export async function buildWebSources(options: { target: string, isServiceWorker: boolean, release: boolean, force: boolean }) {
+export async function buildWebSourcesForAllTargets(options: { targets: string[], release: boolean, force: boolean, parallel: boolean }) {
+    if (!options.parallel) {
+        print('Building web sources one by one', LogLevel.Verbose)
+        for (let i = 0; i < options.targets.length; i++) {
+            const target = options.targets[i]
+            await buildWebSources({
+                target: target,
+                isServiceWorker: !(target === appTargetName),
+                release: false,
+                force: true
+            })
+        }
+    } else {
+        print('Building web sources in parallel', LogLevel.Verbose)
+        await Promise.all(options.targets.map(async (target) => {
+            await buildWebSources({
+                target: target,
+                isServiceWorker: !(target === appTargetName),
+                release: false,
+                force: true
+            })
+        }))
+    }
+}
+async function buildWebSources(options: { target: string, isServiceWorker: boolean, release: boolean, force: boolean }) {
     if (!webber) throw `webber is null`
     if (!options.force && doesDependenciesPresent() && !doesModifiedAnyJSTSFile(options.target)) {
         print(`buildWebSources skipping for ${options.target} target because force == false and nothing was modified`, LogLevel.Verbose)

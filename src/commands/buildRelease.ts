@@ -9,7 +9,7 @@ import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, Swift
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
-import { buildWebSources } from './build/buildWebSources'
+import { buildWebSourcesForAllTargets } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
 import { proceedBundledResources } from "./build/proceedBundledResources"
 import { proceedCSS } from "./build/proceedCSS"
@@ -110,14 +110,12 @@ export async function buildReleaseCommand() {
 		})
 		// Phase 7: Build all the web sources
 		print('🔳 Phase 7: Build all the web sources', LogLevel.Verbose)
-		await Promise.all(targetsDump.executables.map(async (target) => {
-			await buildWebSources({
-				target: target,
-				isServiceWorker: !(target === appTargetName),
-				release: true,
-				force: true
-			})
-		}))
+		await buildWebSourcesForAllTargets({
+			targets: targetsDump.executables,
+			release: true,
+			force: true,
+			parallel: false
+		})
 		// Phase 8: Retrieve manifest from the Service target
 		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
 		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: true })
