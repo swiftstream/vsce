@@ -4,6 +4,7 @@ import { env } from "process"
 import { ExtensionMode, extensionMode, isInContainer } from "./extension"
 import { SwiftBuildType } from "./swift"
 import { doesPackageCheckedOut, KnownPackage } from "./commands/build/helpers"
+import path from "node:path"
 
 export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private _onDidChangeTreeData: EventEmitter<Dependency | undefined | void> = new EventEmitter<Dependency | undefined | void>()
@@ -45,11 +46,11 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Expanded, 'heart', false))
 		} else if (element?.id == SideTreeItem.Debug) {
 			items = [
-				new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : 'run::charts.green'),
+				new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : { light: path.join(__filename, '..', '..', 'assets', 'icons', 'hammer.svg'), dark: path.join(__filename, '..', '..', 'assets', 'icons', 'hammer.svg') }),
 				new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
-				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
-				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red')
 				new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console'),
+				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'),
+				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline')
 			]
 		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
