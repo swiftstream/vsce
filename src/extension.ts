@@ -58,6 +58,10 @@ export async function activate(context: ExtensionContext) {
 			console.dir(added)
 		}
 	})
+	// Monitoring files rename
+	workspace.onDidRenameFiles(event => {
+		webber?.onDidRenameFiles(event)
+	})
 
 	webber = new Webber()
 

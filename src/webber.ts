@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession } from "vscode";
+import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession, FileRenameEvent } from "vscode";
 import { Toolchain } from "./toolchain";
 import { SideTreeItem } from "./sidebarTreeView";
 import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
@@ -246,7 +246,14 @@ export class Webber {
 	}
 
 	setWebSourcesPath(value?: string) {
-		webSourcesPath = value ?? workspace.getConfiguration().get('web.webSourcesPath') as string
+		const newValue = value ?? workspace.getConfiguration().get('web.webSourcesPath') as string
+		if (webSourcesFolder != newValue) {
+			const oldPath = `${projectDirectory}/${webSourcesFolder}`
+			const newPath = `${projectDirectory}/${newValue}`
+			if (fs.existsSync(oldPath) && !fs.existsSync(newPath))
+				fs.renameSync(oldPath, newPath)
+		}
+		webSourcesFolder = newValue
 		if (value) workspace.getConfiguration().update('web.webSourcesPath', value)
 		sidebarTreeView?.refresh()
 	}
@@ -308,6 +315,14 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Repository, repositoryCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, discussionsCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, submitAnIssueCommand))
+	}
+
+	onDidRenameFiles(event: FileRenameEvent) {
+		const webSourcesRename = event.files.filter(x => x.oldUri.path === `${projectDirectory}/${webSourcesFolder}`).pop()
+		if (webSourcesRename) {
+			const newFolderName = webSourcesRename.newUri.path.replace(`${projectDirectory}/`, '')
+			this.setWebSourcesPath(newFolderName)
+		}
 	}
 }
 
