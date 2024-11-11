@@ -1,4 +1,5 @@
-import { sidebarTreeView, webber } from "../extension"
+import * as fs from 'fs'
+import { projectDirectory, sidebarTreeView, webber } from "../extension"
 import { appTargetName, buildStatus, clearStatus, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
@@ -244,6 +245,24 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		const targetsToRebuild = params.target ? [params.target] : targetsDump.executables
 		const buildTypes = allSwiftBuildTypes()
 		createSymlinkFoldersIfNeeded()
+		// Check that all executable targets have already been built
+		for (let n = 0; n < buildTypes.length; n++) {
+			const buildType: SwiftBuildType = buildTypes[n]
+			for (let i = 0; i < targetsToRebuild.length; i++) {
+				const target = targetsToRebuild[i]
+				if (buildType == SwiftBuildType.Native) {
+					if (!fs.existsSync(`${projectDirectory}/.build/debug/${target}`)) {
+						print('🙅‍♂️ Hot rebuilding aborted. Build the whole project at least once first.', LogLevel.Detailed)
+						return
+					}
+				} else if (buildType == SwiftBuildType.Wasi) {
+					if (!fs.existsSync(`${projectDirectory}/.build/.${buildType}/debug/${target}.wasm`)) {
+						print('🙅‍♂️ Hot rebuilding aborted. Build the whole project at least once first.', LogLevel.Detailed)
+						return
+					}
+				}
+			}
+		}
 		await new Promise<void>((resolve, reject) => {
 			let completedBuildTypes: SwiftBuildType[] = []
 			for (let n = 0; n < buildTypes.length; n++) {
