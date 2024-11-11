@@ -1,4 +1,4 @@
-import { buildStatus, LogLevel, print } from "../../webber"
+import { buildStatus } from "../../webber"
 
 export interface AwaitGzippingParams {
 	gzippedTargets: string[],
