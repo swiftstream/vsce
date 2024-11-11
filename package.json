@@ -206,6 +206,18 @@
         "contents": "Ready to create a project?\n[Start New Project](command:startNewProjectWizard)\n[Open project](command:openProject)",
         "when": "webber.state == NoProjectFolder"
       }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "crawlserver",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "carwlserver"
+          }
+        }
+      }
     ]
   },
   "scripts": {

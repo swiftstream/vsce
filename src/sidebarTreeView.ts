@@ -1,5 +1,5 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForSwifweb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer } from "./webber"
 import { env } from "process"
 import { ExtensionMode, extensionMode, isInContainer } from "./extension"
 import { SwiftBuildType } from "./swift"
@@ -49,6 +49,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
 				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red'),
 				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline::charts.red')
+				new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console'),
 			]
 		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
@@ -152,6 +153,7 @@ export enum SideTreeItem {
 		ReopenInContainer = 'ReopenInContainer',
 		Build = 'Build',
 		DebugInChrome = 'DebugInChrome',
+		RunCrawlServer = 'RunCrawlServer',
 		HotReload = 'HotReload',
 		HotRebuild = 'HotRebuild',
 	Release = 'Release',

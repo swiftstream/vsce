@@ -1,6 +1,10 @@
 FROM swiftstream/base:latest
 
+# image version, should be increased with any major change
 ENV S_IMAGE_VERSION=100
+
+# crawl server port
+ENV CS_SERVER_PORT=3080
 
 # do not remove commented out layers, may be needed for the future updates
 # install wasm related required dependencies
@@ -31,7 +35,8 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     && nvm install $NODE_VERSION \
     && nvm alias default $NODE_VERSION \
     && nvm use default \
-    && npm install -g webpack-cli@^5.1.4 --quiet --no-progress
+    && npm install -g webpack-cli@^5.1.4 --quiet --no-progress \
+    && npm install -g crawl-server@1.6.1 --quiet --no-progress
 # copy required files
 COPY wasm-strip /usr/local/bin/
 COPY wasm-opt /usr/local/bin/

@@ -26,6 +26,7 @@ import { toolchainCommand } from "./commands/toolchain";
 import { Gzip } from "./gzip";
 import { Bash } from "./bash";
 import { Wasm } from "./wasm";
+import { CrawlServer } from './crawlServer';
 
 let output = window.createOutputChannel('SwifWeb')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -90,6 +91,10 @@ export function setBuildingRelease(active: boolean) {
 	if (!active) abortBuildingRelease = undefined
 	isBuildingRelease = active
 	commands.executeCommand('setContext', 'isBuildingRelease', active)
+}
+export var isRunningCrawlServer = false
+export function setRunningCrawlServer(active: boolean) {
+	isRunningCrawlServer = active
 }
 export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
@@ -181,6 +186,7 @@ export class Webber {
 	public webpack: Webpack
 	public wasm: Wasm
 	public gzip: Gzip
+	public crawlServer: CrawlServer
 
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
@@ -197,6 +203,7 @@ export class Webber {
 		this.webpack = new Webpack(this)
 		this.wasm = new Wasm(this)
 		this.gzip = new Gzip(this)
+		this.crawlServer = new CrawlServer(this)
 		this._configure()
 	}
 
@@ -223,6 +230,10 @@ export class Webber {
 					this.setAppTargetName()
 				if (event.affectsConfiguration('web.serviceWorkerTargetName'))
 					this.setServiceWorkerTargetName()
+			})
+			this.crawlServer.registerTaskProvider({
+				pathToWasm: `${projectDirectory}/${buildDevFolder}/${appTargetName.toLowerCase()}.wasm`,
+				debug: true
 			})
 		}
 	}
@@ -283,6 +294,7 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotReload, hotReloadCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFilePage, newFilePageCommand))
