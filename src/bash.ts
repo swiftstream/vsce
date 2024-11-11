@@ -43,6 +43,7 @@ export class Bash {
                 options.cwd = program.cwd
             if (program.env)
                 options.env = program.env
+            print(`Executing ${path!} ${args.join(' ')}`, LogLevel.Unbearable)
             const process = spawn(path!, args, options)
             if (program.processInstanceHandler)
                 program.processInstanceHandler(process)
