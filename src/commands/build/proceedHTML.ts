@@ -45,13 +45,17 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     else {
         const htmlString = fs.readFileSync(indexPath, 'utf8')
         const htmlLines = htmlString.split('\n')
+        var iteratedMetas = false
+        var iteratedLinks = false
+        var iteratedScripts = false
         var addedMetas = false
         var addedLinks = false
         var addedScripts = false
+        var addedIframe = false
         for (let i = 0; i < htmlLines.length; i++) {
             const htmlLine = htmlLines[i]
             // <html lang="">
-            if (options.index?.lang && htmlLine.startsWith('<html') && htmlLine.includes(managedBy)) {
+            if (htmlLine.trimStart().startsWith('<html') && htmlLine.includes(managedBy) && options.index?.lang) {
                 const firstSplit = htmlLine.split('lang="')
                 const left = firstSplit[0]
                 const oldValue = firstSplit[1].split('"')[0]
@@ -110,6 +114,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             }
             // <meta>
             else if (htmlLine.trimStart().startsWith('<meta')) {
+                iteratedMetas = true
                 // Add managed metas above the others
                 if (options.index?.metas && !addedMetas) {
                     addedMetas = true
@@ -146,6 +151,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             }
             // <link>
             else if (htmlLine.trimStart().startsWith('<link')) {
+                iteratedLinks = true
                 // Add managed links above the others
                 if (!addedLinks) {
                     addedLinks = true
@@ -163,6 +169,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             }
             // <script>
             else if (htmlLine.trimStart().startsWith('<script')) {
+                iteratedScripts = true
                 // Add managed scripts above the others
                 if (!addedScripts) {
                     addedScripts = true
@@ -178,13 +185,46 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                     lines.push(htmlLine)
                 }
             }
+            // </head>
+            else if (htmlLine.includes('</head>')) {
+                const cleanedLine = htmlLine.replace('</head>', '')
+                // append if line contains anything else
+                if (cleanedLine.trim().length > 0) {
+                    lines.push(cleanedLine)
+                }
+                // if <meta> tags haven't been present in <head> yet
+                if (!iteratedMetas && options.index?.metas && options.index?.metas.length > 0) {
+                    addedMetas = true
+                    lines.push(...(options.index.metas.map((params) => tag('meta', params))))
+                }
+                // if <link> tags haven't been present in <head> yet
+                if (!iteratedLinks) {
+                    let added = false
+                    if (options.manifest) {
+                        added = true
+                        lines.push(tag('link', { rel: 'manifest', href: `./${manifestFileNameValue}.webmanifest` }))
+                    }
+                    if (options.index?.links && options.index?.links.length > 0) {
+                        added = true
+                        lines.push(...(options.index.links.map((params) => tag('link', params))))
+                    }
+                    addedLinks = added
+                }
+                // if <script> tags haven't been present in <head> yet
+                if (!iteratedScripts && options.index?.scripts && options.index?.scripts.length > 0) {
+                    addedScripts = true
+                    lines.push(...(options.index.scripts.map((params) => tag('script', params))))
+                }
+                lines.push('    </head>')
+            }
             // <iframe>
             else if (htmlLine.trimStart().includes('iframe')) {
                 // check if it is one-line iframe
                 if (htmlLine.trimStart().startsWith('<iframe') && htmlLine.includes('/iframe')) {
                     // check if it is splash
                     if (htmlLine.includes(managedBy) && htmlLine.includes('id="splash"')) {
-                        if (options.index?.splash) {
+                        if (!addedIframe && options.index?.splash) {
+                            addedIframe = true
                             lines.push(splash(options.index.splash))
                         }
                     }
@@ -223,14 +263,15 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                     }
                     // work with managed splash iframe
                     else if (isSplash) {
-                        if (options.index?.splash) {
+                        if (!addedIframe && options.index?.splash) {
+                            addedIframe = true
                             lines.push(splash(options.index.splash))
                         }
                     }
                 }
             }
             else if (htmlLine.trimStart().startsWith('<body')) {
-                if (!htmlString.includes(`id="splash"`)) {
+                if (!htmlString.includes(`id="splash"`) && options.index?.splash) {
                     if (htmlLine.includes(closeBody().trimStart())) {
                         lines.push(htmlLine.replace(closeBody().trimStart(), ''))
                         lines.push(splash(options.index?.splash))
@@ -239,6 +280,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                         lines.push(htmlLine)
                         lines.push(splash(options.index?.splash))
                     }
+                    addedIframe = true
                 } else {
                     lines.push(htmlLine)
                 }
@@ -247,6 +289,9 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             else {
                 lines.push(htmlLine)
             }
+        }
+        if (addedLinks || addedMetas || addedScripts || addedIframe) {
+            isIndexChanged = true
         }
     }
     // writing index.html if needed
