@@ -20,7 +20,7 @@ import { loggingLevelCommand } from "./commands/loggingLevel";
 import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCommand } from "./commands/newFile";
 import { portDevCommand } from "./commands/portDev";
 import { portProdCommand } from "./commands/portProd";
-import { updateSwifWebCommand, updateJSKitCommand } from "./commands/suggestions";
+import { updateWebCommand, updateJSKitCommand } from "./commands/suggestions";
 import { repositoryCommand, discussionsCommand, submitAnIssueCommand, webDocumentationCommand, androidDocumentationCommand, vaporDocumentationCommand, hummingbirdDocumentationCommand, serverDocumentationCommand } from "./commands/support";
 import { toolchainCommand } from "./commands/toolchain";
 import { Gzip } from "./gzip";
@@ -28,7 +28,7 @@ import { Bash } from "./bash";
 import { Wasm } from "./wasm";
 import { CrawlServer } from './crawlServer';
 
-let output = window.createOutputChannel('SwifWeb')
+let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
 let problemStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 0)
 
@@ -131,7 +131,7 @@ export var isRecompilingJS = false
 export var isRecompilingCSS = false
 export var isRecompilingHTML = false
 export var containsRecommendations = true // TODO: check if contains any recommendations
-export var containsUpdateForSwifweb = true // TODO: check if SwifWeb could be updated
+export var containsUpdateForWeb = true // TODO: check if Web could be updated
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${getToolchainNameFromURL()}`
 export var pendingNewToolchain: string | undefined
@@ -317,7 +317,7 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateSwifWeb, updateSwifWebCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateWeb, updateWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WebDocumentation, webDocumentationCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AndroidDocumentation, androidDocumentationCommand))

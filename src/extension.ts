@@ -74,12 +74,12 @@ export async function activate(context: ExtensionContext) {
 	////
 
 	if (!projectDirectory) {
-		commands.executeCommand('setContext', 'webber.state', WebberState.NoProjectFolder)
+		commands.executeCommand('setContext', 'swiftstream.state', WebberState.NoProjectFolder)
 		return
 	}
 
 	if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
-		commands.executeCommand('setContext', 'webber.state', WebberState.EmptyProjectFolder)
+		commands.executeCommand('setContext', 'swiftstream.state', WebberState.EmptyProjectFolder)
 		return
 	}
 
@@ -113,10 +113,10 @@ async function openProjectCommand() {
 }
 
 async function switchToProjectMode() {
-	commands.executeCommand('setContext', 'webber.state', WebberState.ProjectMode)
+	commands.executeCommand('setContext', 'swiftstream.state', WebberState.ProjectMode)
 	// await webber.prepare(undefined)
 	sidebarTreeView = new SidebarTreeView()
-	let tv: TreeView<Dependency> = window.createTreeView('webberSidebar', {
+	let tv: TreeView<Dependency> = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
 }

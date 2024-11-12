@@ -149,12 +149,12 @@
         {
           "group": "inline",
           "command": "stopBuildingDebug",
-          "when": "view == webberSidebar && viewItem == Build && isBuilding"
+          "when": "view == swiftstreamSidebar && viewItem == Build && isBuilding"
         },
         {
           "group": "inline",
           "command": "stopBuildingRelease",
-          "when": "view == webberSidebar && viewItem == BuildRelease && isBuildingRelease"
+          "when": "view == swiftstreamSidebar && viewItem == BuildRelease && isBuildingRelease"
         }
       ]
     },
@@ -179,20 +179,20 @@
     ],
     "views": {
       "explorer": [],
-      "webber-sidebar": [
+      "swiftstream-sidebar": [
         {
-          "id": "webberSidebar",
+          "id": "swiftstreamSidebar",
           "name": "PROJECT",
           "icon": "media/dep.svg",
-          "contextualTitle": "SwifWeb Actions"
+          "contextualTitle": "Swift Stream Actions"
         }
       ]
     },
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "webber-sidebar",
-          "title": "SwifWeb",
+          "id": "swiftstream-sidebar",
+          "title": "Swift Stream",
           "icon": "media/VSCodeIcon.svg"
         }
       ]
@@ -201,17 +201,17 @@
       {
         "view": "explorer",
         "contents": "[Create Swift Web Project](command:startNewProjectWizard)",
-        "when": "webber.state == NoProjectFolder"
+        "when": "swiftstream.state == NoProjectFolder"
       },
       {
         "view": "explorer",
         "contents": "[Create Swift Web Project](command:startNewProjectWizard)",
-        "when": "webber.state == EmptyProjectFolder"
+        "when": "swiftstream.state == EmptyProjectFolder"
       },
       {
-        "view": "webberSidebar",
+        "view": "swiftstreamSidebar",
         "contents": "Ready to create a project?\n[Start New Project](command:startNewProjectWizard)\n[Open project](command:openProject)",
-        "when": "webber.state == NoProjectFolder"
+        "when": "swiftstream.state == NoProjectFolder"
       }
     ],
     "taskDefinitions": [

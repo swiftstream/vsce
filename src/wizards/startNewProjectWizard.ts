@@ -13,8 +13,8 @@ let webViewPanel: WebviewPanel | undefined
 export async function startNewProjectWizard() {
 	if (webViewPanel) { return }
 	webViewPanel = window.createWebviewPanel(
-		'swifweb',
-		'SwifWeb',
+		'swiftstream',
+		'SwiftStream',
 		ViewColumn.One,
 		{// Enable scripts in the webview
 			enableScripts: true

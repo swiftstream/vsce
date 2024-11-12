@@ -20,7 +20,7 @@
 	"customizations": {
 		"vscode": {
     		"extensions": [
-				"SwifWeb.webber",
+				"SwiftStream.swiftstream",
 				"sswg.swift-lang",
 				"ms-vscode.wasm-dwarf-debugging"
 			],

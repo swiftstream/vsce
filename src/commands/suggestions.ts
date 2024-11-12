@@ -1,7 +1,7 @@
 import { window } from "vscode"
 
-export function updateSwifWebCommand() {
-	window.showInformationMessage(`updateSwifWebCommand`)
+export function updateWebCommand() {
+	window.showInformationMessage(`updateWebCommand`)
 }
 
 export function updateJSKitCommand() {

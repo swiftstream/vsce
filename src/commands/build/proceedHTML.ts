@@ -5,7 +5,7 @@ import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { Index, SplashData } from '../../swift'
 
-const managedBy = `managedBy="SwifWeb"`
+const managedBy = `managedBy="webber"`
 
 export async function proceedHTML(options: { appTargetName: string, manifest?: any, index?: Index, release: boolean }) {
     const measure = new TimeMeasure()
