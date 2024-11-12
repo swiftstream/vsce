@@ -91,6 +91,7 @@ export async function activate(context: ExtensionContext) {
 }
 
 function registerCommands() {
+	extensionContext.subscriptions.push(commands.registerCommand('openProject', openProjectCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('startNewProjectWizard', startNewProjectWizard))
 	extensionContext.subscriptions.push(commands.registerCommand('runDebugging', debugInChromeCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('stopDebugging', async () => {
@@ -108,6 +109,7 @@ function registerCommands() {
 
 async function openProjectCommand() {
 	const folderUri = await selectFolder('Please select folder with a project', 'Open')
+	if (!folderUri) return
 	commands.executeCommand('remote-containers.openFolder', folderUri)
 	commands.executeCommand('remote-containers.revealLogTerminal')
 }
