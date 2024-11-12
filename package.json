@@ -200,12 +200,12 @@
     "viewsWelcome": [
       {
         "view": "explorer",
-        "contents": "[Create Swift Web Project](command:startNewProjectWizard)",
+        "contents": "[Create Swift Project](command:startNewProjectWizard)",
         "when": "swiftstream.state == NoProjectFolder"
       },
       {
         "view": "explorer",
-        "contents": "[Create Swift Web Project](command:startNewProjectWizard)",
+        "contents": "[Create Swift Project](command:startNewProjectWizard)",
         "when": "swiftstream.state == EmptyProjectFolder"
       },
       {

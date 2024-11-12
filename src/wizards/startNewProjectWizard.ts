@@ -14,7 +14,7 @@ export async function startNewProjectWizard() {
 	if (webViewPanel) { return }
 	webViewPanel = window.createWebviewPanel(
 		'swiftstream',
-		'SwiftStream',
+		'Swift Stream',
 		ViewColumn.One,
 		{// Enable scripts in the webview
 			enableScripts: true
