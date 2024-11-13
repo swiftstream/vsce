@@ -1,1 +1,1 @@
-FROM swiftstream/android:latest
+FROM swiftstream/android-dev:latest

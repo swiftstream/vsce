@@ -66,14 +66,14 @@
 		},
 		// MARK: Docker Create Web
 		{
-			"label": "Docker Create BuildX Container Web (step 2)",
+			"label": "Docker Create BuildX Container WebDev (step 2)",
 			"command": "docker",
-			"args": ["buildx", "create", "--name", "web-container", "--driver=docker-container"],
+			"args": ["buildx", "create", "--name", "webdev-container", "--driver=docker-container"],
 			"type": "shell"
 		},
 		// MARK: Docker Push BASE
 		{
-			"label": "Docker Build and Push MultiArch BASE Image (step 3)",
+			"label": "Docker Build & Push Multi BASE Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
@@ -81,13 +81,13 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "swift-base-container",
 				"--push",
-				"./DockerImageBase"
+				"./docker-images/base"
 			],
 			"type": "shell"
 		},
-		// MARK: Docker Push Android
+		// MARK: Docker Push Android Development Container Image
 		{
-			"label": "Docker Build and Push MultiArch Android Image (step 3)",
+			"label": "Docker Build & Push Multi AndroidDev Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
@@ -95,27 +95,27 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
-				"./DockerImageAndroid"
+				"./docker-images/android-dev"
 			],
 			"type": "shell"
 		},
-		// MARK: Docker Push Web
+		// MARK: Docker Push Web Development Container Image
 		{
-			"label": "Docker Build and Push MultiArch Web Image (step 3)",
+			"label": "Docker Build & Push Multi WebDev Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/web:latest",
+				"--tag", "swiftstream/web-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "web-container",
+				"--builder", "webdev-container",
 				"--push",
-				"./DockerImageWeb"
+				"./docker-images/web-dev"
 			],
 			"type": "shell"
 		},
-		// MARK: Docker ForcePush Android
+		// MARK: Docker ForcePush Android Development Container Image
 		{
-			"label": "Docker Build and Push MultiArch Android Image Without Cache (step 3)",
+			"label": "Docker Build & Push Multi AndroidDev Image (no cache) (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
@@ -124,13 +124,13 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
-				"./DockerImageAndroid"
+				"./docker-images/android-dev"
 			],
 			"type": "shell"
 		},
-		// MARK: Docker ForcePush Web
+		// MARK: Docker ForcePush Web Development Container Image
 		{
-			"label": "Docker Build and Push MultiArch Web Image Without Cache (step 3)",
+			"label": "Docker Build & Push Multi WebDev Image (no cache) (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
@@ -139,7 +139,7 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "web-container",
 				"--push",
-				"./DockerImageWeb"
+				"./docker-images/web-dev"
 			],
 			"type": "shell"
 		}

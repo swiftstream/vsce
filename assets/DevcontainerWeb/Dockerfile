@@ -1,1 +1,1 @@
-FROM swiftstream/web:latest
+FROM swiftstream/web-dev:latest
