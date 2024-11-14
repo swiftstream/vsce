@@ -10,9 +10,10 @@
 		"S_TOOLCHAIN_URL_ARM": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_aarch64.tar.gz",
 		"S_VERSION_MAJOR": "5",
 		"S_VERSION_MINOR": "10",
-		"S_VERSION_PATCH": "0"
+		"S_VERSION_PATCH": "0",
+		"S_NGINX_CRAWLERS": "linkedinbot|googlebot|yahoo|bingbot|baiduspider|yandex|yeti|yodaobot|gigabot|ia_archiver|facebookexternalhit|twitterbot|developers.google.com"
 	},
-	"appPort": ["7770:443", "8880:444"],
+	"appPort": ["7770:443", "8880:444", "9990:3080"],
 	"otherPortsAttributes": {
 		"onAutoForward": "ignore"
 	},

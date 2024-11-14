@@ -11,9 +11,10 @@
 		"S_VERSION_MAJOR": "6",
 		"S_VERSION_MINOR": "0",
 		"S_VERSION_PATCH": "3",
-		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
+		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip",
+		"S_NGINX_CRAWLERS": "linkedinbot|googlebot|yahoo|bingbot|baiduspider|yandex|yeti|yodaobot|gigabot|ia_archiver|facebookexternalhit|twitterbot|developers.google.com"
 	},
-	"appPort": ["7770:443", "8880:444"],
+	"appPort": ["7770:443", "8880:444", "9990:3080"],
 	"otherPortsAttributes": {
 		"onAutoForward": "ignore"
 	},
