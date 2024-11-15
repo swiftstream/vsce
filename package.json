@@ -34,13 +34,6 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "themes": [
-      {
-        "label": "Swift Stream Resesif (Dark)",
-        "uiTheme": "vs-dark",
-        "path": "./themes/Resesif-Dark-color-theme.json"
-      }
-    ],
     "configuration": {
       "title": "Swift Stream",
       "properties": {
