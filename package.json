@@ -3,7 +3,7 @@
   "displayName": "SwiftStream",
   "description": "SwiftStream by iMike",
   "version": "1.0.0",
-  "publisher": "SwiftStream",
+  "publisher": "swiftstream",
   "engines": {
     "vscode": "^1.94.0"
   },
