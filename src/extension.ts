@@ -50,7 +50,7 @@ export async function activate(context: ExtensionContext) {
 	extensionContext = context
 	
 	// Monitoring project directory path
-	workspace.onDidChangeWorkspaceFolders(event => { // TODO: track project directory change
+	workspace.onDidChangeWorkspaceFolders(event => {
 		window.showInformationMessage('onDidChangeWorkspaceFolders')
 		console.log('onDidChangeWorkspaceFolders')
 		for (let i = 0; i < event.added.length; i++) {
