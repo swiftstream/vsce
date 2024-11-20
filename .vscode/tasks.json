@@ -64,6 +64,13 @@
 			"args": ["buildx", "create", "--name", "android-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Server
+		{
+			"label": "Docker Create BuildX Container Server (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "server-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Web
 		{
 			"label": "Docker Create BuildX Container WebDev (step 2)",
@@ -99,6 +106,20 @@
 			],
 			"type": "shell"
 		},
+		// MARK: Docker Push Server Development Container Image
+		{
+			"label": "Docker Build & Push Multi ServerDev Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/server:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "server-container",
+				"--push",
+				"./docker-images/server-dev"
+			],
+			"type": "shell"
+		},
 		// MARK: Docker Push Web Development Container Image
 		{
 			"label": "Docker Build & Push Multi WebDev Image (step 3)",
@@ -125,6 +146,21 @@
 				"--builder", "android-container",
 				"--push",
 				"./docker-images/android-dev"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Server Development Container Image
+		{
+			"label": "Docker Build & Push Multi ServerDev Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/server:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "server-container",
+				"--push",
+				"./docker-images/server-dev"
 			],
 			"type": "shell"
 		},

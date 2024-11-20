@@ -1,0 +1,54 @@
+// For format details, see https://aka.ms/devcontainer.json.
+// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "swifserv",
+	"build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "Dockerfile",
+		"args": {}
+    },
+	"containerEnv": {
+		// project mode for the swift.stream extension
+		"S_MODE": "SERVER",
+		// from https://www.swift.org/download
+		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0.1-release/ubuntu2004/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0.1-release/ubuntu2004-aarch64/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+		// semver
+		"S_VERSION_MAJOR": "6",
+		"S_VERSION_MINOR": "0",
+		"S_VERSION_PATCH": "1"
+	},
+	"postStartCommand": "cmd.sh",
+	"customizations": {
+		"vscode": {
+    		"extensions": [
+				"sswg.swift-lang"
+			],
+			"settings": {
+				"extensions.ignoreRecommendations": true,
+				"swift.path": "/swift/toolchains/6.0.1-RELEASE/usr/bin",
+				"swift.swiftEnvironmentVariables": {
+					"DEVELOPER_DIR": "public"
+				},
+				"lldb.library": "/swift/toolchains/6.0.1-RELEASE/usr/lib/liblldb.so",
+				"lldb.launch.expressions": "native",
+				"swift.disableAutoResolve": false,
+				"swift.autoGenerateLaunchConfigurations": true,
+				"swift.backgroundCompilation": false,
+				"swift.showCreateSwiftProjectInWelcomePage": false,
+				"editor.semanticHighlighting.enabled": true,
+				"editor.fontFamily": "Verdana, Verdana, Menlo, Monaco, 'Courier New', monospace",
+				"editor.codeLensFontFamily": "Verdana, Verdana, Menlo, Monaco, 'Courier New', monospace"
+			}
+		}
+	},
+
+	// Adds the `ptrace` capability required for debugger.
+	"capAdd": ["SYS_PTRACE"],
+
+	// Adds volume for swift toolchains.
+	"mounts": [
+		{ "source": "swift-toolchains", "target": "/swift/toolchains", "type": "volume" },
+		{ "source": "swift-sdks", "target": "/root/.swiftpm/swift-sdks", "type": "volume" }
+	]
+}
