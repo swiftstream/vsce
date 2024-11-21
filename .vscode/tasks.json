@@ -78,6 +78,12 @@
 			"args": ["buildx", "create", "--name", "webdev-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		{
+			"label": "Docker Create BuildX Container WebProd (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "webprod-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Push BASE
 		{
 			"label": "Docker Build & Push Multi BASE Image (step 3)",
@@ -131,6 +137,19 @@
 				"--builder", "webdev-container",
 				"--push",
 				"./docker-images/web-dev"
+			],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Build & Push Multi WebProd Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/web-prod:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "webprod-container",
+				"--push",
+				"./docker-images/web-production"
 			],
 			"type": "shell"
 		},
