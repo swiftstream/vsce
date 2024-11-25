@@ -6,12 +6,12 @@
     },
 	"containerEnv": {
 		"S_MODE": "WEB",
-		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0-branch/ubuntu2004/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04.tar.gz",
-		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0-branch/ubuntu2004-aarch64/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04-aarch64.tar.gz",
+		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0.2-release/ubuntu2004-aarch64/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04-aarch64.tar.gz",
 		"S_VERSION_MAJOR": "6",
 		"S_VERSION_MINOR": "0",
-		"S_VERSION_PATCH": "3",
-		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip",
+		"S_VERSION_PATCH": "2",
+		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0.2-RELEASE/swift-wasm-6.0.2-RELEASE-wasm32-unknown-wasi.artifactbundle.zip",
 		"S_NGINX_CRAWLERS": "linkedinbot|googlebot|yahoo|bingbot|baiduspider|yandex|yeti|yodaobot|gigabot|ia_archiver|facebookexternalhit|twitterbot|developers.google.com"
 	},
 	"appPort": ["7770:443", "8880:444", "9990:3080"],
@@ -28,11 +28,11 @@
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
-				"swift.path": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/bin",
+				"swift.path": "/swift/toolchains/6.0.2-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
 				},
-				"lldb.library": "/swift/toolchains/6.0-DEVELOPMENT-SNAPSHOT-2024-10-12/usr/lib/liblldb.so",
+				"lldb.library": "/swift/toolchains/6.0.2-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
