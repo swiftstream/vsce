@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="175px" height="175px" viewBox="0 0 175 175" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>vapor</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-188.000000, -243.000000)">
+            <g id="vapor" transform="translate(188.000000, 243.000000)">
+                <rect id="Rectangle" x="0" y="0" width="175" height="175"></rect>
+                <path d="M90.5088757,15.1734965 C89.2544379,13.6088345 86.7455621,13.6088345 85.4911243,15.1734965 C74.8284024,28.9425226 35,82.7668973 35,108.114423 C35,137.217137 58.8343195,161 88,161 C117.16568,161 141,137.217137 141,108.114423 C141,82.7668973 101.171598,28.9425226 90.5088757,15.1734965 Z" id="Path" stroke="#000000" stroke-width="16" fill-opacity="0" fill="#000000" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>
