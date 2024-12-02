@@ -104,7 +104,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/android:latest",
+				"--tag", "swiftstream/android-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
@@ -118,7 +118,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/server:latest",
+				"--tag", "swiftstream/server-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
@@ -160,7 +160,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/android:latest",
+				"--tag", "swiftstream/android-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
@@ -175,7 +175,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/server:latest",
+				"--tag", "swiftstream/server-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
@@ -190,7 +190,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/web:latest",
+				"--tag", "swiftstream/web-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "web-container",
 				"--push",
