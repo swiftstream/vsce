@@ -100,3 +100,14 @@ if grep -q "DOLLAR" "/etc/nginx/sites-available/default"; then
 fi
 # apply the config
 /etc/init.d/nginx restart
+
+# Check if launchAfterFirstStart.sh exists in the project directory
+if [ -f "./launchAfterFirstStart.sh" ]; then
+  # Retrieve the first line of the file
+  cmd=$(head -n 1 "./launchAfterFirstStart.sh")
+  # Execute the command
+  bash -c "$cmd"
+  # Delete the file after execution
+  rm -f "./launchAfterFirstStart.sh"
+  echo -c "${GREEN}File launchAfterFirstStart.sh executed and deleted.${NC}"
+fi
