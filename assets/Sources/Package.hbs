@@ -1,0 +1,47 @@
+// swift-tools-version:{{swiftToolsVersion}}
+import PackageDescription
+
+let package = Package(
+    name: "{{name}}"{{#if platforms}},
+    platforms: [
+       {{{platforms}}}
+    ]{{/if}}{{#if (arrNotEmpty products)}},
+    products: [
+        {{#each products as |product|}}
+        {{{product}}},
+        {{/each}}
+    ]{{/if}}{{#if (arrNotEmpty dependencies)}},
+    dependencies: [
+        {{#each dependencies as |dependency|}}
+        {{#if dependency.comment}}
+        // {{{dependency.comment}}}
+        {{/if}}
+        {{{dependency.package}}},
+        {{/each}}
+    ]{{/if}}{{#if (arrNotEmpty targets)}},
+    targets: [
+        {{#each targets as |target|}}
+        .{{{target.type}}}(
+            name: "{{target.name}}"{{#if (arrNotEmpty target.dependencies)}},
+            dependencies: [
+                {{#each target.dependencies as |dependency|}}
+                {{{dependency}}},
+                {{/each}}
+            ]{{/if}}{{#if target.swiftSettings}},
+            swiftSettings: swiftSettings
+            {{/if}}
+        
+        ),
+        {{/each}}
+    ]{{/if}}{{#if swiftLanguageModes}},
+    swiftLanguageModes: [{{{swiftLanguageModes}}}]
+    {{/if}}
+
+)
+{{#if swiftSettings}}
+var swiftSettings: [SwiftSetting] { [
+    {{#each swiftSettings as |swiftSetting|}}
+    {{{swiftSetting}}},
+    {{/each}}
+] }
+{{/if}}
