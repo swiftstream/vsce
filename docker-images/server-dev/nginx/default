@@ -16,6 +16,17 @@ server {
 		proxy_pass http://127.0.0.1:8080/;
 		proxy_redirect off;
 		proxy_read_timeout 86400;
+
+		# supposedly prevents 502 bad gateway error
+        proxy_buffers 8 32k;
+        proxy_buffer_size 64k;
+        
+        # required for WebSockets
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        tcp_nodelay on;
 	}
 
 	location ~* \.(js|jpg|png|css|webp|wasm)${DOLLAR} {
