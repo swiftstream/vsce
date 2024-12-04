@@ -243,6 +243,7 @@
     "@vscode/test-electron": "^2.4.0",
     "@wasmer/wasm-transformer": "^0.12.0",
     "eslint": "^8.57.0",
+    "handlebars": "^4.7.8",
     "jsdom": "^25.0.1",
     "json5": "^2.2.3",
     "sass": "^1.79.3",
