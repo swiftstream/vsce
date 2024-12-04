@@ -1,7 +1,25 @@
 import * as fs from 'fs'
 import * as crypto from 'crypto'
 import path from 'path'
-import { projectDirectory } from '../extension'
+import { Uri, window } from 'vscode'
+import { projectDirectory, extensionContext } from '../extension'
+
+export async function copyFile(
+    sourcePath: string,
+    destPath: string
+): Promise<boolean> {
+    try {
+        fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, destPath)
+        return true
+    } catch (err) {
+        window.showErrorMessage(`${err?.toString()}`)
+        return false
+    }
+}
+
+export function readFile(sourcePath: string): string {
+    return fs.readFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, 'utf8')
+}
 
 export function isFolder(path: string) {
     return fs.statSync(path).isDirectory()
