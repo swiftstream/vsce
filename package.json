@@ -4,6 +4,7 @@
   "description": "SwiftStream by iMike",
   "version": "1.0.0",
   "publisher": "swiftstream",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.94.0"
   },
