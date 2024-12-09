@@ -1,8 +1,8 @@
 {
   "name": "swiftstream",
-  "displayName": "SwiftStream",
   "description": "SwiftStream by iMike",
   "version": "1.0.0",
+  "displayName": "Swift Stream",
   "publisher": "swiftstream",
   "icon": "media/icon.png",
   "engines": {
