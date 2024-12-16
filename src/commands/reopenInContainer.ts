@@ -1,6 +1,10 @@
 import { commands, extensions, env, Uri, window } from "vscode"
 import { projectDirectory } from "../extension"
 
+export async function whyReopenInContainerCommand() {
+	window.showInformationMessage('Swift Stream requires projects to be opened inside a Docker container to ensure a consistent, isolated, and platform-independent environment for Swift development.')
+}
+
 export async function reopenInContainerCommand() {
 	if (!projectDirectory) {
 		window.showInformationMessage('Please open project folder first')
