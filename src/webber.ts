@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession, FileRenameEvent } from "vscode";
 import { Toolchain } from "./toolchain";
 import { SideTreeItem } from "./sidebarTreeView";
-import { defaultDevPort, defaultProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
+import { defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { Swift } from "./swift";
@@ -135,8 +135,8 @@ export var containsUpdateForWeb = true // TODO: check if Web could be updated
 export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentToolchain: string = `${getToolchainNameFromURL()}`
 export var pendingNewToolchain: string | undefined
-export var currentDevPort: string = `${defaultDevPort}`
-export var currentProdPort: string = `${defaultProdPort}`
+export var currentDevPort: string = `${defaultWebDevPort}`
+export var currentProdPort: string = `${defaultWebProdPort}`
 export var pendingNewDevPort: string | undefined
 export var pendingNewProdPort: string | undefined
 export var currentLoggingLevel: LogLevel = LogLevel.Normal
@@ -210,8 +210,8 @@ export class Webber {
 	private async _configure() {
 		if (projectDirectory) {
 			const readPorts = await readPortsFromDevContainer()
-			currentDevPort = `${readPorts.devPort ?? defaultDevPort}`
-			currentProdPort = `${readPorts.prodPort ?? defaultProdPort}`
+			currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
+			currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
 			createDebugConfigIfNeeded()
 			this.setHotReload()
 			this.setHotRebuild()
