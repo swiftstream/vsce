@@ -8,7 +8,7 @@ import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { Swift } from "./swift";
 import { NPM } from "./npm";
 import { Webpack } from "./webpack";
-import { reopenInContainerCommand } from "./commands/reopenInContainer";
+import { reopenInContainerCommand, whyReopenInContainerCommand } from "./commands/reopenInContainer";
 import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./commands/build";
 import { debugInChromeCommand } from "./commands/debugInChrome";
 import { hotReloadCommand } from "./commands/hotReload";
@@ -292,6 +292,7 @@ export class Webber {
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WhyReopenInContainer, whyReopenInContainerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
