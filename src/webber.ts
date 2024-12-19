@@ -27,6 +27,7 @@ import { Gzip } from "./gzip";
 import { Bash } from "./bash";
 import { Wasm } from "./wasm";
 import { CrawlServer } from './crawlServer';
+import { startNewProjectWizard } from './wizards/startNewProjectWizard';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -293,6 +294,7 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WhyReopenInContainer, whyReopenInContainerCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewProject, startNewProjectWizard))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
