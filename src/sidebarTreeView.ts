@@ -22,6 +22,10 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 
 	flag = false
 
+	fileIcon(light: string, dark?: string | undefined) {
+		return { light: path.join(__filename, '..', '..', 'assets', 'icons', `${light}.svg`), dark: path.join(__filename, '..', '..', 'assets', 'icons', `${dark ?? light}.svg`) }
+	}
+
 	async getChildren(element?: Dependency): Promise<Dependency[]> {
 		var items: Dependency[] = []
 		if (!isInContainer() && !env.S_DEV) {
