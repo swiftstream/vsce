@@ -22,6 +22,7 @@ export const extensionMode: ExtensionMode = Object.values(ExtensionMode).include
 	: ExtensionMode.Server
 export const defaultWebDevPort = 7770
 export const defaultWebProdPort = 8880
+export const defaultServerPort = 8080
 export const dockerImage = new DockerImage()
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
