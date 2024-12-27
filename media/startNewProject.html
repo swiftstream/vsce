@@ -12,6 +12,7 @@
         <h3>Folder</h3>
         <span id="folderLabel" class="t_path">Path to the project folder</span>
         <span id="folderButton" class="t_path_but">•••</span>
+        <div id="levels"></div>
         <br/>
         <button id="createButton" class="selectButton"><div id="createLoader" class="loader"></div><span id="createButtonTitle">Create Project</span></button>
         <span id="createTooLongHint">If it takes too long, then seems Docker is hanging, so we suggest restarting it.</span>
@@ -162,6 +163,7 @@
                 fileInputBoxCSSJS.innerHTML = fileNames.join(', ')
             } else {
                 fileInputBoxCSSJS.innerHTML = ''
+        const levelsContainer = document.getElementById('levels')
             }
         })
         createButton.addEventListener('click', () => {
