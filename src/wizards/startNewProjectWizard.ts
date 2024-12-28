@@ -2,11 +2,11 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { commands, extensions, Uri, ViewColumn, WebviewPanel, window } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
-import { copyFile } from '../helpers/copyFile'
 import { defaultServerPort, defaultWebDevPort, defaultWebProdPort, extensionContext } from '../extension'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
 import { webSourcesFolder } from '../webber'
+import { copyFile, readFile } from '../helpers/filesHelper'
 
 let webViewPanel: WebviewPanel | undefined
 
@@ -92,21 +92,10 @@ async function createNewProjectFiles(
 				return
 			}
 		}
-		// Copy devcontainer files
 		if (!fs.existsSync(`${path}/.devcontainer`)) {
 			fs.mkdirSync(`${path}/.devcontainer`)
 		}
-		await copyFile(`assets/DevcontainerWeb/Dockerfile`, `${path}/.devcontainer/Dockerfile`)
-		// TODO: if swift 5
-		await copyFile(`assets/DevcontainerWeb/devcontainer5.json`, `${path}/.devcontainer/devcontainer.json`)
 		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
-		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
-		if (devContainerContent) {
-			const availableDevPort = await checkPortAndGetNextIfBusy(defaultDevPort)
-			const availableProdPort = await checkPortAndGetNextIfBusy(defaultProdPort)
-			devContainerContent = devContainerContent.replace(`${defaultDevPort}:443`, `${availableDevPort}:443`)
-			devContainerContent = devContainerContent.replace(`${defaultProdPort}:444`, `${availableProdPort}:444`)
-			fs.writeFileSync(devContainerPath, devContainerContent)
 		}
 		// Copy .gitignore
 		await copyFile(`assets/WebSources/.gitignore`, `${path}/.gitignore`)
