@@ -22,20 +22,12 @@
         var userHomePath = ''
         var name = ''
         var folder = ''
-        var type = ''
-        var libraryType = ''
         var libraryFilePaths = []
-        var style = ''
         const vscode = acquireVsCodeApi()
         const nameInput = document.getElementById('nameInput')
         const folderLabel = document.getElementById('folderLabel')
         const folderButton = document.getElementById('folderButton')
-        const typeInputs = document.getElementsByClassName('typeInput')
-        const libraryTypeInputs = document.getElementsByClassName('libraryTypeInput')
-        const libraryTypes = document.getElementsByClassName('libraryTypes')
-        const libraryFiles = document.getElementsByClassName('libraryFiles')
-        const styleInputs = document.getElementsByClassName('styleInput')
-        const styles = document.getElementsByClassName('styles')
+        const libraryFiles = () => { document.getElementsByClassName('libraryFiles') }
         const fileInputCSSJS = document.getElementById('fileInputCSSJS')
         const fileInputBoxCSSJS = document.getElementById('fileInputBoxCSSJS')
         const createButton = document.getElementById('createButton')
