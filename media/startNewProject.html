@@ -39,10 +39,7 @@
         nameInput.focus()
         function disableItems(value) {
             nameInput.disabled = value
-            Array.from(typeInputs).forEach((el) => el.disabled = value)
-            Array.from(libraryTypeInputs).forEach((el) => el.disabled = value)
-            Array.from(styleInputs).forEach((el) => el.disabled = value)
-            fileInputCSSJS.disabled = value
+            if (fileInputCSSJS) fileInputCSSJS.disabled = value
             createButton.disabled = value
         }
         function updateFolderLabel(value) {
