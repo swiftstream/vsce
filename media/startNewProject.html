@@ -84,39 +84,19 @@
         function checkValues() {
             const isNameOK = name.length > 0
             const isFolderOK = folder.length > 0
-            const isTypeOK = type.length > 0
-            var isLibraryTypeOK = true
-            var isStyleOK = true
-            if (type == 'lib' || type == '') {
-                style = ''
-                if (type == 'lib') {
-                    toggleElementsVisibility(true, libraryTypes)
-                    toggleElementsVisibility(libraryType.length > 0, libraryFiles)
-                    isLibraryTypeOK = libraryType.length > 0
-                } else {
-                    toggleElementsVisibility(false, libraryTypes)
-                    toggleElementsVisibility(false, libraryFiles)
-                    uncheckRadios(libraryTypeInputs)
-                    libraryType = ''
-                    libraryFilePaths = []
+            function isRecursivelyOK(block) {
+                if (!block.required) { return true }
+                if (!block.value) { return false }
+                if (block.value.length === 0) { return false }
+                let nextItem = block.items.filter((x) => x.type == block.value)[0]
+                if (nextItem && nextItem.sublevel) {
+                    return isRecursivelyOK(nextItem.sublevel)
                 }
-                toggleElementsVisibility(false, styles)
-                uncheckRadios(styleInputs)
-            } else {
-                toggleElementsVisibility(false, libraryTypes)
-                uncheckRadios(libraryTypeInputs)
-                toggleElementsVisibility(false, libraryFiles)
-                libraryType = ''
-                libraryFilePaths = []
-                toggleElementsVisibility(true, styles)
-                isStyleOK = style.length > 0
+                return true
             }
-            const isDone = isNameOK && isFolderOK && isTypeOK && isStyleOK && isLibraryTypeOK
-            if (isDone) {
-                createButton.style.display = 'block'
-            } else {
-                createButton.style.display = 'none'
-            }
+            const isNextOK = isRecursivelyOK(streamLevel)
+            const isDone = isNameOK && isFolderOK && isNextOK
+            createButton.disabled = !isDone
         }
         nameInput.addEventListener('input', function (evt) {
             name = nameInput.value
