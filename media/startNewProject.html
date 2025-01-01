@@ -112,26 +112,6 @@
         }
         folderLabel.addEventListener('click', selectFolder)
         folderButton.addEventListener('click', selectFolder)
-        Array.from(typeInputs).forEach((input) => { input.onclick = () => {
-            type = input.value
-            checkValues()
-        }})
-        Array.from(libraryTypeInputs).forEach((input) => { input.onclick = () => {
-            libraryType = input.value
-            checkValues()
-        }})
-        Array.from(styleInputs).forEach((input) => { input.onclick = () => {
-            style = input.value
-            checkValues()
-        }})
-        fileInputCSSJS.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                const paths = Array.from(e.target.files).map((x) => x.path)
-                libraryFilePaths = paths
-                const fileNames = paths.map((x) => x.split('/')[x.split('/').length - 1])
-                fileInputBoxCSSJS.innerHTML = fileNames.join(', ')
-            } else {
-                fileInputBoxCSSJS.innerHTML = ''
         const levelsContainer = document.getElementById('levels')
             }
         })

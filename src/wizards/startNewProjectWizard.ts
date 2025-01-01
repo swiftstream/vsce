@@ -37,9 +37,7 @@ export async function startNewProjectWizard() {
 				await createNewProjectFiles(
 					event.payload.name,
 					event.payload.path,
-					event.payload.type,
-					event.payload.style,
-					event.payload.libraryType,
+					event.payload.selectedValues,
 					event.payload.libraryFiles
 				)
 				break
@@ -63,9 +61,7 @@ export async function startNewProjectWizard() {
 async function createNewProjectFiles(
 	name: string,
     path: string,
-    type: string,
-    style: string,
-	libraryType: string,
+	selectedValues: any,
 	libraryFiles: string[]
 ) {
 	function capitalizeFirstLetter(string: string) {
