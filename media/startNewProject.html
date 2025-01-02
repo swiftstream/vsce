@@ -112,6 +112,49 @@
         }
         folderLabel.addEventListener('click', selectFolder)
         folderButton.addEventListener('click', selectFolder)
+        
+        function additionalLibraryFilesView(intoContainer) {
+            libraryFilePaths = []
+            let t = document.createElement('h4')
+            t.classList.add('libraryFiles')
+            t.innerHTML = 'Library Files (optional)'
+            intoContainer.appendChild(t)
+            let d = document.createElement('div')
+            d.classList.add('libraryFiles')
+            d.classList.add('fileInput')
+            let i = document.createElement('input')
+            i.setAttribute('id', 'fileInputCSSJS')
+            i.setAttribute('type', 'file')
+            i.setAttribute('name', 'filefield')
+            i.setAttribute('multiple', 'multiple')
+            i.setAttribute('accept', 'text/javascript, text/css, font/ttf, font/truetype, application/x-font-ttf, application/x-font-truetype, application/x-font-opentype, application/vnd.ms-opentype, font/otf, application/font-woff, application/font-woff2, application/vnd.ms-fontobject, application/font-sfnt')
+            i.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    const paths = Array.from(e.target.files).map((x) => x.path)
+                    libraryFilePaths = paths
+                    const fileNames = paths.map((x) => x.split('/')[x.split('/').length - 1])
+                    fileInputBoxCSSJS.innerHTML = fileNames.join(', ')
+                } else {
+                    fileInputBoxCSSJS.innerHTML = ''
+                }
+            })
+            d.appendChild(i)
+            let l = document.createElement('label')
+            l.classList.add('radio')
+            l.setAttribute('for', 'fileInputCSSJS')
+            let s1 = document.createElement('span')
+            s1.setAttribute('id', 'fileInputBoxCSSJS')
+            s1.classList.add('fileInputBox')
+            s1.innerHTML = 'Select JS, CSS, and font files'
+            l.appendChild(s1)
+            let s2 = document.createElement('span')
+            s2.classList.add('fileInputBoxBut')
+            s2.innerHTML = '•••'
+            l.appendChild(s2)
+            d.appendChild(l)
+            intoContainer.appendChild(d)
+        }
+
         const levelsContainer = document.getElementById('levels')
             }
         })
