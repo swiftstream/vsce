@@ -156,6 +156,18 @@
         }
 
         const levelsContainer = document.getElementById('levels')
+        const webAppLevel = {
+            id: 'web-app-style',
+            title: 'Style',
+            required: true,
+            items: [
+                { type: 'pure', title: 'No CSS frameworks', logo: 'logo-pure', top: 23, left: 32, width: 36, height: 54 },
+                //{ type: 'tailwind', title: 'Tailwind CSS', logo: 'logo-tailwind', top: 26, left: 10, width: 80, height: 48 },
+                { type: 'bootstrap', title: 'Bootstrap CSS', logo: 'logo-bootstrap', top: 23, left: 16, width: 68, height: 54 },
+                { type: 'materialize', title: 'Materialize CSS', logo: 'logo-materialize', top: 29, left: 10, width: 80, height: 41 },
+                //{ type: 'semantic', title: 'SemanticUI CSS', logo: 'logo-semantic', top: 23, left: 23, width: 54, height: 54 },
+            ]
+        }
             }
         })
         createButton.addEventListener('click', () => {
