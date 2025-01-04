@@ -168,6 +168,16 @@
                 //{ type: 'semantic', title: 'SemanticUI CSS', logo: 'logo-semantic', top: 23, left: 23, width: 54, height: 54 },
             ]
         }
+        const webLibLevel = {
+            id: 'web-lib-type',
+            title: 'Library Type',
+            required: true,
+            additionalViews: additionalLibraryFilesView,
+            items: [
+                { type: 'pure', title: 'Pure Swift', logo: 'logo-pure', top: 23, left: 32, width: 36, height: 54 },
+                { type: 'js', title: 'JS Wrapper', logo: 'logo-js', top: 23, left: 23, width: 54, height: 54 }
+            ]
+        }
             }
         })
         createButton.addEventListener('click', () => {
