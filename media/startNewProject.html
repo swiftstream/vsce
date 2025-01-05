@@ -178,6 +178,17 @@
                 { type: 'js', title: 'JS Wrapper', logo: 'logo-js', top: 23, left: 23, width: 54, height: 54 }
             ]
         }
+        const webStreamLevel = {
+            id: 'web-type',
+            title: 'Type',
+            required: true,
+            items: [
+                { type: 'pwa', title: 'Progressive Web Application', top: 35, left: 10, width: 80, height: 30, sublevel: webAppLevel },
+                { type: 'spa', title: 'Single Page Application', top: 31, left: 10, width: 78, height: 36, sublevel: webAppLevel },
+                //{ type: 'tg', title: 'Telegram Mini App', top: 31, left: 17, width: 66, height: 36 },
+                { type: 'lib', title: 'Library', top: 31, left: 27, width: 46, height: 36, sublevel: webLibLevel }
+            ]
+        }
             }
         })
         createButton.addEventListener('click', () => {
