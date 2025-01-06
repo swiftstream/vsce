@@ -189,6 +189,15 @@
                 { type: 'lib', title: 'Library', top: 31, left: 27, width: 46, height: 36, sublevel: webLibLevel }
             ]
         }
+        const serverStreamLevel = {
+            id: 'server-type',
+            title: 'Framework',
+            required: true,
+            items: [
+                { type: 'vapor', title: 'Vapor Server', logo: 'logo-vapor' },
+                { type: 'hummingbird', title: 'Hummingbird Server', logo: 'logo-hummingbird' }
+            ]
+        }
             }
         })
         createButton.addEventListener('click', () => {
