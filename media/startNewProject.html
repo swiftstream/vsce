@@ -207,6 +207,17 @@
                 { type: 'lib', title: 'Library', logo: 'logo-package' }
             ]
         }
+        const embeddedStreamLevel = {
+            id: 'embedded-type',
+            title: 'Microchip',
+            required: true,
+            items: [
+                { type: 'esp32', title: 'ESP32-C6', logo: 'embedded-esp32' },
+                { type: 'stm32', title: 'STM32F746G', logo: 'embedded-stm32' },
+                { type: 'raspberry', title: 'Raspberry Pi Pico', logo: 'embedded-raspberry' },
+                { type: 'zephyr', title: 'nRF52840-DK', logo: 'embedded-zephyr' }
+            ]
+        }
             }
         })
         createButton.addEventListener('click', () => {
