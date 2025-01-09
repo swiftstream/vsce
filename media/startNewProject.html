@@ -218,6 +218,39 @@
                 { type: 'zephyr', title: 'nRF52840-DK', logo: 'embedded-zephyr' }
             ]
         }
+        const packageLevel = {
+            id: 'package-type',
+            title: 'Type',
+            required: true,
+            items: [
+                { type: 'library', title: 'Library package', logo: 'package-library' },
+                { type: 'executable', title: 'Executable package', logo: 'package-executable' },
+                { type: 'tool', title: 'CLI tool', logo: 'package-tool' },
+                { type: 'build-tool-plugin', title: 'Build tool plugin', logo: 'package-build-tool-plugin' },
+                { type: 'command-plugin', title: 'Command plugin', logo: 'package-command-plugin' },
+                { type: 'macro', title: 'Macro package', logo: 'package-macro' },
+                { type: 'empty', title: 'Empty package', logo: 'package-empty' }
+            ]
+        }
+        const streamLevel = {
+            id: 'stream',
+            title: 'Stream',
+            required: true,
+            items: [
+                { type: 'web', title: 'Web', sublevel: webStreamLevel },
+                { type: 'server', title: 'Server', sublevel: serverStreamLevel },
+                { type: 'android', title: 'Android', sublevel: androidStreamLevel },
+                //{ type: 'embedded', title: 'Embedded', sublevel: embeddedStreamLevel },
+                { type: 'package', title: 'Package', logo: 'logo-package', sublevel: packageLevel }
+            ]
+        }
+        function clearContainer(container) {
+            container.innerHTML = ''
+            if (container === subtypesContainer) {
+                libraryFilePaths = []
+                toggleElementsVisibility(false, libraryFiles())
+            }
+        }
             }
         })
         createButton.addEventListener('click', () => {
