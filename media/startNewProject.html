@@ -251,7 +251,56 @@
                 toggleElementsVisibility(false, libraryFiles())
             }
         }
+        function fillLevel(level, parentContainer, callback) {
+            const id = `${level.id}-level`
+            var container = document.getElementById(id)
+            if (!container) {
+                container = document.createElement('div')
+                container.setAttribute('id', id)
+                parentContainer.appendChild(container)
             }
+            var sublevelContainer = document.createElement('div')
+            container.innerHTML = `<h3>${level.title}</h3>`
+            let radios = document.createElement('div')
+            radios.classList.add('radios')
+            for (let i = 0; i < level.items.length; i++) {
+                let data = level.items[i]
+                let input = document.createElement('input')
+                input.classList.add('radioInput')
+                input.classList.add('streamInput')
+                input.setAttribute('type', 'radio')
+                input.setAttribute('name', level.id + 'Group')
+                input.setAttribute('value', data.type)
+                input.setAttribute('id', level.id + i)
+                input.onclick = () => {
+                    callback(data, input.value, level, sublevelContainer)
+                }
+                radios.appendChild(input)
+                let label = document.createElement('label')
+                label.classList.add('radio')
+                label.setAttribute('for', level.id + i)
+                let img = document.createElement('img')
+                img.style.position = 'absolute'
+                img.style.top = `${data.top ?? 22}px`
+                img.style.left = `${data.left ?? 21}px`
+                img.style.width = `${data.width ?? 55}px`
+                img.style.height = `${data.height ?? 55}px`
+                img.setAttribute('src', `__LF__/${data.logo ?? level.id+'-'+data.type}.svg`)
+                label.appendChild(img)
+                let span = document.createElement('span')
+                span.classList.add('hint')
+                let innerSpan = document.createElement('span')
+                innerSpan.innerHTML = data.title
+                span.appendChild(innerSpan)
+                label.appendChild(span)
+                radios.appendChild(label)
+            }
+            container.appendChild(radios)
+            container.appendChild(sublevelContainer)
+            if (level.additionalViews) {
+                level.additionalViews(container)
+            }
+        }
         })
         createButton.addEventListener('click', () => {
             disableItems(true)
