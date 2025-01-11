@@ -301,15 +301,58 @@
                 level.additionalViews(container)
             }
         }
+        fillLevel(streamLevel, levelsContainer, (item, value, parentLevel, container) => {
+            if (streamLevel.value === value) return
+            streamLevel.value = value
+            container.innerHTML = ''
+            function deselectAllItems(items) {
+                for (let i = 0; i < items.length; i++) {
+                    items[i].value = undefined
+                    if (items[i].sublevel) {
+                        items[i].sublevel.value = undefined
+                        if (items[i].sublevel.items) {
+                            deselectAllItems(items[i].sublevel.items)
+                        }
+                    }
+                }
+            }
+            deselectAllItems(streamLevel.items)
+            if (item.sublevel && item.sublevel.items) {
+                let callback;
+                callback = (item, value, level, container) => {
+                    if (level.value && level.value == value) return
+                    level.value = value
+                    container.innerHTML = ''
+                    deselectAllItems(level.items)
+                    if (item.sublevel && item.sublevel.items) {
+                        fillLevel(item.sublevel, container, callback)
+                    }
+                    checkValues()
+                }
+                fillLevel(item.sublevel, container, callback)
+            }
+            checkValues()
         })
         createButton.addEventListener('click', () => {
             disableItems(true)
+            var selectedValues = {}
+            function retrieveSelected(level) {
+                selectedValues[level.id] = level.value
+                if (level.items) {
+                    let items = level.items.filter((x) => x.type == level.value)
+                    if (items.length == 0) return
+                    let item = items[0]
+                    if (item && item.sublevel) {
+                        retrieveSelected(item.sublevel)
+                    }
+                }
+            }
+            retrieveSelected(streamLevel)
+            console.dir({selectedValues:selectedValues})
             vscode.postMessage({ command: 'createNewProject', payload: {
                 name: name,
                 path: folder == userHomePath ? `${userHomePath}/${name.replaceAll(' ', '')}` : folder,
-                type: type,
-                style: style,
-                libraryType: libraryType,
+                selectedValues: selectedValues,
                 libraryFiles: libraryFilePaths
             } })
         })
