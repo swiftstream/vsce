@@ -6,6 +6,8 @@ import { defaultServerPort, defaultWebDevPort, defaultWebProdPort, extensionCont
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
 import { webSourcesFolder } from '../webber'
+import { FileBuilder } from '../helpers/fileBuilder'
+import Handlebars from 'handlebars'
 import { copyFile, readFile } from '../helpers/filesHelper'
 
 let webViewPanel: WebviewPanel | undefined
@@ -92,72 +94,15 @@ async function createNewProjectFiles(
 			fs.mkdirSync(`${path}/.devcontainer`)
 		}
 		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
+		const streamType = selectedValues['stream']
+		const copyDevContainerFile = async (from: string, to?: string) => {
+			await copyFile(`assets/Devcontainer/${streamType}/${from}`, `${path}/.devcontainer/${to ?? from}`)
 		}
-		// Copy .gitignore
-		await copyFile(`assets/WebSources/.gitignore`, `${path}/.gitignore`)
-		// Copy WebSources
-		if (!fs.existsSync(`${path}/WebSources`)) {
-			fs.mkdirSync(`${path}/WebSources`)
-		}
-		['app.js', 'index.html', 'serviceWorker.js', 'webpack.config.js', 'placeholder.ts'].forEach(async (file) => {
-			await copyFile(`assets/WebSources/${file}`, `${path}/WebSources/${file}`)
-		})
-		await copyFile(`assets/WebSources/_tsconfig.json`, `${path}/WebSources/tsconfig.json`)
-		if (!fs.existsSync(`${path}/WebSources/wasi`)) {
-			fs.mkdirSync(`${path}/WebSources/wasi`)
-		}
-		['devSocket.js', 'errorHandler.js', 'overrideFS.js', 'startTask.js'].forEach(async (file) => {
-			await copyFile(`assets/WebSources/wasi/${file}`, `${path}/WebSources/wasi/${file}`)
-		})
-		// Copy images
-		if (type == 'spa') {
-			const p = `${path}/Sources/App`
-			if (!fs.existsSync(p)) {
-				fs.mkdirSync(p, { recursive: true })
-			}
-			await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
-		} else if (type != 'lib') {
-			const p = `${path}/Sources/Service/images`
-			if (!fs.existsSync(p)) {
-				fs.mkdirSync(p, { recursive: true })
-			}
-			await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
-			await copyFile(`media/icon-192.png`, `${p}/icon-192.png`)
-			await copyFile(`media/icon-512.png`, `${p}/icon-512.png`)
-		}
-		const swifWebRepo = 'https://github.com/swifweb'
-		const sortedLibraryFilePaths = sortLibraryFilePaths(libraryFiles)
-		// MARK: PLATFORMS
-		var platforms: string[] = []
-		platforms.push(`.macOS(.v10_15)`)
-		// MARK: PRODUCTS
-		var products: string[] = []
-		if (type == 'lib') {
-			products.push(`.library(name: "${name}", type: .static, targets: ["${name}"])`)
-		} else {
-			products.push(`.executable(name: "App", targets: ["App"])`)
-		}
-		if (type != 'spa' && type != 'lib') {
-			products.push(`.executable(name: "Service", targets: ["Service"])`)
-		}
-		// MARK: DEPENDENCIES
-		var dependencies: string[] = []
-		dependencies.push(`.package(url: "${swifWebRepo}/web", from: "1.0.0-beta.3.0.0")`)
-		if (type == `tailwind`) {
-			dependencies.push(`.package(url: "${swifWebRepo}/tailwind", from: "1.0.0")`)
-			products.push(`.product(name: "Tailwind", package: "tailwind")`)
-		} else if (type == `bootstrap`) {
-			dependencies.push(`.package(url: "${swifWebRepo}/bootstrap", from: "0.0.1")`)
-			products.push(`.product(name: "Bootstrap", package: "bootstrap")`)
-		} else if (type == `materialize`) {
-			dependencies.push(`.package(url: "${swifWebRepo}/materialize", from: "1.0.0")`)
-			products.push(`.product(name: "Materialize", package: "materialize")`)
-		} else if (type == `semantic`) {
-			dependencies.push(`.package(url: "${swifWebRepo}/semantic", from: "1.0.0")`)
-			products.push(`.product(name: "SemanticUI", package: "semantic-ui")`)
+		const copySourceFile = async (from: string, to?: string) => {
+			await copyFile(`assets/Sources/${streamType}/${from}`, `${path}/${to ?? from}`)
 		}
 		// MARK: TARGETS
-		function buildTarget(type: string, name: string, options: { dependencies?: string[], resources?: string[], plugins?: string[] }): string {
+		const buildTarget = (type: string, name: string, options: { dependencies?: string[], resources?: string[], plugins?: string[] }) => {
 			var items: string[] = []
 			items.push(`name: "${name}"`)
 			function arrayItems(name: string, items: string[]): string {
