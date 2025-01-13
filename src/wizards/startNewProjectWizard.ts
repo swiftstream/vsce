@@ -120,22 +120,15 @@ async function createNewProjectFiles(
 			return `.${type}(\n            ${items.join(',\n            ')}\n        )`
 		}
 		var targets: string[] = []
-		if (type == 'lib') {
-			var libResourcesArray: string[] = []
-			enum LibraryFileType { js = 'js', css = 'css', fonts = 'fonts' }
-			function parseStructuredLibraryFiles(type: LibraryFileType) {
-				if (sortedLibraryFilePaths[type].length == 0) { return }
-				const assetPath = `${path}/Sources/${name}/${type}`
-				if (!fs.existsSync(assetPath)) {
-					fs.mkdirSync(assetPath, { recursive: true })
-				}
-				sortedLibraryFilePaths[type].forEach(src => {
-					const pathComponents = src.split('/')
-					const filename = pathComponents[pathComponents.length - 1]
-					fs.copyFileSync(src, `${assetPath}/${filename}`)
-					libResourcesArray.push(`.copy("${type}/${filename}")`)
-				})
-				libResourcesArray.push(`.copy("${type}")`)
+		var platforms: string[] = []
+		var products: string[] = []
+		var dependencies: string[] = []
+		function createPackageManifest() {
+			// MARK: PACKAGE
+			var packageItems: string[] = []
+			packageItems.push(`name: "${name}"`)
+			function packageArrayItems(name: string, items: string[]): string {
+				return `${name}: [\n        ${items.join(',\n        ')}\n    ]`
 			}
 			parseStructuredLibraryFiles(LibraryFileType.js)
 			parseStructuredLibraryFiles(LibraryFileType.css)
