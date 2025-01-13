@@ -36,11 +36,25 @@
 			],
 			"problemMatcher": []
 		},
-		// MARK: VSCode Extension
+		// MARK: Build VSCode Extension VSIX
 		{
-			"label": "Build Dev Extension",
+			"label": "Build Extension",
 			"command": "vsce",
 			"args": ["package", "-o", "extension.vsix"],
+			"type": "shell"
+		},
+		// MARK: Establish VSCode Store Session
+		{
+			"label": "Store Establish Session",
+			"command": "vsce",
+			"args": ["login", "swiftstream"],
+			"type": "shell"
+		},
+		// MARK: Publish VSCode Release Build
+		{
+			"label": "Store Publish Build",
+			"command": "vsce",
+			"args": ["publish"], // "--pre-release"
 			"type": "shell"
 		},
 		// MARK: Docker List
