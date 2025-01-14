@@ -9,5 +9,13 @@
 		"dist": true // set this to false to include "dist" folder in search results
 	},
 	// Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-	"typescript.tsc.autoDetect": "off"
+	"typescript.tsc.autoDetect": "off",
+	"terminal.integrated.profiles.windows": {
+		"PowerShell": {
+			"source": "PowerShell",
+			"icon": "terminal-powershell",
+			"args": ["-ExecutionPolicy", "Bypass"]
+		}
+	},
+	"terminal.integrated.defaultProfile.windows": "PowerShell",
 }
