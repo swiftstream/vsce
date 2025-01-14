@@ -23,6 +23,7 @@
         var name = ''
         var folder = ''
         var libraryFilePaths = []
+        const slash = navigator.appVersion.toLowerCase().includes('windows') ? '\\' : '/'
         const vscode = acquireVsCodeApi()
         const nameInput = document.getElementById('nameInput')
         const folderLabel = document.getElementById('folderLabel')
@@ -101,7 +102,7 @@
         nameInput.addEventListener('input', function (evt) {
             name = nameInput.value
             if (folder == userHomePath) {
-                updateFolderLabel(userHomePath + '/' + name.replaceAll(' ', ''))
+                updateFolderLabel(userHomePath + slash + name.replaceAll(' ', ''))
             } else {
                 updateFolderLabel(folder)
             }
