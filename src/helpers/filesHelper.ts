@@ -4,12 +4,18 @@ import path from 'path'
 import { Uri, window } from 'vscode'
 import { projectDirectory, extensionContext } from '../extension'
 
+const isWin = process.platform == 'win32'
+
 export async function copyFile(
     sourcePath: string,
     destPath: string
 ): Promise<boolean> {
     try {
-        fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, destPath)
+        if (isWin) {
+            fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).fsPath, destPath)
+        } else {
+            fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, destPath)
+        }
         return true
     } catch (err) {
         window.showErrorMessage(`${err?.toString()}`)

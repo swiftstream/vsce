@@ -352,14 +352,14 @@
             console.dir({selectedValues:selectedValues})
             vscode.postMessage({ command: 'createNewProject', payload: {
                 name: name,
-                path: folder == userHomePath ? `${userHomePath}/${name.replaceAll(' ', '')}` : folder,
+                path: folder == userHomePath ? `${userHomePath}${slash}${name.replaceAll(' ', '')}` : folder,
                 selectedValues: selectedValues,
                 libraryFiles: libraryFilePaths
             } })
         })
         openProjectButton.addEventListener('click', () => {
             vscode.postMessage({ command: 'openNewProject', payload: {
-                path: folder == userHomePath ? `${userHomePath}/${name.replaceAll(' ', '')}` : folder
+                path: folder == userHomePath ? `${userHomePath}${slash}${name.replaceAll(' ', '')}` : folder
             } })
         })
         checkValues()

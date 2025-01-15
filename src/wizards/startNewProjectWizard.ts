@@ -9,8 +9,11 @@ import { webSourcesFolder } from '../webber'
 import { FileBuilder } from '../helpers/fileBuilder'
 import Handlebars from 'handlebars'
 import { copyFile, readFile } from '../helpers/filesHelper'
+import * as osPath from 'path'
+import { openProject } from '../helpers/openProject'
 
 let webViewPanel: WebviewPanel | undefined
+const isWin = process.platform == 'win32'
 
 export async function startNewProjectWizard() {
 	if (webViewPanel) { return }
@@ -28,9 +31,9 @@ export async function startNewProjectWizard() {
 	webViewPanel.onDidChangeViewState((e) => {
 		console.dir(e)
 	})
-	webViewPanel.iconPath = Uri.file(extensionContext.extensionPath + '/media/favicon.ico')
-	const htmlPath = Uri.file(extensionContext.extensionPath + '/media/startNewProject.html')
-	const basePath: string = webViewPanel.webview.asWebviewUri(Uri.file(extensionContext.extensionPath + '/media')).toString()
+	webViewPanel.iconPath = Uri.file(osPath.join(extensionContext.extensionPath, 'media', 'favicon.ico'))
+	const htmlPath = Uri.file(osPath.join(extensionContext.extensionPath, 'media', 'startNewProject.html'))
+	const basePath: string = webViewPanel.webview.asWebviewUri(Uri.file(osPath.join(extensionContext.extensionPath, 'media'))).toString()
 	webViewPanel.webview.html = fs.readFileSync(htmlPath.fsPath, 'utf8')
 		.replaceAll('__LF__', basePath)
 	webViewPanel?.webview.onDidReceiveMessage(async (event) => {
@@ -44,13 +47,13 @@ export async function startNewProjectWizard() {
 				)
 				break
 			case 'openNewProject':
-				commands.executeCommand(`vscode.openFolder`, Uri.parse(event.payload.path))
+				commands.executeCommand(`vscode.openFolder`, Uri.parse(osPath.normalize(event.payload.path)))
 				break
 			case 'getUserHomePath':
 				webViewPanel?.webview.postMessage({ type: 'userHomePath', data: { path: os.homedir() } })
 				break
 			case 'selectFolder':
-				const folderPath = (await selectFolder('Please select a folder for the project', 'Select'))?.path
+				const folderPath = (await selectFolder('Please select a folder for the project', 'Select'))?.fsPath
 				if (folderPath) {
 					webViewPanel?.webview.postMessage({ type: event.payload.type, data: { path: folderPath } })
 				}
@@ -76,7 +79,7 @@ async function createNewProjectFiles(
 			fs.mkdirSync(path)
 			pathWasExists = false
 		}
-		if (fs.existsSync(`${path}/Package.swift`)) {
+		if (fs.existsSync(osPath.join(path, 'Package.swift'))) {
 			const rewriteContent = await window.showWarningMessage(
 				`
 				Folder already contains Package.swift.
@@ -90,16 +93,16 @@ async function createNewProjectFiles(
 				return
 			}
 		}
-		if (!fs.existsSync(`${path}/.devcontainer`)) {
-			fs.mkdirSync(`${path}/.devcontainer`)
+		if (!fs.existsSync(osPath.join(path, '.devcontainer'))) {
+			fs.mkdirSync(osPath.join(path, '.devcontainer'))
 		}
-		const devContainerPath = `${path}/.devcontainer/devcontainer.json`
+		const devContainerPath = osPath.join(path, '.devcontainer', 'devcontainer.json')
 		const streamType = selectedValues['stream']
 		const copyDevContainerFile = async (from: string, to?: string) => {
-			await copyFile(`assets/Devcontainer/${streamType}/${from}`, `${path}/.devcontainer/${to ?? from}`)
+			await copyFile(osPath.join('assets', 'Devcontainer', streamType, from), osPath.join(path, '.devcontainer', to ?? from))
 		}
 		const copySourceFile = async (from: string, to?: string) => {
-			await copyFile(`assets/Sources/${streamType}/${from}`, `${path}/${to ?? from}`)
+			await copyFile(osPath.join('assets', 'Sources', streamType, from), osPath.join(path, to ?? from))
 		}
 		// MARK: TARGETS
 		const buildTarget = (type: string, name: string, options: { dependencies?: string[], resources?: string[], plugins?: string[] }) => {
@@ -148,7 +151,7 @@ async function createNewProjectFiles(
 			packageSwift += `\nlet package = Package(`
 			packageSwift += `\n    ${packageItems.join(',\n    ')}`
 			packageSwift += `\n)`
-			fs.writeFileSync(`${path}/Package.swift`, packageSwift)
+			fs.writeFileSync(osPath.join(path, 'Package.swift'), packageSwift)
 		}
 		Handlebars.registerHelper('eq', (a, b) => a === b)
 		Handlebars.registerHelper('arrNotEmpty', (a) => a && a.length > 0)
@@ -172,34 +175,35 @@ async function createNewProjectFiles(
 					fs.writeFileSync(devContainerPath, devContainerContent)
 				}
 				// Copy WebSources
-				if (!fs.existsSync(`${path}/WebSources`)) {
-					fs.mkdirSync(`${path}/WebSources`)
+				if (!fs.existsSync(osPath.join(path, 'WebSources'))) {
+					fs.mkdirSync(osPath.join(path, 'WebSources'))
 				}
-				['app.js', 'index.html', 'serviceWorker.js', 'webpack.config.js', 'placeholder.ts'].forEach(async (file) => {
-					await copySourceFile(`${file}`, `WebSources/${file}`)
+				['app.js', 'index.html', 'serviceWorker.js', 'webpack.config.js'].forEach(async (file) => {
+					await copySourceFile(file, osPath.join('WebSources', file))
 				})
-				await copySourceFile(`_tsconfig.json`, `WebSources/tsconfig.json`)
-				if (!fs.existsSync(`${path}/WebSources/wasi`)) {
-					fs.mkdirSync(`${path}/WebSources/wasi`)
+				await copySourceFile('placeholder.ts.js', osPath.join('WebSources', 'placeholder.ts'))
+				await copySourceFile(`_tsconfig.json`, osPath.join('WebSources', 'tsconfig.json'))
+				if (!fs.existsSync(osPath.join(path, 'WebSources', 'wasi'))) {
+					fs.mkdirSync(osPath.join(path, 'WebSources', 'wasi'))
 				}
 				['devSocket.js', 'errorHandler.js', 'overrideFS.js', 'startTask.js'].forEach(async (file) => {
-					await copySourceFile(`wasi/${file}`, `WebSources/wasi/${file}`)
+					await copySourceFile(osPath.join('wasi', file), osPath.join('WebSources', 'wasi', file))
 				})
 				// Copy images
 				if (webType == 'spa') {
-					const p = `${path}/Sources/App`
+					const p = osPath.join(path, 'Sources', 'App')
 					if (!fs.existsSync(p)) {
 						fs.mkdirSync(p, { recursive: true })
 					}
-					await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
+					await copyFile(osPath.join('media', 'favicon.ico'), osPath.join(p, 'favicon.ico'))
 				} else if (webType != 'lib') {
-					const p = `${path}/Sources/Service/images`
+					const p = osPath.join(path, 'Sources', 'Service', 'images')
 					if (!fs.existsSync(p)) {
 						fs.mkdirSync(p, { recursive: true })
 					}
-					await copyFile(`media/favicon.ico`, `${p}/favicon.ico`)
-					await copyFile(`media/icon-192.png`, `${p}/icon-192.png`)
-					await copyFile(`media/icon-512.png`, `${p}/icon-512.png`)
+					await copyFile(osPath.join('media', 'favicon.ico'), osPath.join(p, 'favicon.ico'))
+					await copyFile(osPath.join('media', 'icon-192.png'), osPath.join(p, 'icon-192.png'))
+					await copyFile(osPath.join('media', 'icon-512.png'), osPath.join(p, 'icon-512.png'))
 				}
 				const swifWebRepo = 'https://github.com/swifweb'
 				const sortedLibraryFilePaths = sortLibraryFilePaths(libraryFiles)
@@ -234,14 +238,13 @@ async function createNewProjectFiles(
 					enum LibraryFileType { js = 'js', css = 'css', fonts = 'fonts' }
 					function parseStructuredLibraryFiles(type: LibraryFileType) {
 						if (sortedLibraryFilePaths[type].length == 0) { return }
-						const assetPath = `${path}/Sources/${name}/${type}`
+						const assetPath = osPath.join(path, 'Sources', name, type)
 						if (!fs.existsSync(assetPath)) {
 							fs.mkdirSync(assetPath, { recursive: true })
 						}
 						sortedLibraryFilePaths[type].forEach(src => {
-							const pathComponents = src.split('/')
-							const filename = pathComponents[pathComponents.length - 1]
-							fs.copyFileSync(src, `${assetPath}/${filename}`)
+							const filename = osPath.parse(src).base
+							fs.copyFileSync(src, osPath.join(assetPath, filename))
 							libResourcesArray.push(`.copy("${type}/${filename}")`)
 						})
 						libResourcesArray.push(`.copy("${type}")`)
@@ -284,8 +287,7 @@ async function createNewProjectFiles(
 						mainFile.line('    public static func configure(avoidStyles: Bool? = nil) {')
 								.line('        if avoidStyles != true {')
 						const paths = sortedLibraryFilePaths.css.map((path) => {
-							const pathComponents = path.split('/')
-							return pathComponents[pathComponents.length - 1]
+							return osPath.parse(path).base
 						})
 						mainFile.line(`            let files: [String] = [${paths.map(x => `"${x}"`).join(', ')}]`)
 								.line('            for file in files {')
@@ -298,8 +300,7 @@ async function createNewProjectFiles(
 					}
 					if (sortedLibraryFilePaths.fonts.length > 0) {
 						const fonts = sortedLibraryFilePaths.fonts.map((path) => {
-							const pathComponents = path.split('/')
-							return pathComponents[pathComponents.length - 1]
+							return osPath.parse(path).base
 						})
 						mainFile.line(`        let fonts: [String] = [${fonts.map(x => `"${x}"`).join(', ')}]`)
 								.line('        WebApp.shared.document.head.appendChild(Style {')
@@ -312,8 +313,7 @@ async function createNewProjectFiles(
 					}
 					if (sortedLibraryFilePaths.js.length > 0) {
 						const paths = sortedLibraryFilePaths.js.map((path) => {
-							const pathComponents = path.split('/')
-							return pathComponents[pathComponents.length - 1]
+							return osPath.parse(path).base
 						})
 						mainFile.line(`        let files: [String] = [${paths.map(x => `"${x}"`).join(', ')}]`)
 								.line('        for file in files {')
@@ -323,7 +323,7 @@ async function createNewProjectFiles(
 								.line('    }')
 								.line('}')
 					}
-					mainFile.writeFile(`${path}/Sources/${name}`, `${name}.swift`)
+					mainFile.writeFile(osPath.join(path, 'Sources', name), `${name}.swift`)
 				} else if (['spa', 'pwa'].includes(webType)) {
 					//MARK: MAIN APP FILE
 					new FileBuilder()
@@ -356,7 +356,7 @@ async function createNewProjectFiles(
 						.line('        }')
 						.line('    }')
 						.line('}')
-						.writeFile(`${path}/Sources/App`, 'App.swift')
+						.writeFile(osPath.join(path, 'Sources', 'App'), 'App.swift')
 					// IndexPage file
 					new FileBuilder()
 						.import('Web')
@@ -366,7 +366,7 @@ async function createNewProjectFiles(
 						.line('        P("Index page")')
 						.line('    }')
 						.line('}')
-						.writeFile(`${path}/Sources/App/Pages`, 'IndexPage.swift')
+						.writeFile(osPath.join(path, 'Sources', 'App', 'Pages'), 'IndexPage.swift')
 					// HelloPage file
 					new FileBuilder()
 						.import('Web')
@@ -391,7 +391,7 @@ async function createNewProjectFiles(
 						.line('        HelloPage()')
 						.line('    }')
 						.line('}')
-						.writeFile(`${path}/Sources/App/Pages`, 'HelloPage.swift')
+						.writeFile(osPath.join(path, 'Sources', 'App', 'Pages'), 'HelloPage.swift')
 					// NotFoundPage file
 					new FileBuilder()
 						.import('Web')
@@ -417,7 +417,7 @@ async function createNewProjectFiles(
 						.line('        NotFoundPage()')
 						.line('    }')
 						.line('}')
-						.writeFile(`${path}/Sources/App/Pages`, 'NotFoundPage.swift')
+						.writeFile(osPath.join(path, 'Sources', 'App', 'Pages'), 'NotFoundPage.swift')
 					if (webType == 'pwa') {
 						// Service Worker file
 						new FileBuilder()
@@ -449,11 +449,11 @@ async function createNewProjectFiles(
 							.line('        }')
 							.line('    }')
 							.line('}')
-							.writeFile(`${path}/Sources/Service`, `Service.swift`)
+							.writeFile(osPath.join(path, 'Sources', 'Service'), `Service.swift`)
 					}
 				}
 				// MARK: PACKAGE.json
-				const wSourcesPath = `${path}/${webSourcesFolder}`
+				const wSourcesPath = osPath.join(path, webSourcesFolder)
 				if (!fs.existsSync(wSourcesPath)) {
 					fs.mkdirSync(wSourcesPath, { recursive: true })
 				}
@@ -469,7 +469,7 @@ async function createNewProjectFiles(
 						"webpack-cli": "^5.1.4"
 					}
 				}
-				fs.writeFileSync(`${wSourcesPath}/package.json`, JSON.stringify(packageJson, null, '\t'))
+				fs.writeFileSync(osPath.join(wSourcesPath, 'package.json'), JSON.stringify(packageJson, null, '\t'))
 				createPackageManifest()
 				break
 			case 'server':
@@ -486,7 +486,7 @@ async function createNewProjectFiles(
 					}
 				})()
 				// Copy .gitignore
-				await copySourceFile(`${serverType}/.gitignore`, `.gitignore`)
+				await copySourceFile(osPath.join(serverType, '.gitignore'), '.gitignore')
 				switch (serverType) {
 					case 'vapor':
 						await (async function () {
@@ -532,50 +532,50 @@ async function createNewProjectFiles(
 								]
 							}
 							fs.writeFileSync(
-								`${path}/Package.swift`,
-								Handlebars.compile(readFile(`assets/Sources/Package.hbs`))(payload)
+								osPath.join(path, 'Package.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', 'Package.hbs')))(payload)
 							)
 							fs.writeFileSync(
-								`${path}/Dockerfile`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Dockerfile.hbs`))(payload)
+								osPath.join(path, 'Dockerfile'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Dockerfile.hbs')))(payload)
 							)
 							copySourceFile(`docker-compose.yml`)
-							const sourcesFolder = `${path}/Sources`
+							const sourcesFolder = osPath.join(path, 'Sources')
 							if (!fs.existsSync(sourcesFolder)) {
 								fs.mkdirSync(sourcesFolder, { recursive: true })
 							}
-							const appSourcesFolder = `${path}/Sources/${name}`
+							const appSourcesFolder = osPath.join(path, 'Sources', name)
 							if (!fs.existsSync(appSourcesFolder)) {
 								fs.mkdirSync(appSourcesFolder, { recursive: true })
 							}
 							fs.writeFileSync(
-								`${appSourcesFolder}/configure.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Sources/App/configure.hbs`))(payload)
+								osPath.join(appSourcesFolder, 'configure.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Sources', 'App', 'configure.hbs')))(payload)
 							)
 							fs.writeFileSync(
-								`${appSourcesFolder}/entrypoint.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Sources/App/entrypoint.hbs`))(payload)
+								osPath.join(appSourcesFolder, 'entrypoint.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Sources', 'App', 'entrypoint.hbs')))(payload)
 							)
 							fs.writeFileSync(
-								`${appSourcesFolder}/routes.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Sources/App/routes.hbs`))(payload)
+								osPath.join(appSourcesFolder, 'routes.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Sources', 'App', 'routes.hbs')))(payload)
 							)
-							const controllersAppSourcesFolder = `${path}/Sources/${name}/Controllers`
+							const controllersAppSourcesFolder = osPath.join(path, 'Sources', name, 'Controllers')
 							if (!fs.existsSync(controllersAppSourcesFolder)) {
 								fs.mkdirSync(controllersAppSourcesFolder, { recursive: true })
 							}
-							fs.writeFileSync(`${controllersAppSourcesFolder}/.gitkeep`, '')
-							const testsFolder = `${path}/Tests`
+							fs.writeFileSync(osPath.join(controllersAppSourcesFolder, '.gitkeep'), '')
+							const testsFolder = osPath.join(path, 'Tests')
 							if (!fs.existsSync(testsFolder)) {
 								fs.mkdirSync(testsFolder, { recursive: true })
 							}
-							const appTestsFolder = `${path}/Tests/${name}Tests`
+							const appTestsFolder = osPath.join(path, 'Tests', `${name}Tests`)
 							if (!fs.existsSync(appTestsFolder)) {
 								fs.mkdirSync(appTestsFolder, { recursive: true })
 							}
 							fs.writeFileSync(
-								`${appTestsFolder}/${name}Tests.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Tests/AppTests/AppTests.hbs`))(payload)
+								osPath.join(appTestsFolder, `${name}Tests.swift`),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Tests', 'AppTests', 'AppTests.hbs')))(payload)
 							)
 						})()
 						break
@@ -616,40 +616,40 @@ async function createNewProjectFiles(
 								]
 							}
 							fs.writeFileSync(
-								`${path}/Package.swift`,
-								Handlebars.compile(readFile(`assets/Sources/Package.hbs`))(payload)
+								osPath.join(path, 'Package.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', 'Package.hbs')))(payload)
 							)
 							fs.writeFileSync(
-								`${path}/Dockerfile`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Dockerfile.hbs`))(payload)
+								osPath.join(path, 'Dockerfile'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Dockerfile.hbs')))(payload)
 							)
-							const sourcesFolder = `${path}/Sources`
+							const sourcesFolder = osPath.join(path, 'Sources')
 							if (!fs.existsSync(sourcesFolder)) {
 								fs.mkdirSync(sourcesFolder, { recursive: true })
 							}
-							const appSourcesFolder = `${path}/Sources/${name}`
+							const appSourcesFolder = osPath.join(path, 'Sources', name)
 							if (!fs.existsSync(appSourcesFolder)) {
 								fs.mkdirSync(appSourcesFolder, { recursive: true })
 							}
 							fs.writeFileSync(
-								`${appSourcesFolder}/App.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Sources/App/App.hbs`))(payload)
+								osPath.join(appSourcesFolder, 'App.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Sources', 'App', 'App.hbs')))(payload)
 							)
 							fs.writeFileSync(
-								`${appSourcesFolder}/Application+Build.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Sources/App/Application+Build.hbs`))(payload)
+								osPath.join(appSourcesFolder, 'Application+Build.swift'),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Sources', 'App', 'Application+Build.hbs')))(payload)
 							)
-							const testsFolder = `${path}/Tests`
+							const testsFolder = osPath.join(path, 'Tests')
 							if (!fs.existsSync(testsFolder)) {
 								fs.mkdirSync(testsFolder, { recursive: true })
 							}
-							const appTestsFolder = `${path}/Tests/${name}Tests`
+							const appTestsFolder = osPath.join(path, 'Tests', `${name}Tests`)
 							if (!fs.existsSync(appTestsFolder)) {
 								fs.mkdirSync(appTestsFolder, { recursive: true })
 							}
 							fs.writeFileSync(
-								`${appTestsFolder}/${name}Tests.swift`,
-								Handlebars.compile(readFile(`assets/Sources/${streamType}/${serverType}/Tests/AppTests/AppTests.hbs`))(payload)
+								osPath.join(appTestsFolder, `${name}Tests.swift`),
+								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Tests', 'AppTests', 'AppTests.hbs')))(payload)
 							)
 						})()
 						break
@@ -690,15 +690,13 @@ async function createNewProjectFiles(
 						fs.writeFileSync(devContainerPath, devContainerContent)
 					}
 				})()
-				const shCommand: string = fs.readFileSync(Uri.file(extensionContext.asAbsolutePath(`assets/Sources/${streamType}/${packageType}.sh`)).path, 'utf8').trimEnd()
-				fs.writeFileSync(`${path}/launchAfterFirstStart.sh`, `${shCommand} --name ${name}`)
+				const shCommand: string = fs.readFileSync(Uri.file(extensionContext.asAbsolutePath(osPath.join('assets', 'Sources', streamType, `${packageType}.sh`))).fsPath, 'utf8').trimEnd()
+				fs.writeFileSync(osPath.join(path, 'launchAfterFirstStart.sh'), `${shCommand} --name ${name}`)
 				break
 			default: break
 		}
 		// MARK: OPEN PROJECT
-		if (await openProject(Uri.parse(path)) == false) {
-			commands.executeCommand(`vscode.openFolder`, Uri.parse(path))
-		}
+		await openProject(Uri.parse(isWin ? `file:///${path}` : path), webViewPanel)
 	} catch (error) {
 		webViewPanel?.webview.postMessage({ type: 'creatingFailed', data: {} })
 		window.showErrorMessage(`Unable to create project: ${error}`)
@@ -709,19 +707,5 @@ async function createNewProjectFiles(
 				window.showErrorMessage(`Unable to delete: ${error}`)
 			}
 		}
-	}
-}
-
-async function openProject(folderUri: Uri): Promise<boolean> {
-    const extension = extensions.getExtension('ms-vscode-remote.remote-containers')
-    if (!extension) { return false }
-	try {
-		if (!extension.isActive) { await extension.activate() }
-		webViewPanel?.webview.postMessage({ type: 'openingInContainer', data: {} })
-		commands.executeCommand('remote-containers.openFolder', folderUri)
-		commands.executeCommand('remote-containers.revealLogTerminal')
-		return true
-	} catch (error) {
-		return false
 	}
 }

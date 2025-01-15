@@ -10,6 +10,7 @@ import { buildCommand } from './commands/build'
 import { debugInChromeCommand } from './commands/debugInChrome'
 import { onDidSaveTextDocument } from './commands/onDidSaveTextDocument'
 import { startWebSocketServer } from './commands/webSocketServer'
+import { openProject } from './helpers/openProject'
 
 export enum ExtensionMode {
 	Android = "ANDROID",
@@ -111,8 +112,7 @@ function registerCommands() {
 async function openProjectCommand() {
 	const folderUri = await selectFolder('Please select folder with a project', 'Open')
 	if (!folderUri) return
-	commands.executeCommand('remote-containers.openFolder', folderUri)
-	commands.executeCommand('remote-containers.revealLogTerminal')
+	await openProject(folderUri)
 }
 
 async function switchToProjectMode() {
