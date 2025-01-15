@@ -27,6 +27,11 @@ let package = Package(
                 {{#each target.dependencies as |dependency|}}
                 {{{dependency}}},
                 {{/each}}
+            ]{{/if}}{{#if (arrNotEmpty target.resources)}},
+            resources: [
+                {{#each target.resources as |resource|}}
+                {{{resource}}},
+                {{/each}}
             ]{{/if}}{{#if target.swiftSettings}},
             swiftSettings: swiftSettings
             {{/if}}
