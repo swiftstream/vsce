@@ -122,37 +122,10 @@ async function createNewProjectFiles(
 			}
 			return `.${type}(\n            ${items.join(',\n            ')}\n        )`
 		}
-		var targets: string[] = []
-		var platforms: string[] = []
+		var targets: any[] = []
 		var products: string[] = []
-		var dependencies: string[] = []
-		function createPackageManifest() {
-			// MARK: PACKAGE
-			var packageItems: string[] = []
-			packageItems.push(`name: "${name}"`)
-			function packageArrayItems(name: string, items: string[]): string {
-				return `${name}: [\n        ${items.join(',\n        ')}\n    ]`
-			}
-			if (platforms.length > 0) {
-				packageItems.push(packageArrayItems('platforms', platforms))
-			}
-			if (products.length > 0) {
-				packageItems.push(packageArrayItems('products', products))
-			}
-			if (dependencies.length > 0) {
-				packageItems.push(packageArrayItems('dependencies', dependencies))
-			}
-			if (targets.length > 0) {
-				packageItems.push(packageArrayItems('targets', targets))
-			}
-			var packageSwift = `// swift-tools-version: 6.0` // TODO: swift version
-			packageSwift += `\nimport PackageDescription`
-			packageSwift += `\n`
-			packageSwift += `\nlet package = Package(`
-			packageSwift += `\n    ${packageItems.join(',\n    ')}`
-			packageSwift += `\n)`
-			fs.writeFileSync(osPath.join(path, 'Package.swift'), packageSwift)
-		}
+		var mainTargetDependencies: string[] = []
+		var dependencies: any[] = []
 		Handlebars.registerHelper('eq', (a, b) => a === b)
 		Handlebars.registerHelper('arrNotEmpty', (a) => a && a.length > 0)
 		switch (streamType) {
@@ -207,8 +180,6 @@ async function createNewProjectFiles(
 				}
 				const swifWebRepo = 'https://github.com/swifweb'
 				const sortedLibraryFilePaths = sortLibraryFilePaths(libraryFiles)
-				// MARK: PLATFORMS
-				platforms.push(`.macOS(.v10_15)`)
 				// MARK: PRODUCTS
 				if (webType == 'lib') {
 					products.push(`.library(name: "${name}", type: .static, targets: ["${name}"])`)
@@ -219,19 +190,22 @@ async function createNewProjectFiles(
 					products.push(`.executable(name: "Service", targets: ["Service"])`)
 				}
 				// MARK: DEPENDENCIES
-				dependencies.push(`.package(url: "${swifWebRepo}/web", from: "1.0.0-beta.3.0.0")`)
+				dependencies.push({
+					comment: '🛜 Swift web framework.',
+					package: `.package(url: "${swifWebRepo}/web", from: "1.0.0-beta.3.0.0")`
+				})
 				if (webAppStyle == `tailwind`) {
-					dependencies.push(`.package(url: "${swifWebRepo}/tailwind", from: "1.0.0")`)
-					products.push(`.product(name: "Tailwind", package: "tailwind")`)
+					dependencies.push({ comment: '🖼️ UI Library', package: `.package(url: "${swifWebRepo}/tailwind", from: "1.0.0")` })
+					mainTargetDependencies.push(`.product(name: "Tailwind", package: "tailwind")`)
 				} else if (webAppStyle == `bootstrap`) {
-					dependencies.push(`.package(url: "${swifWebRepo}/bootstrap", from: "0.0.1")`)
-					products.push(`.product(name: "Bootstrap", package: "bootstrap")`)
+					dependencies.push({ comment: '🖼️ UI Library', package: `.package(url: "${swifWebRepo}/bootstrap", from: "0.0.1")` })
+					mainTargetDependencies.push(`.product(name: "Bootstrap", package: "bootstrap")`)
 				} else if (webAppStyle == `materialize`) {
-					dependencies.push(`.package(url: "${swifWebRepo}/materialize", from: "1.0.0")`)
-					products.push(`.product(name: "Materialize", package: "materialize")`)
+					dependencies.push({ comment: '🖼️ UI Library', package: `.package(url: "${swifWebRepo}/materialize", from: "1.0.0")` })
+					mainTargetDependencies.push(`.product(name: "Materialize", package: "materialize")`)
 				} else if (webAppStyle == `semantic`) {
-					dependencies.push(`.package(url: "${swifWebRepo}/semantic", from: "1.0.0")`)
-					products.push(`.product(name: "SemanticUI", package: "semantic-ui")`)
+					dependencies.push({ comment: '🖼️ UI Library', package: `.package(url: "${swifWebRepo}/semantic", from: "1.0.0")` })
+					mainTargetDependencies.push(`.product(name: "SemanticUI", package: "semantic-ui")`)
 				}
 				if (webType == 'lib') {
 					var libResourcesArray: string[] = []
@@ -252,29 +226,37 @@ async function createNewProjectFiles(
 					parseStructuredLibraryFiles(LibraryFileType.js)
 					parseStructuredLibraryFiles(LibraryFileType.css)
 					parseStructuredLibraryFiles(LibraryFileType.fonts)
-					const libResources: string[] = libResourcesArray.length > 0 ? libResourcesArray : ['// .copy("css/bootstrap.css")', '// .copy("css")']
-					targets.push(buildTarget('target', name, {
+					targets.push({
+						type: 'target',
+						name: name,
 						dependencies: [
 							'.product(name: "Web", package: "web")'
-						], resources: libResources
-					}))
+						].concat(mainTargetDependencies),
+						resources: libResourcesArray.length > 0 ? libResourcesArray : ['// .copy("css/bootstrap.css")', '// .copy("css")']
+					})
 				} else {
-					targets.push(buildTarget('executableTarget', 'App', {
+					targets.push({
+						type: 'executableTarget',
+						name: 'App',
 						dependencies: [
 							'.product(name: "Web", package: "web")'
-						], resources: (webType == 'spa') ? ['.copy("favicon.ico")'] : []
-					}))
+						].concat(mainTargetDependencies),
+						resources: (webType == 'spa') ? ['.copy("favicon.ico")'] : []
+					})
 					if (webType != 'spa') {
-						targets.push(buildTarget('executableTarget', 'Service', {
+						targets.push({
+							type: 'executableTarget',
+							name: 'Service',
 							dependencies: [
 								'.product(name: "ServiceWorker", package: "web")'
-							], resources: [
+							],
+							resources: [
 								'.copy("images/favicon.ico")',
 								'.copy("images/icon-192.png")',
 								'.copy("images/icon-512.png")',
 								'.copy("images")'
 							]
-						}))
+						})
 					}
 				}
 				if (webType == 'lib') {
@@ -470,7 +452,19 @@ async function createNewProjectFiles(
 					}
 				}
 				fs.writeFileSync(osPath.join(wSourcesPath, 'package.json'), JSON.stringify(packageJson, null, '\t'))
-				createPackageManifest()
+				// Create Package.swift
+				let payload = {
+					swiftToolsVersion: '5.10',
+					name: name,
+					platforms: '.macOS(.v10_15)',
+					products: products,
+					dependencies: dependencies,
+					targets: targets
+				}
+				fs.writeFileSync(
+					osPath.join(path, 'Package.swift'),
+					Handlebars.compile(readFile(osPath.join('assets', 'Sources', 'Package.hbs')))(payload)
+				)
 				break
 			case 'server':
 				let serverType = selectedValues['server-type']
