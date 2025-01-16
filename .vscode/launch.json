@@ -12,11 +12,7 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
-			"env": {
-				// Development Test Values
-				// "S_DEV": "TRUE",
-				// "S_TOOLCHAIN": "swift-wasm-5.10-RELEASE"
-			},
+			"env": {},
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
 			],
