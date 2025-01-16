@@ -25,7 +25,7 @@ toolchainURL=$([[ "$(uname -m)" == "aarch64" ]] && echo "${_toolchainURLarm}" ||
 # official toolchain related variables
 toolchainBaseName=$(basename "$toolchainURL")
 toolchainName=$(echo "$toolchainBaseName" | sed 's/^swift-//;s/-a-ubuntu20\.04.*$//;s/-ubuntu20\.04.*$//')
-mvSecondToolchainName=$(echo "$toolchainBaseName" | sed 's/-ubuntu20\.04_[a-z0-9]*\.tar\.gz$//')
+mvSecondToolchainName=$(echo "$toolchainBaseName" | sed 's/-ubuntu20\.04[-_][^\.]*\.tar\.gz$//')
 toolchainCanonicalName=$(echo "$toolchainBaseName" | sed 's/\(\.tar\.gz\|\.zip\)$//')
 # path to all swift toolchains
 toolchainsPath="/swift/toolchains"

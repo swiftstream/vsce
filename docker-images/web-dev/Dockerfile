@@ -24,7 +24,7 @@ ENV CS_SERVER_PORT=3080
 # RUN apt-get purge -y cmake
 # RUN apt-get purge -y python3
 # install nginx to serve the result
-RUN apt-get install -y nginx
+RUN apt-get update && apt-get install -y nginx
 # install envsubst to put env vars into nginx config
 RUN apt-get -y install gettext-base
 # install node and all required packages
