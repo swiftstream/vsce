@@ -206,7 +206,7 @@
 				"--no-cache",
 				"--tag", "swiftstream/web-dev:latest",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "web-container",
+				"--builder", "webdev-container",
 				"--push",
 				"./docker-images/web-dev"
 			],
