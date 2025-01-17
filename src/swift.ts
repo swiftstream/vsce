@@ -249,29 +249,16 @@ export class Swift {
             var errorsCount = 0
             for (let e = 0; e < errors.length; e++) {
                 errorsCount = errors.reduce((a, b) => a + b.places.length, 0)
-                print(" ")
+                print(' ')
                 for (let i = 0; i < errors.length; i++) {
                     const error = errors[i]
-                    print(` ${error.file.split('/').pop()} ${error.file}`)
-                    print(` `)
+                    print(`📄 ${error.file.split('/').pop()} ${error.places.length} error${error.places.length > 1 ? 's' : ''}`)
                     for (let n = 0; n < error.places.length; n++) {
                         const place = error.places[n]
-                        let lineNumberString = `${place.line} |`
-                        let errorTitle = ' ERROR '
-                        let errorTitlePrefix = '   '
-                        print(`${errorTitlePrefix}${errorTitle} ${place.reason}`)
-                        let _len = (errorTitle.length + 5) - lineNumberString.length
-                        let errorLinePrefix = ''
-                        for (let index = 0; index < _len; index++) {
-                            errorLinePrefix += ' '
-                        }
-                        print(`${errorLinePrefix}${lineNumberString} ${place.code}`)
-                        let linePointerBeginning = ''
-                        for (let index = 0; index < lineNumberString.length - 2; index++) {
-                            linePointerBeginning += ' '
-                        }
-                        linePointerBeginning += '|'
-                        print(`${errorLinePrefix}${linePointerBeginning} ${place.pointer}`)
+                        print(`${n + 1}. ${place.reason}`)
+                        print(`${error.file}:${place.line}`)
+                        print(`${place.code}`)
+                        print(`${place.pointer}`)
                         print(' ')
                     }
                 }
@@ -291,14 +278,14 @@ export class Swift {
         var lines = rawError.split('\n')
         while (lines.length > 0) {
             var places: Place[] = []
-            const line = lines.pop()
+            const line = lines.shift()
             if (!line) continue
             function lineIsPlace(line: string): boolean {
                 return line.startsWith('/') && line.split('/').length > 1 && line.includes('.swift:')
             }
             function placeErrorComponents(line: string): string[] | null {
                 const components = line.split(':')
-                if (components.length != 5 || !components[3].includes('error')) {
+                if (components.length != 5 || !components[3].includes('error')) { // also parse `note` and `warning` records
                     return null
                 }
                 return components
