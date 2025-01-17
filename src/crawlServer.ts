@@ -121,7 +121,7 @@ export class CrawlServer {
         if (isRunningCrawlServer) return
         if (this.provider?.pathToWasm) {
             if (!fs.existsSync(this.provider?.pathToWasm)) {
-                print(`🛑 Run debug build first.`)
+                print(`🛑 Run debug build first.`, LogLevel.Normal, true)
                 return
             }
         }
