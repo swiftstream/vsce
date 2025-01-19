@@ -16,7 +16,8 @@ export class Toolchain {
     async checkVersion() {
         const result = await this.webber.bash.execute({
             path: this.swiftPath,
-            description: 'check swift toolchain version'
+            description: 'check swift toolchain version',
+            isCancelled: () => false
         }, ['--version'])
         const version = result.stdout
         if (version.length == 0)

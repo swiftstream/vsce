@@ -13,7 +13,8 @@ export class Swift {
             path: this.webber.toolchain.swiftPath,
             description: `get executable target`,
             cwd: projectDirectory,
-            env: env
+            env: env,
+            isCancelled: () => false
         }, args)
         if (result.stderr.length > 0)
             throw result.stderr
@@ -83,7 +84,8 @@ export class Swift {
             const result = await this.webber.bash.execute({
                 path: executablePath,
                 description: `grab PWA manifest`,
-                cwd: projectDirectory
+                cwd: projectDirectory,
+                isCancelled: () => false
             }, [])
             return JSON.parse(result.stdout)
         } catch (error: any) {
@@ -101,7 +103,8 @@ export class Swift {
             const result = await this.webber.bash.execute({
                 path: executablePath,
                 description: `grab Index`,
-                cwd: projectDirectory
+                cwd: projectDirectory,
+                isCancelled: () => false
             }, ['--index'])
             const startCode = '==INDEX-START=='
             const endCode = '==INDEX-END=='
@@ -128,7 +131,8 @@ export class Swift {
             const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
                 description: `resolve dependencies for ${type}`,
-                cwd: projectDirectory
+                cwd: projectDirectory,
+                isCancelled: () => false
             }, args)
             if (result.code != 0) {
                 if (result.stderr.length > 0) {
@@ -184,7 +188,7 @@ export class Swift {
         }
     }
 
-    async build(options: { type: SwiftBuildType, targetName: string, release: boolean, progressHandler?: (p: string) => void }) {
+    async build(options: { type: SwiftBuildType, targetName: string, release: boolean, isCancelled: () => boolean, progressHandler?: (p: string) => void }) {
         print(`\`swift build\` started`, LogLevel.Verbose)
         var args: string[] = [
             'build',
@@ -213,16 +217,20 @@ export class Swift {
         }
         var env = process.env
         try {
+            if (options.isCancelled()) return
             print(`🧰 ${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
             const result = await this.webber.bash.execute({
                 path: this.webber.toolchain.swiftPath,
                 description: `build swift`,
                 cwd: projectDirectory,
                 env: env,
+                isCancelled: options.isCancelled,
                 processInstanceHandler: (process) => {
+                    if (options.isCancelled()) return
                     // TODO: process.kill('SIGKILL')
                     if (!options.progressHandler) return
                     process.stdout.on('data', function(msg) {
+                        if (options.isCancelled()) return
                         const m = msg.toString()
                         if (m.startsWith('[')) {
                             options.progressHandler!(m.split(']')[0].replace('[', ''))
@@ -230,6 +238,7 @@ export class Swift {
                     })
                 }
             }, args)
+            if (options.isCancelled()) return
         } catch (error: any) {
             const rawError: string = error.stdout
             if (rawError.length == 0) {

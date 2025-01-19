@@ -90,7 +90,10 @@ export async function buildReleaseCommand() {
 					type: type,
 					target: target,
 					release: type == SwiftBuildType.Wasi,
-					force: true
+					force: true,
+					isCancelled: () => {
+						return false
+					}
 				})
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file

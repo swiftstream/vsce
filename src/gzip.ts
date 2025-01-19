@@ -18,7 +18,8 @@ export class Gzip {
         const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `gzip`,
-            cwd: cwd
+            cwd: cwd,
+            isCancelled: () => false
         }, args)
         return result
     }

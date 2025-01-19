@@ -15,7 +15,8 @@ export class NPM {
         const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `npm`,
-            cwd: this.cwd
+            cwd: this.cwd,
+            isCancelled: () => false
         }, args)
         return result
     }

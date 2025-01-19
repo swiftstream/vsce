@@ -23,7 +23,8 @@ export class Webpack {
         const result = await this.webber.bash.execute({
             path: this.binPath!,
             description: `executing webpack`,
-            cwd: `${projectDirectory}/${webSourcesFolder}`
+            cwd: `${projectDirectory}/${webSourcesFolder}`,
+            isCancelled: () => false
         }, args)
         return result
     }

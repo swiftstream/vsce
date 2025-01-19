@@ -43,7 +43,8 @@ export class Wasm {
         const result = await this.webber.bash.execute({
             path: this.stripBinPath!,
             description: `wasm-strip`,
-            cwd: options.destPath
+            cwd: options.destPath,
+            isCancelled: () => false
         }, [`${options.lowercasedTarget}.wasm`])
         const newSize = fs.statSync(fullPath).size
         measure.finish()
@@ -69,7 +70,8 @@ export class Wasm {
         const result = await this.webber.bash.execute({
             path: this.optBinPath!,
             description: `wasm-opt`,
-            cwd: options.destPath
+            cwd: options.destPath,
+            isCancelled: () => false
         }, args)
         const newSize = fs.statSync(fullPath).size
         measure.finish()

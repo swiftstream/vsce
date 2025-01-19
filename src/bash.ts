@@ -24,7 +24,7 @@ export class Bash {
         })
     }
 
-    async execute(program: { path?: string | undefined, name?: string | undefined, description: string | undefined, processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined, cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined }, args: string[] = []): Promise<BashResult> {
+    async execute(program: { path?: string | undefined, name?: string | undefined, description: string | undefined, isCancelled: () => boolean, processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined, cwd?: string | undefined, env?: NodeJS.ProcessEnv | undefined }, args: string[] = []): Promise<BashResult> {
         return new Promise(async (resolve, reject) => {
             var path: string | undefined
             if (program.path) {
@@ -33,6 +33,7 @@ export class Bash {
                 path = await this.which(program.name)
                 if (!path) {
                     const bashError = new BashError({ error: `${program.name} is not available` })
+                    if (program.isCancelled()) return
                     print(bashError.description)
                     return reject(bashError)
                 }
@@ -43,6 +44,7 @@ export class Bash {
                 options.cwd = program.cwd
             if (program.env)
                 options.env = program.env
+            if (program.isCancelled()) return
             print(`Executing ${path!} ${args.join(' ')}`, LogLevel.Unbearable)
             const process = spawn(path!, args, options)
             if (program.processInstanceHandler)
@@ -50,22 +52,26 @@ export class Bash {
             var stderr = ''
 			var stdout = ''
             process.stdout.on('data', function(msg) {
+                if (program.isCancelled()) return
                 const m = msg.toString()
                 print(`stdout: ${m.trim()}`, LogLevel.Unbearable)
 				stdout += m
 			})
 			process.stderr.on('data', function(msg) {
+                if (program.isCancelled()) return
                 const m = msg.toString()
                 print(`stderr: ${m.trim()}`, LogLevel.Unbearable)
 				stderr += m
 			})
 			process.on('error', (error: any) => {
+                if (program.isCancelled()) return
                 measure.finish()
                 const bashError = new BashError({ error: error, executionTime: measure.time, description: program.description, stderr: stderr.replace(/^\s+|\s+$/g, ''), stdout: stdout.replace(/^\s+|\s+$/g, '') })
                 print(bashError.description, LogLevel.Unbearable) // Don't comment out
                 return reject(bashError)
 			})
 			process.on('close', (_exitCode) => {
+                if (program.isCancelled()) return
                 measure.finish()
                 const code = _exitCode || 0
 				const result = new BashResult(path!, measure.time, code, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)

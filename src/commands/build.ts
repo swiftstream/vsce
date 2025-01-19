@@ -103,7 +103,10 @@ export async function buildCommand() {
 					type: type,
 					target: target,
 					release: false,
-					force: true
+					force: true,
+					isCancelled: () => {
+						return false
+					}
 				})
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
@@ -265,6 +268,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		}
 		await new Promise<void>((resolve, reject) => {
 			let completedBuildTypes: SwiftBuildType[] = []
+			let rejected = false
 			for (let n = 0; n < buildTypes.length; n++) {
 				const buildType: SwiftBuildType = buildTypes[n];
 				(new Promise<SwiftBuildType>(async (resolve, reject) => {
@@ -275,7 +279,8 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 								type: buildType,
 								target: target,
 								release: false,
-								force: true
+								force: true,
+								isCancelled: () => rejected
 							})
 							if (buildType == SwiftBuildType.Wasi) {
 								// Proceed WASM file
