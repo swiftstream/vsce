@@ -297,11 +297,16 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 						reject(error)
 					}
 				})).then((buildType) => {
+					if (rejected) return
 					completedBuildTypes.push(buildType)
 					if (completedBuildTypes.length == buildTypes.length) {
 						resolve()
 					}
-				}).catch(reject)
+				}).catch((error) => {
+					if (rejected) return
+					rejected = true
+					reject(error)
+				})
 			}
 		})
 		// Retrieve manifest from the Service target
