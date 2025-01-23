@@ -1,7 +1,8 @@
 import * as fs from 'fs'
-import { LogLevel, print, Webber } from './webber'
-import { projectDirectory } from './extension'
+import { currentLoggingLevel, LogLevel, print, Webber } from './webber'
+import { projectDirectory, sidebarTreeView, sidebarTreeViewContainer } from './extension'
 import { isString } from './helpers/isString'
+import { FileWithError } from './sidebarTreeView'
 
 export class Swift {
     constructor(private webber: Webber) {}
@@ -239,6 +240,12 @@ export class Swift {
                 }
             }, args)
             if (options.isCancelled()) return
+            const ending = await this.processCompilationErrors(result.stdout, options.isCancelled)
+            if (options.isCancelled()) return
+            if (ending.length > 0) {
+                print(`${ending}`, LogLevel.Detailed)
+            }
+            sidebarTreeView?.refresh()
         } catch (error: any) {
             const rawError: string = error.stdout
             if (rawError.length == 0) {
@@ -251,35 +258,85 @@ export class Swift {
                     throw `Build failed with exit code ${error.error.code} ${error.stderr}`
                 }
             }
-            var errors: CompilationError[] = await this.pasreCompilationErrors(rawError)
-            if (errors.length == 0) {
-                throw 'Unable to parse compilation errors'
-            }
-            var errorsCount = 0
-            for (let e = 0; e < errors.length; e++) {
-                errorsCount = errors.reduce((a, b) => a + b.places.length, 0)
-                print(' ')
-                for (let i = 0; i < errors.length; i++) {
-                    const error = errors[i]
-                    print(`📄 ${error.file.split('/').pop()} ${error.places.length} error${error.places.length > 1 ? 's' : ''}`)
-                    for (let n = 0; n < error.places.length; n++) {
-                        const place = error.places[n]
-                        print(`${n + 1}. ${place.reason}`)
-                        print(`${error.file}:${place.line}`)
-                        print(`${place.code}`)
-                        print(`${place.pointer}`)
-                        print(' ')
-                    }
-                }
-            }
-            var ending = ''
-            if (errorsCount == 1) {
-                ending = 'found 1 error ❗️'
-            } else if (errorsCount > 1) {
-                ending = `found ${errorsCount} errors ❗️❗️❗️`
-            }
+            const ending = await this.processCompilationErrors(rawError, options.isCancelled)
+            sidebarTreeView?.refresh()
             throw `🥺 Unable to continue cause of failed compilation, ${ending}\n`
         }
+    }
+
+    async processCompilationErrors(rawOutput: string, isCancelled: () => boolean): Promise<string> {
+        var errors: CompilationError[] = await this.pasreCompilationErrors(rawOutput)
+        if (JSON.stringify(errors) === '[]') return ''
+        sidebarTreeView?.refresh()
+        if (errors.length == 0) {
+            throw 'Unable to parse compilation errors'
+        }
+        var errorsCount = 0
+        var warningsCount = 0
+        var notesCount = 0
+        for (let e = 0; e < errors.length; e++) {
+            if (isCancelled()) return ''
+            const error = errors[e]
+            const eCount = error.places.filter((p) => p.type == 'error')?.length ?? 0
+            const wCount = error.places.filter((p) => p.type == 'warning')?.length ?? 0
+            const nCount = error.places.filter((p) => p.type == 'note')?.length ?? 0
+            errorsCount += eCount
+            warningsCount += wCount
+            notesCount += nCount
+            print(' ', eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+            const found = this.foundString(eCount, wCount, nCount)
+            print(`📄 ${error.file.split('/').pop()} ${found}`, eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+            var fileWithError: FileWithError = {
+                path: error.file,
+                name: error.file.split('/').pop() ?? '',
+                errors: []
+            }
+            for (let n = 0; n < error.places.length; n++) {
+                if (isCancelled()) return ''
+                const place = error.places[n]
+                fileWithError.errors.push({
+                    type: place.type,
+                    line: place.line,
+                    point: place.pointer.length,
+                    lineWithCode: place.code,
+                    description: place.reason
+                })
+                // don't show warnings without detailed+ mode
+                if (currentLoggingLevel == LogLevel.Normal && place.type != 'error') continue
+                print(`${n + 1}. ${place.reason}`, eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+                print(`${error.file}:${place.line}`, eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+                print(`${place.code}`, eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+                print(`${place.pointer}`, eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+                print(' ', eCount > 0 ? LogLevel.Normal : LogLevel.Detailed)
+            }
+            sidebarTreeView?.addFileWithError(fileWithError)
+        }
+        const endings = this.foundString(errorsCount, warningsCount, notesCount)
+        let ending = ''
+        if (endings.length > 0) {
+            ending = `found ${endings}`
+        }
+        return ending
+    }
+
+    foundString(eCount: number, wCount: number, nCount: number): string {
+        let endings: string[] = []
+        if (eCount == 1) {
+            endings.push('1 error ⛔️')
+        } else if (eCount > 1) {
+            endings.push(`${eCount} errors ⛔️`)
+        }
+        if (wCount == 1) {
+            endings.push('1 warning ❗️')
+        } else if (wCount > 1) {
+            endings.push(`${wCount} warnings ❗️`)
+        }
+        if (nCount == 1) {
+            endings.push('1 note 📝')
+        } else if (nCount > 1) {
+            endings.push(`${nCount} notes 📝`)
+        }
+        return endings.join(', ')
     }
 
     async pasreCompilationErrors(rawError: string): Promise<CompilationError[]> {
@@ -288,35 +345,55 @@ export class Swift {
         while (lines.length > 0) {
             var places: Place[] = []
             const line = lines.shift()
-            if (!line) continue
+            if (!line || line === undefined) break
             function lineIsPlace(line: string): boolean {
                 return line.startsWith('/') && line.split('/').length > 1 && line.includes('.swift:')
             }
-            function placeErrorComponents(line: string): string[] | null {
+            function placeErrorComponents(line: string): string[] | undefined {
                 const components = line.split(':')
-                if (components.length != 5 || !components[3].includes('error')) { // also parse `note` and `warning` records
-                    return null
+                function isOfRightType(): boolean {
+                    return components[3].includes('error') || components[3].includes('note') || components[3].includes('warning')
                 }
-                return components
+                if (components.length < 5 || !isOfRightType()) {
+                    return undefined
+                }
+                if (components.length == 5) {
+                    return components
+                } else {
+                    var comps: string[] = []
+                    var i = 0
+                    while (components.length > 0) {
+                        if (i < 4) {
+                            var c = components.shift()
+                            if (!c) return undefined
+                            comps[i] = c
+                            i++
+                        } else {
+                            comps[i] = components.join(':')
+                            break
+                        }
+                    }
+                    return comps
+                }
             }
             if (!lineIsPlace(line)) continue
             function parsePlace(line: string): void {
                 const components = placeErrorComponents(line)
-                if (!components) return
+                if (!components || components === undefined) return
                 const filePath = components[0]
+                const type = components[3].trim()
                 function gracefulExit() {
                     if (places.length > 0) {
                         let error = errors.find(element => element.file == filePath)
                         if (error) {
                             for (let i = 0; i < places.length; i++) {
                                 const place = places[i]
-                                const found = error.places.find(element => element.line == place.line && element.reason == place.reason)
-                                if (!found) break
-                                error.places.push(place)
+                                if (!error.places.find(element => element.line == place.line && element.reason == place.reason))
+                                    error.places.push(place)
                             }
-                            error.places.sort((a, b) => (a.line < b.line) ? 1 : -1)
+                            error.places.sort((a, b) => (a.line > b.line) ? 1 : -1)
                         } else {
-                            places.sort((a, b) => (a.line < b.line) ? 1 : -1)
+                            places.sort((a, b) => (a.line > b.line) ? 1 : -1)
                             errors.push(new CompilationError(filePath, places))
                         }
                     }
@@ -329,10 +406,15 @@ export class Swift {
                 const lineWithCode = lines.shift()
                 if (!lineWithCode) return gracefulExit()
                 
-                const lineWithPointer = lines.shift()
-                if (!lineWithPointer?.includes('^')) return gracefulExit()
+                var lineWithPointer: string | undefined = '^'
+                if (lines.length > 0 && lines[0]?.includes('^')) {
+                    lineWithPointer = lines.shift()
+                    if (!lineWithPointer?.includes('^')) lineWithPointer = '^'
+                    lineWithPointer = lineWithPointer.replaceAll('~', '')
+                }
                 
-                places.push(new Place(lineInFile, reason, lineWithCode, lineWithPointer))
+                if (!places.find((p) => p.type == type && p.line == lineInFile && p.reason == reason))
+                    places.push(new Place(type, lineInFile, reason, lineWithCode, lineWithPointer))
                 
                 const nextLine = lines.shift()
                 if (nextLine && lineIsPlace(nextLine) && placeErrorComponents(nextLine)?.shift() == filePath) {
@@ -349,12 +431,14 @@ export class Swift {
 }
 
 class Place {
+    type: string
     line: number
     reason: string
     code: string
     pointer: string
 
-    constructor (line: number, reason: string, code: string, pointer: string) {
+    constructor (type: string, line: number, reason: string, code: string, pointer: string) {
+        this.type = type
         this.line = line
         this.reason = reason
         this.code = code

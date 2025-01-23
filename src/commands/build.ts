@@ -31,6 +31,8 @@ export async function buildCommand() {
 	wsSendBuildStarted(false)
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
+	sidebarTreeView?.cleanupErrors()
+    sidebarTreeView?.refresh()
 	try {
 		print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
@@ -214,7 +216,8 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	setHotBuildingSwift(true)
 	setRecompilingApp(params.target == appTargetName)
 	setRecompilingService(params.target == serviceWorkerTargetName)
-	sidebarTreeView?.refresh()
+	sidebarTreeView?.cleanupErrors()
+    sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
 	print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
 	const measure = new TimeMeasure()

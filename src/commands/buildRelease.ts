@@ -26,6 +26,8 @@ export async function buildReleaseCommand() {
 	sidebarTreeView?.refresh()
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
+	sidebarTreeView?.cleanupErrors()
+    sidebarTreeView?.refresh()
 	try {
 		print(`🏗️ Started building release`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
