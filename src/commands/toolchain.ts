@@ -110,6 +110,9 @@ export async function toolchainCommand(selectedType?: string) {
 			devContainerJson.customizations.vscode.settings['lldb.library'] = `/swift/toolchains/${newName}/usr/lib/liblldb.so`
 			fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
 			setPendingNewToolchain(newName)
+			// TODO: check if toolchain is already in the folder; or
+			// TODO: ask if would like to download it now
+			// TODO: ask if would like to rebuild container now
 			await window.showInformationMessage(`Pending window reload to start using "${newName}" toolchain`)
 		}
 	}
