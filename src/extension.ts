@@ -29,6 +29,7 @@ export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
 export let webber: Webber | undefined
 export let sidebarTreeView: SidebarTreeView | undefined
+export let sidebarTreeViewContainer: TreeView<Dependency> | undefined
 
 export function isInContainer(): boolean {
 	return vsEnv.remoteName?.includes('container') == true
@@ -119,7 +120,7 @@ async function switchToProjectMode() {
 	commands.executeCommand('setContext', 'swiftstream.state', WebberState.ProjectMode)
 	// await webber.prepare(undefined)
 	sidebarTreeView = new SidebarTreeView()
-	let tv: TreeView<Dependency> = window.createTreeView('swiftstreamSidebar', {
+	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
 }
