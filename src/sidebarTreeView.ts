@@ -1,14 +1,51 @@
-import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Uri, workspace } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer } from "./webber"
+import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from "vscode"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, print } from "./webber"
 import { env } from "process"
-import { ExtensionMode, extensionMode, isInContainer } from "./extension"
+import { extensionContext, ExtensionMode, extensionMode, isInContainer, sidebarTreeViewContainer } from "./extension"
 import { SwiftBuildType } from "./swift"
 import { doesPackageCheckedOut, KnownPackage } from "./commands/build/helpers"
 import path from "node:path"
+import { openDocumentInEditorOnLine } from "./helpers/openDocumentInEditor"
+
+export interface ErrorInFile {
+	type: string,
+	line: number,
+	point: number,
+	lineWithCode: string,
+	description: string
+}
+
+export interface FileWithError {
+	path: string,
+	name: string,
+	errors: ErrorInFile[]
+}
 
 export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private _onDidChangeTreeData: EventEmitter<Dependency | undefined | void> = new EventEmitter<Dependency | undefined | void>()
 	readonly onDidChangeTreeData: Event<Dependency | undefined | void> = this._onDidChangeTreeData.event
+
+	errors: FileWithError[] = []
+	errorCommands: Disposable[] = []
+
+	cleanupErrors() {
+		this.errors = []
+	}
+
+	addFileWithError(file: FileWithError) {
+		var existingFile = this.errors.find((f) => f.path == file.path)
+		if (existingFile) {
+			for (let i = 0; i < file.errors.length; i++) {
+				const error = file.errors[i]
+				const existingError = existingFile.errors.find((e) => e.type == error.type && e.line == error.line && e.description == error.description)
+				if (existingError === undefined) {
+					existingFile.errors.push(error)
+				}
+			}
+		} else {
+			this.errors.push(file)
+		}
+	}
 
 	constructor() {}
 
@@ -49,7 +86,46 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
 			items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
 			items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
-			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Expanded, 'heart', false))
+			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
+			for (let i = 0; i < this.errorCommands.length; i++) {
+				this.errorCommands[i].dispose()
+			}
+			this.errorCommands = []
+			if (this.errors.length > 0) {
+				const eCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'error')?.length ?? 0).reduce((s, a) => s + a, 0)
+				const wCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'warning')?.length ?? 0).reduce((s, a) => s + a, 0)
+				const nCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'note')?.length ?? 0).reduce((s, a) => s + a, 0)
+				items.push(new Dependency(SideTreeItem.Errors, eCount > 0 ? 'Errors' : wCount > 0 ? 'Warnings' : 'Notes', `${eCount + wCount + nCount}`, TreeItemCollapsibleState.Expanded, `bracket-error::charts.${eCount > 0 ? 'red' : wCount > 0 ? 'orange' : 'white'}`, false))
+			}
+		} else if (element?.id == SideTreeItem.Errors) {
+			for (let i = 0; i < this.errors.length; i++) {
+				const error = this.errors[i]
+				const commandId = `${SideTreeItem.ErrorFile}:${error.path}`
+				const command = commands.registerCommand(commandId, async () => {
+					if (error.errors.length > 0 && error.errors[0]) {
+						const place = error.errors[0]
+						await openDocumentInEditorOnLine(error.path, place.line, place.point > 0 ? place.point - 1 : 0)
+					}
+				})
+				extensionContext.subscriptions.push(command)
+				this.errorCommands.push(command)
+				items.push(new Dependency(commandId, error.name, `${error.errors.length}`, TreeItemCollapsibleState.Expanded, 'file', true))
+			}
+		} else if (element?.id && element.id.startsWith(`${SideTreeItem.ErrorFile}:`)) {
+			const path = element.id.replace(`${SideTreeItem.ErrorFile}:`, '')
+			const error = this.errors.find((x) => x.path == path)
+			if (error) {
+				for (let i = 0; i < error.errors.length; i++) {
+					const place = error.errors[i]
+					const commandId = `${SideTreeItem.ErrorPoint}:${error.path}:${place.line}:${place.point}${place.description}`
+					const command = commands.registerCommand(commandId, async () => {
+						await openDocumentInEditorOnLine(error.path, place.line, place.point > 0 ? place.point - 1 : 0)
+					})
+					extensionContext.subscriptions.push(command)
+					this.errorCommands.push(command)
+					items.push(new Dependency(commandId, `${place.line}: ${place.description}`, '', TreeItemCollapsibleState.None, place.type == 'note' ? 'edit::charts.white' : place.type == 'warning' ? 'alert::charts.orange' : 'error::charts.red', true))
+				}
+			}
 		} else if (element?.id == SideTreeItem.Debug) {
 			items = [
 				new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')),
@@ -156,6 +232,9 @@ export class Dependency extends TreeItem {
 }
 
 export enum SideTreeItem {
+	Errors = 'Errors',
+		ErrorFile = 'ErrorFile',	
+			ErrorPoint = 'ErrorPoint',
 	Debug = 'Debug',
 		ReopenInContainer = 'ReopenInContainer',
 		WhyReopenInContainer = 'WhyReopenInContainer',
