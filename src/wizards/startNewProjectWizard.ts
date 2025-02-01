@@ -151,7 +151,7 @@ async function createNewProjectFiles(
 				if (!fs.existsSync(osPath.join(path, 'WebSources'))) {
 					fs.mkdirSync(osPath.join(path, 'WebSources'))
 				}
-				['app.js', 'index.html', 'serviceWorker.js', 'webpack.config.js'].forEach(async (file) => {
+				['app.js', 'main.html', 'serviceWorker.js', 'webpack.config.js'].forEach(async (file) => {
 					await copySourceFile(file, osPath.join('WebSources', file))
 				})
 				await copySourceFile('placeholder.ts.js', osPath.join('WebSources', 'placeholder.ts'))

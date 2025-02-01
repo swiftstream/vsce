@@ -18,7 +18,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
     var lines: string[] = []
     print(`📜 Manifest present: ${options.manifest ? 'true' : 'false'}`, LogLevel.Unbearable)
     buildStatus(`Processing HTML files`)
-    // generate index.html from scratch
+    // generate main.html from scratch
     if (!fs.existsSync(indexPath)) {
         lines = [
             doctype(),
@@ -41,7 +41,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
         ]
         isIndexChanged = true
     }
-    // regenerate index.html by replacing only managed lines of code
+    // regenerate main.html by replacing only managed lines of code
     else {
         const htmlString = fs.readFileSync(indexPath, 'utf8')
         const htmlLines = htmlString.split('\n')
@@ -138,7 +138,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
                                 lines.push(tag('meta', newMeta))
                             } else {
                                 const name = isCharset ? 'charset' : isViewport ? 'viewport' : isDescription ? 'description' : ''
-                                print(`💨 index.html skipping <meta ${name}> since it is set manually`, LogLevel.Verbose)
+                                print(`💨 main.html skipping <meta ${name}> since it is set manually`, LogLevel.Verbose)
                             }
                         } else {
                             lines.push(tag('meta', newMeta))
@@ -294,7 +294,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             isIndexChanged = true
         }
     }
-    // writing index.html if needed
+    // writing main.html if needed
     if (isIndexChanged) {
         const newHTML = lines.join('\n')
         fs.writeFileSync(indexPath, newHTML)
