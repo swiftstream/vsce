@@ -13,8 +13,8 @@ export async function buildWebSourcesForAllTargets(options: { targets: string[],
             await buildWebSources({
                 target: target,
                 isServiceWorker: !(target === appTargetName),
-                release: false,
-                force: true
+                release: options.release,
+                force: options.force
             })
         }
     } else {
@@ -23,8 +23,8 @@ export async function buildWebSourcesForAllTargets(options: { targets: string[],
             await buildWebSources({
                 target: target,
                 isServiceWorker: !(target === appTargetName),
-                release: false,
-                force: true
+                release: options.release,
+                force: options.force
             })
         }))
     }
