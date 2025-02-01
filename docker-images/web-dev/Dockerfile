@@ -27,6 +27,8 @@ ENV CS_SERVER_PORT=3080
 RUN apt-get update && apt-get install -y nginx
 # install envsubst to put env vars into nginx config
 RUN apt-get -y install gettext-base
+# important for: gcloud
+RUN apt-get install -y python3 python3-pip
 # install node and all required packages
 ENV NVM_DIR="/root/.nvm"
 ENV NODE_VERSION="22.10.0"
