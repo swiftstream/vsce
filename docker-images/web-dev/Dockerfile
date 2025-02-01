@@ -40,7 +40,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     && nvm alias default $NODE_VERSION \
     && nvm use default \
     && npm install -g webpack-cli@^5.1.4 --quiet --no-progress \
-    && npm install -g crawl-server@1.6.1 --quiet --no-progress
+    && npm install -g crawl-server@1.7.0 --quiet --no-progress
 # copy required files
 COPY wasm-strip /usr/local/bin/
 COPY wasm-opt /usr/local/bin/
