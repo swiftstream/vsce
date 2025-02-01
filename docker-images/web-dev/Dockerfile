@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y nginx
 RUN apt-get -y install gettext-base
 # important for: gcloud
 RUN apt-get install -y python3 python3-pip
+# important for: firebase predeploy
+RUN apt-get install -y jq
 # install node and all required packages
 ENV NVM_DIR="/root/.nvm"
 ENV NODE_VERSION="22.10.0"
