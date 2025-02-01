@@ -12,7 +12,7 @@
 		"S_VERSION_MINOR": "0",
 		"S_VERSION_PATCH": "2",
 		"S_ARTIFACT_WASI_URL": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0.2-RELEASE/swift-wasm-6.0.2-RELEASE-wasm32-unknown-wasi.artifactbundle.zip",
-		"S_NGINX_CRAWLERS": "linkedinbot|googlebot|yahoo|bingbot|baiduspider|yandex|yeti|yodaobot|gigabot|ia_archiver|facebookexternalhit|twitterbot|developers.google.com"
+		"S_NGINX_CRAWLERS": "ahrefsbot|applebot|baiduspider|bingbot|developers.google.com|discordbot|duckduckbot|exabot|facebookexternalhit|gigabot|googlebot|ia_archiver|linkedinbot|mj12bot|pinterestbot|rogerbot|semrushbot|seznambot|skypeuripreview|slackbot|slurp|sogou|telegrambot|twitterbot|whatsapp|yahoo|yandex|yeti|yodaobot"
 	},
 	"appPort": ["7770:443", "8880:444", "9990:3080"],
 	"otherPortsAttributes": {
