@@ -46,13 +46,21 @@
 			}
 		}
 	},
-
 	// Adds the `ptrace` capability required for debugger.
-	"capAdd": ["SYS_PTRACE"],
-
+	"capAdd": [
+		"SYS_PTRACE"
+	],
 	// Adds volume for swift toolchains.
 	"mounts": [
-		{ "source": "swift-toolchains", "target": "/swift/toolchains", "type": "volume" },
-		{ "source": "swift-sdks", "target": "/root/.swiftpm/swift-sdks", "type": "volume" }
+		{
+			"source": "swift-toolchains",
+			"target": "/swift/toolchains",
+			"type": "volume"
+		},
+		{
+			"source": "swift-sdks",
+			"target": "/root/.swiftpm/swift-sdks",
+			"type": "volume"
+		}
 	]
 }
