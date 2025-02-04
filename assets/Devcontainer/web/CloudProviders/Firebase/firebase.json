@@ -1,0 +1,42 @@
+{
+    "hosting": {
+      "public": "public",
+      "wasm": "app",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|css|wasm|png|jpg|svg|gif|ico|json|txt|woff2|woff|ttf|eot|otf|mp4|webm|ogg|mp3|aac)",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/**",
+          "function": "renderHtml"
+        }
+      ]
+    },
+    "functions": [
+      {
+        "source": "functions",
+        "runtime": "nodejs22",
+        "codebase": "default",
+        "ignore": [
+          "node_modules",
+          ".git",
+          "firebase-debug.log",
+          "firebase-debug.*.log",
+          "predeploy.sh",
+          "*.local"
+        ],
+        "predeploy": [
+          "./functions/predeploy.sh"
+        ]
+      }
+    ]
+  }
+  
