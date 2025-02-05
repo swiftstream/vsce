@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession, FileRenameEvent } from "vscode";
+import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent } from "vscode";
 import { Toolchain } from "./toolchain";
 import { SideTreeItem } from "./sidebarTreeView";
 import { defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
@@ -338,6 +338,9 @@ export class Webber {
 			const newFolderName = webSourcesRename.newUri.path.replace(`${projectDirectory}/`, '')
 			this.setWebSourcesPath(newFolderName)
 		}
+	}
+
+	onDidDeleteFiles(event: FileDeleteEvent) {
 	}
 }
 
