@@ -19,7 +19,7 @@ import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
 import { proceedAdditionalJS } from "./build/proceedAdditionalJS"
 
-export async function buildReleaseCommand() {
+export async function buildReleaseCommand(successCallback?: any) {
 	if (!webber) return
 	if (isBuildingRelease) return
 	setBuildingRelease(true)
@@ -151,6 +151,7 @@ export async function buildReleaseCommand() {
 		console.log(`Release Build Succeeded in ${measure.time}ms`)
 		setBuildingRelease(false)
 		sidebarTreeView?.refresh()
+		if (successCallback) successCallback()
 	} catch (error: any) {
 		setBuildingRelease(false)
 		sidebarTreeView?.refresh()
