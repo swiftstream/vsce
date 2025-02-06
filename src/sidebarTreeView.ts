@@ -1,7 +1,7 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isDeployingToFirebase, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, print } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, print } from "./webber"
 import { env } from "process"
-import { extensionContext, ExtensionMode, extensionMode, isInContainer, sidebarTreeViewContainer } from "./extension"
+import { extensionContext, ExtensionMode, extensionMode, isInContainer, sidebarTreeViewContainer, webber } from "./extension"
 import { SwiftBuildType } from "./swift"
 import { doesPackageCheckedOut, KnownPackage } from "./commands/build/helpers"
 import path from "node:path"
@@ -136,7 +136,24 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			]
 		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
-			items.push(new Dependency(SideTreeItem.DeployToFirebase, isDeployingToFirebase ? 'Deploying to Firebase' : 'Deploy to Firebase', '', TreeItemCollapsibleState.None, isDeployingToFirebase ? 'sync~spin::charts.orange' : 'flame::charts.orange'))
+			if (await webber!.firebase.isInstalled)
+				items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('firebase3')))
+			if (await webber!.firebase.isInstalled == false) 
+				items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+		} else if (element.id == SideTreeItem.Firebase) {
+			if (await webber!.firebase.isPresentInProject() == false) {
+				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.FirebaseDeploy, webber!.firebase.isLoggingIn ? 'Logging in' : webber!.firebase.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webber!.firebase.isLoggingIn || webber!.firebase.isDeploying ? 'sync~spin' : 'cloud-upload'))
+				const fullDeployMode = webber?.firebase.getFullDeployMode()
+				if (fullDeployMode != undefined) {
+					items.push(new Dependency(SideTreeItem.FirebaseDeployMode, 'Deploy Mode', fullDeployMode ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings'))
+				}
+				items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webber!.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webber!.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
+			}
+		} else if (element.id == SideTreeItem.AddCloudProvider) {
+			if (await webber!.firebase.isInstalled == false)
+				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
 		} else if (element?.id == SideTreeItem.Project) {
 			items = [
 				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
@@ -246,7 +263,13 @@ export enum SideTreeItem {
 		HotRebuild = 'HotRebuild',
 	Release = 'Release',
 		BuildRelease = 'BuildRelease',
-		DeployToFirebase = 'DeployToFirebase',
+		Firebase = 'Firebase',
+			FirebaseSetup = 'FirebaseSetup',
+			FirebaseDeployMode = 'FirebaseDeployMode',
+			FirebaseDeploy = 'FirebaseDeployHosting',
+			FirebaseDeintegrate = 'FirebaseDeintegrate',
+		AddCloudProvider = 'AddCloudProvider',
+			AddFirebase = 'AddFirebase',
 	Project = 'Project',
 		NewFilePage = 'NewFilePage',
 		NewFileClass = 'NewFileClass',

@@ -65,6 +65,9 @@ export async function activate(context: ExtensionContext) {
 	workspace.onDidRenameFiles(event => {
 		webber?.onDidRenameFiles(event)
 	})
+	workspace.onDidDeleteFiles(event => {
+		webber?.onDidDeleteFiles(event)
+	})
 
 	webber = new Webber()
 

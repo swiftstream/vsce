@@ -15,7 +15,6 @@ import { hotReloadCommand } from "./commands/hotReload";
 import { hotRebuildCommand } from "./commands/hotRebuild";
 import { buildReleaseCommand } from "./commands/buildRelease";
 import { clearBuildCacheCommand } from "./commands/clearBuildCache";
-import { deployToFirebaseCommand } from "./commands/deployToFirebase";
 import { loggingLevelCommand } from "./commands/loggingLevel";
 import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCommand } from "./commands/newFile";
 import { portDevCommand } from "./commands/portDev";
@@ -28,6 +27,7 @@ import { Bash } from "./bash";
 import { Wasm } from "./wasm";
 import { CrawlServer } from './crawlServer';
 import { startNewProjectWizard } from './wizards/startNewProjectWizard';
+import { Firebase } from './clouds/firebase';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -97,7 +97,6 @@ export var isRunningCrawlServer = false
 export function setRunningCrawlServer(active: boolean) {
 	isRunningCrawlServer = active
 }
-export var isDeployingToFirebase = false
 export var isClearingBuildCache = false
 export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
 export var isClearedBuildCache = false
@@ -189,6 +188,8 @@ export class Webber {
 	public gzip: Gzip
 	public crawlServer: CrawlServer
 
+	// Cloud providers
+	public firebase: Firebase
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			if (e.configuration.type.includes('chrome')) {
@@ -205,6 +206,7 @@ export class Webber {
 		this.wasm = new Wasm(this)
 		this.gzip = new Gzip(this)
 		this.crawlServer = new CrawlServer(this)
+		this.firebase = new Firebase(this)
 		this._configure()
 	}
 
@@ -305,7 +307,6 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileJS, newFileJSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileSCSS, newFileCSSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, buildReleaseCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DeployToFirebase, deployToFirebaseCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileApp, () => {
 			hotRebuildSwift({ target: appTargetName })
@@ -330,6 +331,14 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Repository, repositoryCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, discussionsCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, submitAnIssueCommand))
+
+		// Cloud Providers
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddFirebase, this.firebase.add))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Firebase, () => {}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseSetup, this.firebase.setup))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeployMode, this.firebase.changeDeployMode))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeploy, this.firebase.deploy))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeintegrate, this.firebase.deintegrate))
 	}
 
 	onDidRenameFiles(event: FileRenameEvent) {
@@ -341,6 +350,9 @@ export class Webber {
 	}
 
 	onDidDeleteFiles(event: FileDeleteEvent) {
+		if (event.files.find((f) => f.path == `${projectDirectory}/Firebase`)) {
+			sidebarTreeView?.refresh()
+		}
 	}
 }
 
