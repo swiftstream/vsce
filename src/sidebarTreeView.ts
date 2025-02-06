@@ -81,7 +81,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		}
 		if (element == null) {
 			items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, TreeItemCollapsibleState.Expanded, 'coffee', false))
-			items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Expanded, 'cloud-upload', false))
+			items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Collapsed, 'cloud-upload', false))
 			items.push(new Dependency(SideTreeItem.Project, 'Project', '', TreeItemCollapsibleState.Collapsed, 'package', false))
 			items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
 			items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
