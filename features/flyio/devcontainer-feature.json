@@ -1,0 +1,14 @@
+{
+    "id": "flyio-cli",
+    "name": "FlyIO CLI",
+    "description": "Installs the FlyIO CLI for managing FlyIO applications.",
+    "version": "1.0.1",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the FlyIO CLI to install"
+      }
+    }
+  }
+  
