@@ -1,0 +1,14 @@
+{
+    "id": "alibaba-cli",
+    "name": "AlibabaCloud CLI",
+    "description": "Installs the AlibabaCloud CLI for managing AlibabaCloud applications.",
+    "version": "1.0.2",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the AlibabaCloud CLI to install"
+      }
+    }
+  }
+  
