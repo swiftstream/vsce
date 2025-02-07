@@ -1,0 +1,13 @@
+{
+    "id": "yandex-cli",
+    "name": "Yandex CLI",
+    "description": "Installs the Yandex CLI for deploying projects",
+    "version": "1.0.0",
+    "options": {
+        "version": {
+            "type": "string",
+            "default": "latest",
+            "description": "Version of the Yandex CLI to install"
+        }
+    }
+}
