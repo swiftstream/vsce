@@ -1,0 +1,14 @@
+{
+    "id": "azure-cli",
+    "name": "Azure CLI",
+    "description": "Installs the Azure CLI for managing Azure applications.",
+    "version": "1.0.1",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the Azure CLI to install"
+      }
+    }
+  }
+  
