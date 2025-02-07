@@ -1,0 +1,14 @@
+{
+    "id": "heroku-cli",
+    "name": "Heroku CLI",
+    "description": "Installs the Heroku CLI for managing Heroku applications.",
+    "version": "1.0.3",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the Heroku CLI to install"
+      }
+    }
+  }
+  
