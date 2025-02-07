@@ -1,0 +1,14 @@
+{
+    "id": "cloudflare-cli",
+    "name": "Cloudflare CLI",
+    "description": "Installs the Cloudflare CLI for managing Cloudflare applications.",
+    "version": "1.0.0",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the Cloudflare CLI to install"
+      }
+    }
+  }
+  
