@@ -1,0 +1,13 @@
+{
+    "id": "vercel-cli",
+    "name": "Vercel CLI",
+    "description": "Installs the Vercel CLI for deploying projects",
+    "version": "1.0.1",
+    "options": {
+        "version": {
+            "type": "string",
+            "default": "latest",
+            "description": "Version of the Vercel CLI to install"
+        }
+    }
+}
