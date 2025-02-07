@@ -1,0 +1,14 @@
+{
+    "id": "digitalocean-cli",
+    "name": "DigitalOcean CLI",
+    "description": "Installs the DigitalOcean CLI for managing DigitalOcean applications.",
+    "version": "1.0.0",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "latest",
+        "description": "Version of the DigitalOcean CLI to install"
+      }
+    }
+  }
+  
