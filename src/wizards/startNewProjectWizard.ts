@@ -449,6 +449,9 @@ async function createNewProjectFiles(
 						"reconnecting-websocket": "^4.4.0",
 						"webpack": "^5.91.0",
 						"webpack-cli": "^5.1.4"
+					},
+					overrides: {
+						"ajv": "^8.17.1"
 					}
 				}
 				fs.writeFileSync(osPath.join(wSourcesPath, 'package.json'), JSON.stringify(packageJson, null, '\t'))
