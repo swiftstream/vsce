@@ -7,7 +7,7 @@ ENV S_IMAGE_VERSION=100
 ENV CS_SERVER_PORT=3080
 
 # install nginx to serve the result
-RUN apt-get install -y nginx
+RUN apt-get update && apt-get install -y nginx
 # install envsubst to put env vars into nginx config
 RUN apt-get -y install gettext-base
 # install node and all required packages
@@ -19,11 +19,10 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     && nvm alias default $NODE_VERSION \
     && nvm use default \
     && npm install -g webpack-cli@^5.1.4 --quiet --no-progress \
-    && npm install -g crawl-server@1.6.1 --quiet --no-progress
+    && npm install -g crawl-server@1.7.3 --quiet --no-progress
 # copy required files
 COPY cmd.sh /usr/local/bin/
-COPY nginx/default /etc/nginx/sites-available/
-COPY nginx/mime.types /etc/nginx/
+COPY nginx.conf /etc/nginx/nginx.conf
 
 RUN ["chmod", "+x", "/usr/local/bin/cmd.sh"]
 CMD ["cmd.sh"]

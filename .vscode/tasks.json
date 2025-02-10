@@ -163,7 +163,7 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webprod-container",
 				"--push",
-				"./docker-images/web-production"
+				"./docker-images/web-prod"
 			],
 			"type": "shell"
 		},
