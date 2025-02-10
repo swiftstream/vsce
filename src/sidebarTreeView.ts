@@ -136,7 +136,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			]
 		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
-			if (await webber!.firebase.isInstalled)
+			if (webber!.firebase.isInstalled)
 				items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('firebase3')))
 			if (await webber!.firebase.isInstalled == false) 
 				items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
@@ -152,7 +152,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webber!.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webber!.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
 		} else if (element.id == SideTreeItem.AddCloudProvider) {
-			if (await webber!.firebase.isInstalled == false)
+			if (webber!.firebase.isInstalled == false)
 				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
 		} else if (element?.id == SideTreeItem.Project) {
 			items = [
