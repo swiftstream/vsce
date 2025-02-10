@@ -28,6 +28,7 @@ import { Wasm } from "./wasm";
 import { CrawlServer } from './crawlServer';
 import { startNewProjectWizard } from './wizards/startNewProjectWizard';
 import { Firebase } from './clouds/firebase';
+import { FlyIO } from './clouds/flyio';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -190,6 +191,7 @@ export class Webber {
 
 	// Cloud providers
 	public firebase: Firebase
+	public flyio: FlyIO
     constructor() {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			if (e.configuration.type.includes('chrome')) {
@@ -207,6 +209,7 @@ export class Webber {
 		this.gzip = new Gzip(this)
 		this.crawlServer = new CrawlServer(this)
 		this.firebase = new Firebase(this)
+		this.flyio = new FlyIO(this)
 		this._configure()
 	}
 
@@ -339,6 +342,11 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeployMode, this.firebase.changeDeployMode))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeploy, this.firebase.deploy))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeintegrate, this.firebase.deintegrate))
+		
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddFlyIO, this.flyio.add))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIOSetup, this.flyio.setup))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIODeploy, this.flyio.deploy))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIODeintegrate, this.flyio.deintegrate))
 	}
 
 	onDidRenameFiles(event: FileRenameEvent) {

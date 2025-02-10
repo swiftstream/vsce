@@ -1,0 +1,21 @@
+primary_region = "iad"
+
+[[services]]
+internal_port = 81
+protocol = "tcp"
+
+  [[services.ports]]
+  handlers = [ "http" ]
+  port = "80"
+
+[[services]]
+internal_port = 80
+protocol = "tcp"
+
+  [[services.ports]]
+  handlers = [ "tls", "http" ]
+  port = "443"
+
+[deploy]
+  strategy = "immediate" # Avoid rolling deployments
+  count = 1  # Set the number of machines explicitly

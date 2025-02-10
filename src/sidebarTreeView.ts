@@ -138,8 +138,12 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
 			if (webber!.firebase.isInstalled)
 				items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('firebase3')))
-			if (await webber!.firebase.isInstalled == false) 
-				items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+			if (webber!.flyio.isInstalled)
+				items.push(new Dependency(SideTreeItem.FlyIO, 'Fly.io', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('flyio3')))
+			if (
+				webber!.firebase.isInstalled == false
+				|| webber!.flyio.isInstalled == false
+			) items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
 		} else if (element.id == SideTreeItem.Firebase) {
 			if (await webber!.firebase.isPresentInProject() == false) {
 				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
@@ -151,9 +155,18 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				}
 				items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webber!.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webber!.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+		} else if (element.id == SideTreeItem.FlyIO) {
+			if (await webber!.flyio.isPresentInProject() == false) {
+				items.push(new Dependency(SideTreeItem.FlyIOSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.FlyIODeploy, webber!.flyio.isLoggingIn ? 'Logging in' : webber!.flyio.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webber!.flyio.isLoggingIn || webber!.flyio.isDeploying ? 'sync~spin' : 'cloud-upload'))
+				items.push(new Dependency(SideTreeItem.FlyIODeintegrate, webber!.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webber!.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
+			}
 		} else if (element.id == SideTreeItem.AddCloudProvider) {
 			if (webber!.firebase.isInstalled == false)
 				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
+			if (webber!.flyio.isInstalled == false)
+				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', '', TreeItemCollapsibleState.None, this.fileIcon('flyio3')))
 		} else if (element?.id == SideTreeItem.Project) {
 			items = [
 				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
@@ -268,8 +281,13 @@ export enum SideTreeItem {
 			FirebaseDeployMode = 'FirebaseDeployMode',
 			FirebaseDeploy = 'FirebaseDeployHosting',
 			FirebaseDeintegrate = 'FirebaseDeintegrate',
+		FlyIO = 'FlyIO',
+			FlyIOSetup = 'FlyIOSetup',
+			FlyIODeploy = 'FlyIODeploy',
+			FlyIODeintegrate = 'FlyIODeintegrate',
 		AddCloudProvider = 'AddCloudProvider',
 			AddFirebase = 'AddFirebase',
+			AddFlyIO = 'AddFlyIO',
 	Project = 'Project',
 		NewFilePage = 'NewFilePage',
 		NewFileClass = 'NewFileClass',
