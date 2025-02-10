@@ -18,6 +18,9 @@
       "firebase-admin": "^13.0.2",
       "firebase-functions": "^6.3.1"
     },
+    "overrides": {
+	    "ajv": "^8.17.1"
+    },
     "devDependencies": {
       "firebase-functions-test": "^3.1.0"
     },
