@@ -25,7 +25,7 @@
 	"customizations": {
 		"vscode": {
     		"extensions": [
-				"sswg.swift-lang"
+				"swiftlang.swift-vscode"
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,

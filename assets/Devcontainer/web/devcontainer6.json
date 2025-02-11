@@ -27,7 +27,7 @@
 		"vscode": {
     		"extensions": [
 				"swiftstream.swiftstream",
-				"sswg.swift-lang",
+				"swiftlang.swift-vscode",
 				"ms-vscode.wasm-dwarf-debugging"
 			],
 			"settings": {
