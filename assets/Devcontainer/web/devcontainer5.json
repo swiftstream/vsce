@@ -25,7 +25,7 @@
 	"customizations": {
 		"vscode": {
     		"extensions": [
-				"SwiftStream.swiftstream",
+				"swiftstream.swiftstream",
 				"swiftlang.swift-vscode",
 				"ms-vscode.wasm-dwarf-debugging"
 			],
