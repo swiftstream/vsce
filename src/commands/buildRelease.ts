@@ -18,6 +18,7 @@ import { proceedIndex } from "./build/proceedIndex"
 import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
 import { proceedAdditionalJS } from "./build/proceedAdditionalJS"
+import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
 export async function buildReleaseCommand(successCallback?: any) {
 	if (!webber) return
@@ -26,6 +27,7 @@ export async function buildReleaseCommand(successCallback?: any) {
 	sidebarTreeView?.refresh()
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
+	var brotliFail: any | undefined
 	sidebarTreeView?.cleanupErrors()
     sidebarTreeView?.refresh()
 	try {
@@ -84,6 +86,7 @@ export async function buildReleaseCommand(successCallback?: any) {
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
+		let brotledExecutableTargets: string[] = []
 		for (let n = 0; n < buildTypes.length; n++) {
 			const type = buildTypes[n]
 			for (let i = 0; i < targetsDump.executables.length; i++) {
@@ -104,6 +107,10 @@ export async function buildReleaseCommand(successCallback?: any) {
 						gzippedExecutableTargets.push(target)
 					}, gzipFail: (reason) => {
 						gzipFail = reason
+					}, brotliSuccess: () => {
+						brotledExecutableTargets.push(target)
+					}, brotliFail: (reason) => {
+						brotliFail = reason
 					}})
 				}
 			}
@@ -144,6 +151,12 @@ export async function buildReleaseCommand(successCallback?: any) {
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
+		}
+		// Phase 15: Await Brotling
+		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
+		if (shouldAwaitBrotling(awaitBrotlingParams)) {
+			print('⏳ Phase 15: Await brotling', LogLevel.Detailed)
+			await awaitBrotling(awaitBrotlingParams)
 		}
 		measure.finish()
 		status('check', `Release Build Succeeded in ${measure.time}ms`, StatusType.Success)

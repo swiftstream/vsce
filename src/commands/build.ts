@@ -19,6 +19,7 @@ import { proceedWasmFile } from "./build/proceedWasmFile"
 import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
 import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./webSocketServer"
 import { listOfAdditionalJSFiles, proceedAdditionalJS } from "./build/proceedAdditionalJS"
+import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
 export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
@@ -31,6 +32,7 @@ export async function buildCommand() {
 	wsSendBuildStarted(false)
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
+	var brotliFail: any | undefined
 	sidebarTreeView?.cleanupErrors()
     sidebarTreeView?.refresh()
 	try {
@@ -97,6 +99,7 @@ export async function buildCommand() {
 		// Phase 5: Build executable targets
 		print('🔳 Phase 5: Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
+		let brotledExecutableTargets: string[] = []
 		for (let n = 0; n < buildTypes.length; n++) {
 			const type = buildTypes[n]
 			for (let i = 0; i < targetsDump.executables.length; i++) {
@@ -117,6 +120,10 @@ export async function buildCommand() {
 						gzippedExecutableTargets.push(target)
 					}, gzipFail: (reason) => {
 						gzipFail = reason
+					}, brotliSuccess: () => {
+						brotledExecutableTargets.push(target)
+					}, brotliFail: (reason) => {
+						brotliFail = reason
 					}})
 				}
 			}
@@ -166,6 +173,12 @@ export async function buildCommand() {
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
+		}
+		// Phase 15: Await Brotling
+		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
+		if (shouldAwaitBrotling(awaitBrotlingParams)) {
+			print('⏳ Phase 15: Await brotling', LogLevel.Detailed)
+			await awaitBrotling(awaitBrotlingParams)
 		}
 		measure.finish()
 		wsSendBuildProgress(100)
@@ -222,6 +235,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 	print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
+	var brotliFail: any | undefined
 	try {
 		// Retrieve Swift targets
 		print('🔳 Retrieve Swift targets', LogLevel.Verbose)
@@ -248,6 +262,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		// Build executable targets
 		print('🔳 Build executable targets', LogLevel.Verbose)
 		let gzippedExecutableTargets: string[] = []
+		let brotledExecutableTargets: string[] = []
 		const targetsToRebuild = params.target ? [params.target] : targetsDump.executables
 		const buildTypes = allSwiftBuildTypes()
 		createSymlinkFoldersIfNeeded()
@@ -292,6 +307,10 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 									gzippedExecutableTargets.push(target)
 								}, gzipFail: (reason) => {
 									gzipFail = reason
+								}, brotliSuccess: () => {
+									brotledExecutableTargets.push(target)
+								}, brotliFail: (reason) => {
+									brotliFail = reason
 								}})
 							}
 						}
@@ -333,6 +352,11 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
+		}
+		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsToRebuild, brotliFail: () => brotliFail }
+		if (shouldAwaitBrotling(awaitBrotlingParams)) {
+			print('⏳ Await brotling', LogLevel.Detailed)
+			await awaitBrotling(awaitBrotlingParams)
 		}
 		measure.finish()
 		status('flame', `Hot Rebuilt Swift in ${measure.time}ms`, StatusType.Success)

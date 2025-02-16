@@ -187,6 +187,7 @@ export class Webber {
 	public webpack: Webpack
 	public wasm: Wasm
 	public gzip: Gzip
+	public brotli: Brotli
 	public crawlServer: CrawlServer
 
 	// Cloud providers
@@ -207,6 +208,7 @@ export class Webber {
 		this.webpack = new Webpack(this)
 		this.wasm = new Wasm(this)
 		this.gzip = new Gzip(this)
+		this.brotli = new Brotli(this)
 		this.crawlServer = new CrawlServer(this)
 		this.firebase = new Firebase(this)
 		this.flyio = new FlyIO(this)
