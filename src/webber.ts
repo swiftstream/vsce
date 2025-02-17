@@ -32,6 +32,7 @@ import { FlyIO } from './clouds/flyio';
 import { portDevCrawlerCommand } from './commands/portDevCrawler';
 import { debugGzipCommand } from './commands/debugGzip';
 import { debugBrotliCommand } from './commands/debugBrotli';
+import { Pgrep } from './pgrep';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -202,6 +203,7 @@ export class Webber {
 	public npmJSKit: NPM
 	public webpack: Webpack
 	public wasm: Wasm
+	public pgrep: Pgrep
 	public gzip: Gzip
 	public brotli: Brotli
 	public crawlServer: CrawlServer
@@ -223,6 +225,7 @@ export class Webber {
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
 		this.wasm = new Wasm(this)
+		this.pgrep = new Pgrep(this)
 		this.gzip = new Gzip(this)
 		this.brotli = new Brotli(this)
 		this.crawlServer = new CrawlServer(this)
