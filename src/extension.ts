@@ -21,8 +21,9 @@ const s_mode: string = process.env.S_MODE ?? "SERVER"
 export const extensionMode: ExtensionMode = Object.values(ExtensionMode).includes(s_mode as ExtensionMode)
 	? s_mode as ExtensionMode
 	: ExtensionMode.Server
-export const defaultWebDevPort = 7770
-export const defaultWebProdPort = 8880
+export const defaultWebDevPort = 7700
+export const defaultWebProdPort = 8800
+export const defaultWebCrawlerPort = 9900
 export const defaultServerPort = 8080
 export const dockerImage = new DockerImage()
 export let extensionContext: ExtensionContext

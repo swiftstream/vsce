@@ -15,9 +15,9 @@
 		"S_NGINX_CRAWLERS": "ahrefsbot|applebot|baiduspider|bingbot|developers.google.com|discordbot|duckduckbot|exabot|facebookexternalhit|gigabot|googlebot|ia_archiver|linkedinbot|mj12bot|pinterestbot|rogerbot|semrushbot|seznambot|skypeuripreview|slackbot|slurp|sogou|telegrambot|twitterbot|whatsapp|yahoo|yandex|yeti|yodaobot"
 	},
 	"appPort": [
-		"7770:443",
-		"8880:444",
-		"9990:3080"
+		"7700:443",
+		"8800:444",
+		"9900:3080"
 	],
 	"otherPortsAttributes": {
 		"onAutoForward": "ignore"
