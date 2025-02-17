@@ -1,12 +1,14 @@
-import { buildStatus } from "../../webber"
+import { buildStatus, isDebugGzipEnabled } from "../../webber"
 
 export interface AwaitGzippingParams {
+    release: boolean,
 	gzippedTargets: string[],
 	targetsToRebuild: string[],
 	gzipFail: () => any | undefined
 }
 
 export function shouldAwaitGzipping(params: AwaitGzippingParams): boolean {
+    if (!params.release && !isDebugGzipEnabled) return false
     return params.gzippedTargets.length != params.targetsToRebuild.length
 }
 

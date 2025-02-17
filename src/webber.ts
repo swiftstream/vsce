@@ -30,6 +30,8 @@ import { startNewProjectWizard } from './wizards/startNewProjectWizard';
 import { Firebase } from './clouds/firebase';
 import { FlyIO } from './clouds/flyio';
 import { portDevCrawlerCommand } from './commands/portDevCrawler';
+import { debugGzipCommand } from './commands/debugGzip';
+import { debugBrotliCommand } from './commands/debugBrotli';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -85,6 +87,8 @@ export function setDebugging(active: boolean) {
 }
 export var isHotReloadEnabled = false
 export var isHotRebuildEnabled = false
+export var isDebugGzipEnabled = false
+export var isDebugBrotliEnabled = false
 export var isBuildingRelease = false
 export var abortBuildingRelease: (() => void) | undefined
 export function setAbortBuildingRelease(handler: () => void | undefined) {
@@ -236,6 +240,8 @@ export class Webber {
 			createDebugConfigIfNeeded()
 			this.setHotReload()
 			this.setHotRebuild()
+			this.setDebugGzip()
+			this.setDebugBrotli()
 			this.setLoggingLevel()
 			this.setWebSourcesPath()
 			workspace.onDidChangeConfiguration(event => {
@@ -243,6 +249,10 @@ export class Webber {
 					this.setHotReload()
 				if (event.affectsConfiguration('web.hotRebuild'))
 					this.setHotRebuild()
+				if (event.affectsConfiguration('web.debugGzip'))
+					this.setDebugGzip()
+				if (event.affectsConfiguration('web.debugBrotli'))
+					this.setDebugBrotli()
 				if (event.affectsConfiguration('web.loggingLevel'))
 					this.setLoggingLevel()
 				if (event.affectsConfiguration('web.webSourcesPath'))
@@ -268,6 +278,18 @@ export class Webber {
 	setHotRebuild(value?: boolean) {
 		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('web.hotRebuild') as boolean
 		if (value === true || value === false) workspace.getConfiguration().update('web.hotRebuild', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setDebugGzip(value?: boolean) {
+		isDebugGzipEnabled = value ?? workspace.getConfiguration().get('web.debugGzip') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('web.debugGzip', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setDebugBrotli(value?: boolean) {
+		isDebugBrotliEnabled = value ?? workspace.getConfiguration().get('web.debugBrotli') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('web.debugBrotli', value)
 		sidebarTreeView?.refresh()
 	}
 
@@ -320,6 +342,8 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotReload, hotReloadCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugGzip, debugGzipCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugBrotli, debugBrotliCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFilePage, newFilePageCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileClass, newFileClassCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileJS, newFileJSCommand))

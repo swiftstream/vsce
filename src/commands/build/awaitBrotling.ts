@@ -1,12 +1,14 @@
-import { buildStatus } from "../../webber"
+import { buildStatus, isDebugBrotliEnabled } from "../../webber"
 
 export interface AwaitBrotlingParams {
-    brotledTargets: string[],
+    release: boolean,
+	brotledTargets: string[],
 	targetsToRebuild: string[],
 	brotliFail: () => any | undefined
 }
 
 export function shouldAwaitBrotling(params: AwaitBrotlingParams): boolean {
+    if (!params.release && !isDebugBrotliEnabled) return false
     return params.brotledTargets.length != params.targetsToRebuild.length
 }
 

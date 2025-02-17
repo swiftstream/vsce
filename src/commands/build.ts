@@ -120,10 +120,14 @@ export async function buildCommand() {
 						gzippedExecutableTargets.push(target)
 					}, gzipFail: (reason) => {
 						gzipFail = reason
+					}, gzipDisabled: () => {
+						print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
 					}, brotliSuccess: () => {
 						brotledExecutableTargets.push(target)
 					}, brotliFail: (reason) => {
 						brotliFail = reason
+					}, brotliDisabled: () => {
+						print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
 					}})
 				}
 			}
@@ -169,13 +173,13 @@ export async function buildCommand() {
 		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
 		wsSendBuildProgress(95)
 		// Phase 14: Await Gzipping
-		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
+		const awaitGzippingParams = { release: false, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
 		}
 		// Phase 15: Await Brotling
-		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
+		const awaitBrotlingParams = { release: false, brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
 		if (shouldAwaitBrotling(awaitBrotlingParams)) {
 			print('⏳ Phase 15: Await brotling', LogLevel.Detailed)
 			await awaitBrotling(awaitBrotlingParams)
@@ -307,10 +311,14 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 									gzippedExecutableTargets.push(target)
 								}, gzipFail: (reason) => {
 									gzipFail = reason
+								}, gzipDisabled: () => {
+									print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
 								}, brotliSuccess: () => {
 									brotledExecutableTargets.push(target)
 								}, brotliFail: (reason) => {
 									brotliFail = reason
+								}, brotliDisabled: () => {
+									print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
 								}})
 							}
 						}
@@ -348,12 +356,12 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		// Process additional JS
 		print('🔳 Process additional JS', LogLevel.Verbose)
 		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
-		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsToRebuild, gzipFail: () => gzipFail }
+		const awaitGzippingParams = { release: false, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsToRebuild, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
 		}
-		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsToRebuild, brotliFail: () => brotliFail }
+		const awaitBrotlingParams = { release: false, brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsToRebuild, brotliFail: () => brotliFail }
 		if (shouldAwaitBrotling(awaitBrotlingParams)) {
 			print('⏳ Await brotling', LogLevel.Detailed)
 			await awaitBrotling(awaitBrotlingParams)

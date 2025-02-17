@@ -50,8 +50,20 @@
           "default": true,
           "description": "Hot rebuild whenever any file saved"
         },
-        "web.loggingLevel": {
+        "web.debugGzip": {
           "order": 3,
+          "type": "boolean",
+          "default": true,
+          "description": "Compress WASM files with Gzip during a debug build."
+        },
+        "web.debugBrotli": {
+          "order": 4,
+          "type": "boolean",
+          "default": true,
+          "description": "Compress WASM files with Brotli during a debug build."
+        },
+        "web.loggingLevel": {
+          "order": 5,
           "type": "string",
           "description": "Building process log level",
           "enum": [
@@ -64,19 +76,19 @@
           "uniqueItems": true
         },
         "web.appTargetName": {
-          "order": 4,
+          "order": 6,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "web.serviceWorkerTargetName": {
-          "order": 5,
+          "order": 7,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
         },
         "web.webSourcesPath": {
-          "order": 6,
+          "order": 8,
           "type": "string",
           "description": "Relative path to folder with web source files and package.json",
           "default": "WebSources"

@@ -111,7 +111,7 @@ export async function buildReleaseCommand(successCallback?: any) {
 						brotledExecutableTargets.push(target)
 					}, brotliFail: (reason) => {
 						brotliFail = reason
-					}})
+					}, gzipDisabled: () => {}, brotliDisabled: () => {}})
 				}
 			}
 		}
@@ -147,13 +147,13 @@ export async function buildReleaseCommand(successCallback?: any) {
 		print('🔳 Phase 13: Process additional JS', LogLevel.Verbose)
 		proceedAdditionalJS({ release: true, executableTargets: targetsDump.executables })
 		// Phase 14: Await Gzipping
-		const awaitGzippingParams = { gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
+		const awaitGzippingParams = { release: true, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Phase 14: Await gzipping', LogLevel.Detailed)
 			await awaitGzipping(awaitGzippingParams)
 		}
 		// Phase 15: Await Brotling
-		const awaitBrotlingParams = { brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
+		const awaitBrotlingParams = { release: true, brotledTargets: brotledExecutableTargets, targetsToRebuild: targetsDump.executables, brotliFail: () => brotliFail }
 		if (shouldAwaitBrotling(awaitBrotlingParams)) {
 			print('⏳ Phase 15: Await brotling', LogLevel.Detailed)
 			await awaitBrotling(awaitBrotlingParams)

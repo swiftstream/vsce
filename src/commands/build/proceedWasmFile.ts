@@ -1,10 +1,10 @@
 import * as fs from 'fs'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { buildDevFolder, buildProdFolder, LogLevel, print } from '../../webber'
+import { buildDevFolder, buildProdFolder, isDebugBrotliEnabled, isDebugGzipEnabled, LogLevel, print } from '../../webber'
 import { projectDirectory, webber } from '../../extension'
 import { SwiftBuildType } from '../../swift'
 
-export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void }): Promise<any> {
+export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void, gzipDisabled: () => void, brotliSuccess: () => void, brotliFail: (any) => void, brotliDisabled: () => void }): Promise<any> {
     if (!webber) throw `webber is null`
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
@@ -23,17 +23,45 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     }
     timeMeasure.finish()
     // TODO: hot reloads
-    const gzipOptions = { path: destPath, filename: `${lowercasedTarget}.wasm`, level: options.release ? 9 : undefined }
+    const originalWasm = `${lowercasedTarget}.wasm`
+    const gzipOptions = { path: destPath, filename: originalWasm, level: options.release ? 9 : undefined }
+    const brotliOptions = { path: destPath, filename: originalWasm, level: options.release ? 11 : 4 }
     if (options.release) {
-        await webber?.gzip.compress(gzipOptions)
-        options.gzipSuccess()
-    } else {
-        webber?.gzip.compress(gzipOptions).then(() => {
+        try {
+            await webber?.gzip.compress(gzipOptions)
             options.gzipSuccess()
-        }, (error) => {
+        } catch (error) {
             print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
             options.gzipFail(error)
-        })
+        }
+        try {
+            await webber?.brotli.compress(brotliOptions)
+            options.brotliSuccess()
+        } catch (error) {
+            print(`😳 Unable to brotli ${options.target}.wasm`, LogLevel.Detailed)
+            options.brotliFail(error)
+        }
+    } else {
+        if (isDebugGzipEnabled) {
+            webber?.gzip.compress(gzipOptions).then(() => {
+                options.gzipSuccess()
+            }, (error) => {
+                print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
+                options.gzipFail(error)
+            })
+        } else {
+            options.gzipDisabled()
+        }
+        if (isDebugBrotliEnabled) {
+            webber?.brotli.compress(brotliOptions).then(() => {
+                options.brotliSuccess()
+            }, (error) => {
+                print(`😳 Unable to brotli ${options.target}.wasm`, LogLevel.Detailed)
+                options.brotliFail(error)
+            })
+        } else {
+            options.brotliDisabled()
+        }
     }
     print(`🧮 Processed wasm file in ${timeMeasure.time}ms`, LogLevel.Detailed)
 }

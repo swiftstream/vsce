@@ -1,5 +1,5 @@
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from "vscode"
-import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, print, currentDevCrawlerPort, pendingNewDevCrawlerPort } from "./webber"
+import { currentLoggingLevel, currentDevPort, currentToolchain, isBuilding, isBuildingRelease, isClearingBuildCache, isDebugging, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, isClearedBuildCache, pendingNewDevPort, pendingNewToolchain, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, print, currentDevCrawlerPort, pendingNewDevCrawlerPort, isDebugGzipEnabled, isDebugBrotliEnabled } from "./webber"
 import { env } from "process"
 import { extensionContext, ExtensionMode, extensionMode, isInContainer, sidebarTreeViewContainer, webber } from "./extension"
 import { SwiftBuildType } from "./swift"
@@ -132,7 +132,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
 				new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console'),
 				new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'),
-				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline')
+				new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline'),
+				new Dependency(SideTreeItem.DebugGzip, 'Gzip', isDebugGzipEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugGzipEnabled ? 'pass::charts.green' : 'circle-large-outline'),
+				new Dependency(SideTreeItem.DebugBrotli, 'Brotli', isDebugBrotliEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugBrotliEnabled ? 'pass::charts.green' : 'circle-large-outline')
 			]
 		} else if (element.id == SideTreeItem.Release) {
 			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
@@ -275,6 +277,8 @@ export enum SideTreeItem {
 		RunCrawlServer = 'RunCrawlServer',
 		HotReload = 'HotReload',
 		HotRebuild = 'HotRebuild',
+		DebugGzip = 'DebugGzip',
+		DebugBrotli = 'DebugBrotli',
 	Release = 'Release',
 		BuildRelease = 'BuildRelease',
 		Firebase = 'Firebase',
