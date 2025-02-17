@@ -32,6 +32,12 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
     }
     buildStatus(`Building JavaScriptKit`)
     if (!doesPackageModulesPresent()) {
+        try {
+            print(`Deleting ${jsKitPath}/package-lock.json`, LogLevel.Verbose)
+            fs.rmSync(`${jsKitPath}/package-lock.json`, { force: true })
+        } catch (error) {
+            print(`Error deleting ${jsKitPath}/package.json: ${error}`, LogLevel.Verbose)
+        }
 		print(`Building JavaScriptKit: npm install`, LogLevel.Verbose)
 		buildStatus('Building JavaScriptKit: npm install')
 		await webber.npmJSKit.install()
