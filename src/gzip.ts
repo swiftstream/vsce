@@ -37,7 +37,7 @@ export class Gzip {
         const result = await this.execute([options.level ? `-${options.level}` : '-2', '-f', '--keep', options.filename], options.path)
         const newSize = fs.statSync(gzFilePath).size
         measure.finish()
-        print(`🧳 Gzipped ${options.filename}.wasm ${humanFileSize(originalSize)} → ${humanFileSize(newSize)} in ${measure.time}ms`, LogLevel.Detailed)
+        print(`🧳 Gzipped ${options.filename} ${humanFileSize(originalSize)} → ${humanFileSize(newSize)} in ${measure.time}ms`, LogLevel.Detailed)
         return result
     }
 }
