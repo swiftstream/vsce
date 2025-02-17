@@ -194,7 +194,7 @@ async function createNewProjectFiles(
 				// MARK: DEPENDENCIES
 				dependencies.push({
 					comment: '🛜 Swift web framework.',
-					package: `.package(url: "${swifWebRepo}/web", from: "1.0.0-beta.3.0.0")`
+					package: `.package(url: "${swifWebRepo}/web", from: "2.0.0-nightly.5")`
 				})
 				if (webAppStyle == `tailwind`) {
 					dependencies.push({ comment: '🖼️ UI Library', package: `.package(url: "${swifWebRepo}/tailwind", from: "1.0.0")` })
