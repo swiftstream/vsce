@@ -25,6 +25,9 @@ export const defaultWebDevPort = 7700
 export const defaultWebProdPort = 8800
 export const defaultWebCrawlerPort = 9900
 export const defaultServerPort = 8080
+export const innerDevPort = 443
+export const innerProdPort = 444
+export const innerDevCrawlerPort = 3080
 export const dockerImage = new DockerImage()
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
