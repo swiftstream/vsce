@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildProdFolder, buildStatus, clearStatus, isBuildingRelease, LogLevel, print, serviceWorkerTargetName, setBuildingRelease, status, StatusType } from "../webber"
+import { appTargetName, buildProdFolder, buildStatus, clearStatus, currentProdPort, isBuildingRelease, LogLevel, print, serviceWorkerTargetName, setBuildingRelease, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -161,6 +161,7 @@ export async function buildReleaseCommand(successCallback?: any) {
 		measure.finish()
 		status('check', `Release Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Release Build Succeeded in ${measure.time}ms`)
+		print(`🌐 Test in browser at https://127.0.0.1:${currentProdPort}`)
 		console.log(`Release Build Succeeded in ${measure.time}ms`)
 		setBuildingRelease(false)
 		sidebarTreeView?.refresh()

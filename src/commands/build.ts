@@ -1,11 +1,11 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildStatus, clearStatus, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService, status, StatusType } from "../webber"
+import { appTargetName, buildStatus, currentDevPort, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService, status, StatusType } from "../webber"
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, Index, SwiftBuildType, SwiftTargets } from '../swift'
+import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -188,6 +188,7 @@ export async function buildCommand() {
 		wsSendBuildProgress(100)
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
+		print(`🌐 Test in browser at https://127.0.0.1:${currentDevPort}`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
 		setBuilding(false)
 		sidebarTreeView?.refresh()
