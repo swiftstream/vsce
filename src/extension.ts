@@ -44,11 +44,6 @@ export async function activate(context: ExtensionContext) {
 		? workspace.workspaceFolders[0].uri.fsPath : undefined
 	
 	workspace.onDidSaveTextDocument(onDidSaveTextDocument)
-	workspace.onDidChangeTextDocument((e: TextDocumentChangeEvent) => {
-		// window.showInformationMessage(`document changed`)
-	})
-
-	// vscode.window.createTreeView("", )
 	
 	// Open folder name
 	let folderName = workspace.name
@@ -76,12 +71,6 @@ export async function activate(context: ExtensionContext) {
 	webber = new Webber()
 
 	registerCommands()
-
-	////
-
-	
-
-	////
 
 	if (!projectDirectory) {
 		commands.executeCommand('setContext', 'swiftstream.state', WebberState.NoProjectFolder)
@@ -130,34 +119,6 @@ async function switchToProjectMode() {
 	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
-}
-
-/**
- * Shows a pick list using window.showQuickPick().
- */
-export async function showQuickPick() {
-	let i = 0
-	const result = await window.showQuickPick(['one', 'two', 'three'], {
-		placeHolder: 'one, two or three',
-		onDidSelectItem: item => window.showInformationMessage(`Focus ${++i}: ${item}`)
-	})
-	window.showInformationMessage(`Got: ${result}`)
-}
-
-/**
- * Shows an input box using window.showInputBox().
- */
-export async function showInputBox() {
-	const result = await window.showInputBox({
-		value: 'abcdef',
-		valueSelection: [2, 4],
-		placeHolder: 'For example: fedcba. But not: 123',
-		validateInput: text => {
-			window.showInformationMessage(`Validating: ${text}`)
-			return text === '123' ? 'Not 123!' : null
-		}
-	})
-	window.showInformationMessage(`Got: ${result}`)
 }
 
 export function deactivate() {}
