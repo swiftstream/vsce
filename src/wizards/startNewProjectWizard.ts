@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { commands, extensions, Uri, ViewColumn, WebviewPanel, window } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
-import { defaultServerPort, defaultWebDevPort, defaultWebProdPort, extensionContext } from '../extension'
+import { defaultServerPort, defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext } from '../extension'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
 import { webSourcesFolder } from '../webber'
@@ -143,8 +143,10 @@ async function createNewProjectFiles(
 				if (devContainerContent) {
 					const availableDevPort = await checkPortAndGetNextIfBusy(defaultWebDevPort)
 					const availableProdPort = await checkPortAndGetNextIfBusy(defaultWebProdPort)
+					const availableCrawlerPort = await checkPortAndGetNextIfBusy(defaultWebCrawlerPort)
 					devContainerContent = devContainerContent.replace(`${defaultWebDevPort}:443`, `${availableDevPort}:443`)
 					devContainerContent = devContainerContent.replace(`${defaultWebProdPort}:444`, `${availableProdPort}:444`)
+					devContainerContent = devContainerContent.replace(`${defaultWebCrawlerPort}:3080`, `${availableCrawlerPort}:3080`)
 					fs.writeFileSync(devContainerPath, devContainerContent)
 				}
 				// Copy WebSources

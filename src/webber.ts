@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import { commands, StatusBarAlignment, ThemeColor, window, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent } from "vscode";
 import { Toolchain } from "./toolchain";
 import { SideTreeItem } from "./sidebarTreeView";
-import { defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
+import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, webber } from "./extension";
 import { readPortsFromDevContainer } from "./helpers/readPortsFromDevContainer";
 import { createDebugConfigIfNeeded } from "./helpers/createDebugConfigIfNeeded";
 import { Swift } from "./swift";
@@ -29,6 +29,7 @@ import { CrawlServer } from './crawlServer';
 import { startNewProjectWizard } from './wizards/startNewProjectWizard';
 import { Firebase } from './clouds/firebase';
 import { FlyIO } from './clouds/flyio';
+import { portDevCrawlerCommand } from './commands/portDevCrawler';
 
 let output = window.createOutputChannel('SwiftStream')
 let problemStatusBarIcon = window.createStatusBarItem(StatusBarAlignment.Left, 0)
@@ -137,8 +138,10 @@ export var containsUpdateForJSKit = true // TODO: check if JSKit could be update
 export var currentToolchain: string = `${getToolchainNameFromURL()}`
 export var pendingNewToolchain: string | undefined
 export var currentDevPort: string = `${defaultWebDevPort}`
+export var currentDevCrawlerPort: string = `${defaultWebCrawlerPort}`
 export var currentProdPort: string = `${defaultWebProdPort}`
 export var pendingNewDevPort: string | undefined
+export var pendingNewDevCrawlerPort: string | undefined
 export var pendingNewProdPort: string | undefined
 export var currentLoggingLevel: LogLevel = LogLevel.Normal
 export function getToolchainNameFromURL(url: string | undefined = undefined): string | undefined {
@@ -165,6 +168,15 @@ export function setPendingNewDevPort(value: string | undefined) {
 		pendingNewDevPort = undefined
 	} else {
 		pendingNewDevPort = value
+	}
+	sidebarTreeView?.refresh()
+}
+export function setPendingNewDevCrawlerPort(value: string | undefined) {
+	if (!isInContainer() && value) {
+		currentDevCrawlerPort = value
+		pendingNewDevCrawlerPort = undefined
+	} else {
+		pendingNewDevCrawlerPort = value
 	}
 	sidebarTreeView?.refresh()
 }
@@ -220,6 +232,7 @@ export class Webber {
 			const readPorts = await readPortsFromDevContainer()
 			currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
 			currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
+			currentDevCrawlerPort = `${readPorts.devCrawlerPort ?? defaultWebCrawlerPort}`
 			createDebugConfigIfNeeded()
 			this.setHotReload()
 			this.setHotRebuild()
@@ -325,6 +338,7 @@ export class Webber {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevCrawlerPort, portDevCrawlerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateWeb, updateWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))

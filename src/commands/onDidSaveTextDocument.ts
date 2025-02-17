@@ -1,6 +1,6 @@
 import { TextDocument } from "vscode";
 import { isInContainer, projectDirectory } from "../extension";
-import { currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevPort, setPendingNewProdPort, webSourcesFolder } from "../webber";
+import { currentDevCrawlerPort, currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevCrawlerPort, setPendingNewDevPort, setPendingNewProdPort, webSourcesFolder } from "../webber";
 import { generateChecksum } from "../helpers/filesHelper";
 import { hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./build";
 import { readPortsFromDevContainer } from "../helpers/readPortsFromDevContainer";
@@ -78,6 +78,11 @@ export async function onDidSaveTextDocument(document: TextDocument) {
                     setPendingNewDevPort(`${readPorts.devPort}`)
                 } else {
                     setPendingNewDevPort(undefined)
+                }
+                if (readPorts.devCrawlerPortPresent && `${readPorts.devCrawlerPort}` != currentDevCrawlerPort) {
+                    setPendingNewDevCrawlerPort(`${readPorts.devCrawlerPort}`)
+                } else {
+                    setPendingNewDevCrawlerPort(undefined)
                 }
                 if (readPorts.prodPortPresent && `${readPorts.prodPort}` != currentProdPort) {
                     setPendingNewProdPort(`${readPorts.prodPort}`)

@@ -1,8 +1,8 @@
 import * as fs from 'fs'
+import JSON5 from 'json5'
 import { window } from "vscode"
-import { currentDevPort, currentProdPort, pendingNewDevPort, pendingNewProdPort, setPendingNewDevPort } from "../webber"
-import { projectDirectory } from "../extension"
-import { openDocumentInEditor } from "../helpers/openDocumentInEditor"
+import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort, setPendingNewDevPort } from "../webber"
+import { innerDevPort, projectDirectory } from "../extension"
 
 export async function portDevCommand() {
 	const port = await window.showInputBox({
@@ -12,6 +12,8 @@ export async function portDevCommand() {
 			const value = parseInt(text)
 			if ((pendingNewProdPort && `${value}` == pendingNewProdPort) || `${value}` == currentProdPort)
 				return "Can't set same port as for release builds"
+			if ((pendingNewDevCrawlerPort && `${value}` == pendingNewDevCrawlerPort) || `${value}` == currentDevCrawlerPort)
+				return "Can't set same port as for crawler server"
 			if (value < 80)
 				return 'Should be >= 80'
 			if (value > 65534)
@@ -20,21 +22,26 @@ export async function portDevCommand() {
 		}
 	})
 	if (!port) return
-	const devPortToReplace = pendingNewDevPort ? pendingNewDevPort : currentDevPort
-	const prodPortToReplace = pendingNewProdPort ? pendingNewProdPort : currentProdPort
-	if (port == devPortToReplace) return
+	const innerPort = innerDevPort
+	const portToReplace = pendingNewDevPort ? pendingNewDevPort : currentDevPort
+	if (port == portToReplace) return
 	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 	if (devContainerContent) {
-		const stringToReplace = `"appPort": ["${devPortToReplace}:443", "${prodPortToReplace}:444"],`
-		if (!devContainerContent.includes(stringToReplace)) {
-			const res = await window.showErrorMessage(`Port doesn't match in devcontainer.json`, 'Edit manually', 'Cancel')
-			if (res == 'Edit manually')
-				await openDocumentInEditor(devContainerPath, `"appPort"`)
-			return
+		let devContainerJson = JSON5.parse(devContainerContent)
+		const valueToInsert = `${port}:${innerPort}`
+		if (!devContainerJson.appPort || devContainerJson.appPort.length == 0) {
+			devContainerJson.appPort = [valueToInsert]
+		} else {
+			const index = devContainerJson.appPort.findIndex((x) => x.includes(`:${innerPort}`))
+			if (index <= -1) {
+				devContainerJson.appPort.push(valueToInsert)
+			} else {
+				devContainerJson.appPort.splice(index, 1)
+				devContainerJson.appPort.splice(index, 0, valueToInsert)
+			}
 		}
-		devContainerContent = devContainerContent.replace(stringToReplace, `"appPort": ["${port}:443", "${prodPortToReplace}:444"],`)
-		fs.writeFileSync(devContainerPath, devContainerContent)
+		fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
 		setPendingNewDevPort(`${port}`)
 	}
 }

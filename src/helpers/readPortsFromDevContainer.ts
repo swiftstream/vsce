@@ -1,11 +1,13 @@
 import { Uri, workspace } from "vscode"
-import { projectDirectory } from "../extension"
+import { innerDevCrawlerPort, innerDevPort, innerProdPort, projectDirectory } from "../extension"
 import JSON5 from 'json5'
 
 export async function readPortsFromDevContainer(): Promise<{
     devPort: number | undefined,
+    devCrawlerPort: number | undefined,
     prodPort: number | undefined,
     devPortPresent: boolean,
+    devCrawlerPortPresent: boolean,
     prodPortPresent: boolean
 }> {
     const devcontainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
@@ -14,27 +16,24 @@ export async function readPortsFromDevContainer(): Promise<{
     const appPorts: string[] = devcontainerConfig.appPort
     if (appPorts.length == 0)
         return {
-            devPort: undefined, prodPort: undefined,
-            devPortPresent: false, prodPortPresent: false
+            devPort: undefined, devCrawlerPort: undefined, prodPort: undefined,
+            devPortPresent: false, devCrawlerPortPresent: false, prodPortPresent: false
         }
-    function extractPort(prod: boolean): number | undefined {
+    function extractPort(port: string): number | undefined {
         var appPortsString = ''
-        if (!prod) {
-            if (appPorts.length < 1)
-                return undefined
-            appPortsString = appPorts[0]
-        } else {
-            if (appPorts.length < 2)
-                return undefined
-            appPortsString = appPorts[1]
-        }
+        const index = appPorts.findIndex((x) => x == port)
+        if (index <= -1)
+            return undefined
+        appPortsString = appPorts[index]
         const appPort: number = +appPortsString.split(':')[0]
         return appPort
     }
     return {
-        devPort: extractPort(false),
-        prodPort: extractPort(true),
-        devPortPresent: appPorts.length >= 1,
-        prodPortPresent: appPorts.length > 1
+        devPort: extractPort(`${innerDevPort}`),
+        devCrawlerPort: extractPort(`${innerDevCrawlerPort}`),
+        prodPort: extractPort(`${innerProdPort}`),
+        devPortPresent: appPorts.find((x) => x === `${innerDevPort}`) != undefined,
+        devCrawlerPortPresent: appPorts.find((x) => x === `${innerDevCrawlerPort}`) != undefined,
+        prodPortPresent: appPorts.find((x) => x === `${innerProdPort}`) != undefined
     }
 }
