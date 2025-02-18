@@ -1,6 +1,7 @@
 import * as fs from 'fs'
-import { projectDirectory, webber } from "../../extension"
-import { LogLevel, print } from '../../webber'
+import { projectDirectory, currentStream } from '../../extension'
+import { print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { SwiftBuildType } from '../../swift'
 
 export enum KnownPackage {
@@ -15,8 +16,8 @@ export function doesPackageCheckedOut(packageName: KnownPackage): boolean {
 	return value
 }
 export async function buildSwiftTarget(options: { type: SwiftBuildType, targetName: string, release: boolean, isCancelled: () => boolean, progressHandler?: (p: string) => void }) {
-	if (!webber) { throw `webber is null` }
-	await webber.swift.build({
+	if (!currentStream) { throw `webStream is null` }
+	await currentStream.swift.build({
 		type: options.type,
 		targetName: options.targetName,
 		release: options.release,

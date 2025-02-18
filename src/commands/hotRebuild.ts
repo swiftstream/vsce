@@ -1,7 +1,7 @@
-import { sidebarTreeView, webber } from "../extension"
-import { isHotRebuildEnabled } from "../webber"
+import { sidebarTreeView, webStream } from "../extension"
+import { isHotRebuildEnabled } from "../streams/web/webStream"
 
 export function hotRebuildCommand() {
-	webber?.setHotRebuild(!isHotRebuildEnabled)
+	webStream?.setHotRebuild(!isHotRebuildEnabled)
 	sidebarTreeView?.refresh()
 }

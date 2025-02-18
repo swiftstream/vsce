@@ -1,6 +1,9 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from "../extension"
-import { buildDevFolder, isBuilding, isClearedBuildCache, isClearingBuildCache, LogLevel, print, setClearedBuildCache, setClearingBuildCache, status, StatusType } from "../webber"
+import { buildDevFolder } from "../streams/web/webStream"
+import { isClearedBuildCache, isClearingBuildCache, setClearedBuildCache, setClearingBuildCache } from '../streams/stream'
+import { print, status, StatusType } from '../streams/stream'
+import { isBuilding, LogLevel } from '../streams/stream'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { createSymlinkFoldersIfNeeded } from '../swift'
 

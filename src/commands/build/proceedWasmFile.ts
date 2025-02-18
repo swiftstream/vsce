@@ -1,11 +1,13 @@
 import * as fs from 'fs'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { buildDevFolder, buildProdFolder, isDebugBrotliEnabled, isDebugGzipEnabled, LogLevel, print } from '../../webber'
-import { projectDirectory, webber } from '../../extension'
+import { buildDevFolder, buildProdFolder, isDebugBrotliEnabled, isDebugGzipEnabled } from '../../streams/web/webStream'
+import { print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
+import { projectDirectory, webStream } from '../../extension'
 import { SwiftBuildType } from '../../swift'
 
 export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void, gzipDisabled: () => void, brotliSuccess: () => void, brotliFail: (any) => void, brotliDisabled: () => void }): Promise<any> {
-    if (!webber) throw `webber is null`
+    if (!webStream) throw `webStream is null`
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     if (!fs.existsSync(buildFolder)) throw `Unable to process WASM files, seems swift project hasn't been built`
@@ -15,11 +17,11 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     fs.cpSync(`${buildFolder}/${options.target}.wasm`, `${destPath}/${lowercasedTarget}.wasm`)
     if (options.release) {
         // Optimization for old Safari
-        await webber.wasm.lowerI64Imports({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.lowerI64Imports({ destPath: destPath, lowercasedTarget: lowercasedTarget })
         // Stripping debug info
-        await webber.wasm.strip({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.strip({ destPath: destPath, lowercasedTarget: lowercasedTarget })
         // Optimize, reduces the size, and improves the performance through various optimization techniques
-        await webber.wasm.opt({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.opt({ destPath: destPath, lowercasedTarget: lowercasedTarget })
     }
     timeMeasure.finish()
     // TODO: hot reloads
@@ -28,14 +30,14 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     const brotliOptions = { path: destPath, filename: originalWasm, level: options.release ? 11 : 4 }
     if (options.release) {
         try {
-            await webber?.gzip.compress(gzipOptions)
+            await webStream?.gzip.compress(gzipOptions)
             options.gzipSuccess()
         } catch (error) {
             print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
             options.gzipFail(error)
         }
         try {
-            await webber?.brotli.compress(brotliOptions)
+            await webStream?.brotli.compress(brotliOptions)
             options.brotliSuccess()
         } catch (error) {
             print(`😳 Unable to brotli ${options.target}.wasm`, LogLevel.Detailed)
@@ -43,7 +45,7 @@ export async function proceedWasmFile(options: { target: string, release: boolea
         }
     } else {
         if (isDebugGzipEnabled) {
-            webber?.gzip.compress(gzipOptions).then(() => {
+            webStream?.gzip.compress(gzipOptions).then(() => {
                 options.gzipSuccess()
             }, (error) => {
                 print(`😳 Unable to gzip ${options.target}.wasm`, LogLevel.Detailed)
@@ -53,7 +55,7 @@ export async function proceedWasmFile(options: { target: string, release: boolea
             options.gzipDisabled()
         }
         if (isDebugBrotliEnabled) {
-            webber?.brotli.compress(brotliOptions).then(() => {
+            webStream?.brotli.compress(brotliOptions).then(() => {
                 options.brotliSuccess()
             }, (error) => {
                 print(`😳 Unable to brotli ${options.target}.wasm`, LogLevel.Detailed)

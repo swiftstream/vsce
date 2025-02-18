@@ -1,18 +1,20 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { buildDevFolder, buildProdFolder, LogLevel, print, serviceWorkerTargetName, webSourcesFolder } from "../../webber"
-import { projectDirectory, webber } from '../../extension'
+import { buildDevFolder, buildProdFolder, serviceWorkerTargetName, webSourcesFolder } from "../../streams/web/webStream"
+import { print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
+import { projectDirectory, currentStream } from '../../extension'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }): Promise<any> {
-    if (!webber) throw `webber is null`
+    if (!currentStream) throw `webStream is null`
     if (!options.isPWA) {
         print(`💨 Skipping manifest retrieval since it is not PWA app`, LogLevel.Verbose)
         return
     }
     const timeMeasure = new TimeMeasure()
     print(`📜 Getting service worker manifest`, LogLevel.Detailed)
-    var generatedManifest = await webber.swift.grabPWAManifest({ serviceWorkerTarget: serviceWorkerTargetName })
+    var generatedManifest = await currentStream.swift.grabPWAManifest({ serviceWorkerTarget: serviceWorkerTargetName })
     const webManifestFileName = generatedManifest.file_name ?? 'site'
     const staticManifest = getStaticManifest(webManifestFileName)
     if (staticManifest) {

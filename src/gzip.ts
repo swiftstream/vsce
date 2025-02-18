@@ -1,21 +1,23 @@
 import * as fs from 'fs'
 import { BashResult } from './bash'
-import { LogLevel, print, Webber } from './webber'
+import { WebStream } from './streams/web/webStream'
+import { print } from './streams/stream'
+import { LogLevel } from './streams/stream'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
 import { humanFileSize } from './helpers/filesHelper'
 
 export class Gzip {
     private binPath?: string
 
-    constructor(private webber: Webber) {}
+    constructor(private webStream: WebStream) {}
 
     private async execute(args: string[], cwd: string): Promise<BashResult> {
         if (!this.binPath)
-            this.binPath = await this.webber.bash.which('gzip')
+            this.binPath = await this.webStream.bash.which('gzip')
         if (!this.binPath)
             throw 'Path to gzip is undefined'
         print(`executing gzip ${args.join(' ')}`, LogLevel.Verbose)
-        const result = await this.webber.bash.execute({
+        const result = await this.webStream.bash.execute({
             path: this.binPath!,
             description: `gzip`,
             cwd: cwd,

@@ -4,7 +4,8 @@ import { WebberState } from './enums/WebberStateEnum'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
-import { abortBuilding, abortBuildingRelease, Webber } from './webber'
+import { abortBuildingRelease, WebStream } from './streams/web/webStream'
+import { abortBuilding, Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
 import { buildCommand } from './commands/build'
 import { debugInChromeCommand } from './commands/debugInChrome'
@@ -15,7 +16,9 @@ import { openProject } from './helpers/openProject'
 export enum ExtensionMode {
 	Android = "ANDROID",
 	Server = "SERVER",
-	Web = "WEB"
+	Web = "WEB",
+	Embedded = "EMBEDDED",
+	Pure = "PURE"
 }
 const s_mode: string = process.env.S_MODE ?? "SERVER"
 export const extensionMode: ExtensionMode = Object.values(ExtensionMode).includes(s_mode as ExtensionMode)
@@ -31,7 +34,8 @@ export const innerDevCrawlerPort = 3080
 export const dockerImage = new DockerImage()
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
-export let webber: Webber | undefined
+export let currentStream: Stream | undefined
+export let webStream: WebStream | undefined
 export let sidebarTreeView: SidebarTreeView | undefined
 export let sidebarTreeViewContainer: TreeView<Dependency> | undefined
 
@@ -62,14 +66,33 @@ export async function activate(context: ExtensionContext) {
 	})
 	// Monitoring files rename
 	workspace.onDidRenameFiles(event => {
-		webber?.onDidRenameFiles(event)
+		currentStream?.onDidRenameFiles(event)
 	})
 	workspace.onDidDeleteFiles(event => {
-		webber?.onDidDeleteFiles(event)
+		currentStream?.onDidDeleteFiles(event)
 	})
 
-	webber = new Webber()
-
+	switch (extensionMode) {
+		case ExtensionMode.Android:
+			
+			break
+		case ExtensionMode.Embedded:
+			
+			break
+		case ExtensionMode.Pure:
+			
+			break
+		case ExtensionMode.Server:
+			
+			break
+		case ExtensionMode.Web:
+			webStream = new WebStream()
+			currentStream = webStream
+			break
+		default:
+			break
+	}
+	
 	registerCommands()
 
 	if (!projectDirectory) {
@@ -103,7 +126,7 @@ function registerCommands() {
 	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingRelease', () => {
 		if (abortBuildingRelease) abortBuildingRelease()
 	}))
-	webber?.registercommands()
+	currentStream?.registerCommands()
 }
 
 async function openProjectCommand() {
@@ -114,7 +137,7 @@ async function openProjectCommand() {
 
 async function switchToProjectMode() {
 	commands.executeCommand('setContext', 'swiftstream.state', WebberState.ProjectMode)
-	// await webber.prepare(undefined)
+	// await webStream.prepare(undefined)
 	sidebarTreeView = new SidebarTreeView()
 	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView

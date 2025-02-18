@@ -1,12 +1,12 @@
 import { projectDirectory, sidebarTreeView } from '../extension'
 import { env, ProgressLocation, Uri, window } from 'vscode'
 import { CloudFeature } from './cloudFeature'
-import { Webber } from '../webber'
+import { WebStream } from '../streams/web/webStream'
 
 export class FlyIO extends CloudFeature {
-    constructor(webber: Webber) {
+    constructor(webStream: WebStream) {
         super(
-            webber,
+            webStream,
             'Fly.io',
             'swiftstream/vsce',
             'flyio-cli', 'latest', {},

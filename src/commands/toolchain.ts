@@ -1,8 +1,8 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { ProgressLocation, window } from "vscode"
-import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from "../webber"
-import { extensionMode, ExtensionMode, projectDirectory } from "../extension"
+import { ProgressLocation, window } from 'vscode'
+import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from '../streams/stream'
+import { extensionMode, ExtensionMode, projectDirectory } from '../extension'
 
 export async function toolchainCommand(selectedType?: string) {
 	const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`

@@ -1,13 +1,15 @@
 import * as fs from 'fs'
-import { projectDirectory, webber } from "../../extension"
-import { buildStatus, LogLevel, print, webSourcesFolder } from '../../webber'
+import { projectDirectory, webStream } from '../../extension'
+import { webSourcesFolder } from '../../streams/web/webStream'
+import { buildStatus, print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { SwiftBuildType } from '../../swift'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 import { doesPackageCheckedOut, KnownPackage } from './helpers'
 
 export async function buildJavaScriptKit(options: { force: boolean }) {
-    if (!webber) throw `webber is null`
+    if (!webStream) throw `webStream is null`
     const jsKitPath = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/checkouts/JavaScriptKit`
     var packageWasModified = false
     var packageWasCompiled = doesJavaScriptKitCompiled(jsKitPath)
@@ -40,15 +42,15 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
         }
 		print(`Building JavaScriptKit: npm install`, LogLevel.Verbose)
 		buildStatus('Building JavaScriptKit: npm install')
-		await webber.npmJSKit.install()
+		await webStream.npmJSKit.install()
 		if (!doesPackageModulesPresent())
 			throw `JavaScriptKit: npm install failed`
 		print(`Building JavaScriptKit: npm run build`, LogLevel.Verbose)
 		buildStatus('Building JavaScriptKit: npm run build')
-        await webber.npmJSKit.run(['build'])
+        await webStream.npmJSKit.run(['build'])
 		if (!doesJavaScriptKitCompiled(jsKitPath)) {
 			print(`Building JavaScriptKit: npm run build (2nd attempt)`, LogLevel.Verbose)
-			await webber.npmJSKit.run(['build'])
+			await webStream.npmJSKit.run(['build'])
 		}
 	} else {
 		print(`Building JavaScriptKit: checking versions`, LogLevel.Verbose)
@@ -59,7 +61,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
 			if (versions.locked != versions.current) {
 				print(`Updating JavaScriptKit v${versions.locked} to v${versions.current} via npm install in WebSources folder`, LogLevel.Verbose)
 				buildStatus('Updating JavaScriptKit in web sources')
-				await webber.npmWeb.install()
+				await webStream.npmWeb.install()
                 const versionsAfterInstall = readVersions({ projectLock: projectPackageLockPath, jsKitPackage: jsKitPackagePath })
                 if (versionsAfterInstall.locked != versionsAfterInstall.current) {
                     print(`JavaScriptKit installed version mismatch: v${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`, LogLevel.Detailed)

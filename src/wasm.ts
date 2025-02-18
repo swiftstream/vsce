@@ -1,6 +1,8 @@
 import * as fs from 'fs'
 import { BashResult } from './bash'
-import { LogLevel, print, Webber } from './webber'
+import { WebStream } from './streams/web/webStream'
+import { print } from './streams/stream'
+import { LogLevel } from './streams/stream'
 import { lowerI64Imports } from '@wasmer/wasm-transformer'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
 import { humanFileSize } from './helpers/filesHelper'
@@ -9,7 +11,7 @@ export class Wasm {
     private stripBinPath?: string
     private optBinPath?: string
 
-    constructor(private webber: Webber) {}
+    constructor(private webStream: WebStream) {}
 
     /// Optimizes for old Safari
     async lowerI64Imports(options: {
@@ -33,14 +35,14 @@ export class Wasm {
     }): Promise<BashResult> {
         const measure = new TimeMeasure()
         if (!this.stripBinPath)
-            this.stripBinPath = await this.webber.bash.which('wasm-strip')
+            this.stripBinPath = await this.webStream.bash.which('wasm-strip')
         if (!this.stripBinPath)
             throw 'Path to wasm-strip is undefined'
         const fullPath = `${options.destPath}/${options.lowercasedTarget}.wasm`
         const originalSize = fs.statSync(fullPath).size
         print(`🔪 Stripping ${options.lowercasedTarget}.wasm`, LogLevel.Detailed)
         print(`executing wasm-strip ${options.lowercasedTarget}.wasm`, LogLevel.Verbose)
-        const result = await this.webber.bash.execute({
+        const result = await this.webStream.bash.execute({
             path: this.stripBinPath!,
             description: `wasm-strip`,
             cwd: options.destPath,
@@ -59,7 +61,7 @@ export class Wasm {
     }): Promise<BashResult> {
         const measure = new TimeMeasure()
         if (!this.optBinPath)
-            this.optBinPath = await this.webber.bash.which('wasm-opt')
+            this.optBinPath = await this.webStream.bash.which('wasm-opt')
         if (!this.optBinPath)
             throw 'Path to wasm-opt is undefined'
         const fullPath = `${options.destPath}/${options.lowercasedTarget}.wasm`
@@ -67,7 +69,7 @@ export class Wasm {
         const args: string[] = ['-Os', '--enable-bulk-memory', fullPath, '-o', fullPath]
         print(`💾 Optimizing ${options.lowercasedTarget}.wasm`, LogLevel.Detailed)
         print(`executing wasm-opt ${args.join(' ')}`, LogLevel.Verbose)
-        const result = await this.webber.bash.execute({
+        const result = await this.webStream.bash.execute({
             path: this.optBinPath!,
             description: `wasm-opt`,
             cwd: options.destPath,

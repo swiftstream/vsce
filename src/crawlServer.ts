@@ -1,5 +1,7 @@
 import * as fs from 'fs'
-import { isRunningCrawlServer, LogLevel, print, setRunningCrawlServer, Webber } from './webber'
+import { isRunningCrawlServer, setRunningCrawlServer, WebStream } from './streams/web/webStream'
+import { print } from './streams/stream'
+import { LogLevel } from './streams/stream'
 import { ShellExecution, Task, TaskProvider, tasks, TaskScope, Terminal } from 'vscode'
 import { extensionContext, sidebarTreeView } from './extension'
 
@@ -32,7 +34,7 @@ class CrawlTaskProvider implements TaskProvider {
 }
 
 export class CrawlServer {
-    constructor(private webber: Webber) {}
+    constructor(private webStream: WebStream) {}
 
     pathToBin?: string
     isRegistered: boolean = false
@@ -41,7 +43,7 @@ export class CrawlServer {
 
     async isInstalled(): Promise<boolean> {
         if (!this.pathToBin) {
-            this.pathToBin = await this.webber.bash.which(CrawlTaskProvider.CrawlType)
+            this.pathToBin = await this.webStream.bash.which(CrawlTaskProvider.CrawlType)
             return !(this.pathToBin === undefined)
         }
         return true

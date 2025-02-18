@@ -1,7 +1,9 @@
 import * as fs from 'fs'
 import { SwiftBuildType } from '../../swift'
 import { projectDirectory } from '../../extension'
-import { buildDevFolder, buildProdFolder, LogLevel, print } from '../../webber'
+import { buildDevFolder, buildProdFolder } from '../../streams/web/webStream'
+import { print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export function proceedBundledResources(options: { release: boolean }) {

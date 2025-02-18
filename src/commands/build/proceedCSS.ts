@@ -1,12 +1,14 @@
 import * as fs from 'fs'
 import * as sass from 'sass'
-import { projectDirectory, webber } from '../../extension'
-import { buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesFolder } from '../../webber'
+import { projectDirectory, currentStream } from '../../extension'
+import { buildDevFolder, buildProdFolder, webSourcesFolder } from '../../streams/web/webStream'
+import { buildStatus, print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
 export async function proceedCSS(options: { force: boolean, release: boolean }) {
-    if (!webber) throw `webber is null`
+    if (!currentStream) throw `webStream is null`
     const measure = new TimeMeasure()
     const webFolder = `${projectDirectory}/${webSourcesFolder}`
     const buildFolder = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`

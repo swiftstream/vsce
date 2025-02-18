@@ -1,5 +1,5 @@
 import { BashResult } from './bash'
-import { Webber, webSourcesFolder } from './webber'
+import { WebStream, webSourcesFolder } from './streams/web/webStream'
 import { projectDirectory } from './extension'
 
 export enum WebpackMode {
@@ -10,17 +10,17 @@ export enum WebpackMode {
 export class Webpack {
     private binPath?: string
 
-    constructor(private webber: Webber) {}
+    constructor(private webStream: WebStream) {}
 
     // TODO: implement config generation
     async createConfig(dev: boolean): Promise<void> {}
 
     private async execute(args: string[]): Promise<BashResult> {
         if (!this.binPath)
-            this.binPath = await this.webber.bash.which('webpack-cli')
+            this.binPath = await this.webStream.bash.which('webpack-cli')
         if (!this.binPath)
             throw 'Path to webpack-cli is undefined'
-        const result = await this.webber.bash.execute({
+        const result = await this.webStream.bash.execute({
             path: this.binPath!,
             description: `executing webpack`,
             cwd: `${projectDirectory}/${webSourcesFolder}`,

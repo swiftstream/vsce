@@ -1,6 +1,7 @@
 import * as fs from 'fs'
-import { projectDirectory, webber } from "../../extension"
-import { buildStatus, LogLevel, print } from "../../webber"
+import { projectDirectory, currentStream } from "../../extension"
+import { buildStatus, print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { SwiftBuildType } from '../../swift'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
@@ -38,6 +39,6 @@ function doesBuildFolderExists(type: SwiftBuildType): boolean {
 	return value
 }
 async function resolveSwiftPackages(type: SwiftBuildType) {
-	if (!webber) { throw `webber is null` }
-	await webber.swift.packageResolve(type)
+	if (!currentStream) { throw `webStream is null` }
+	await currentStream.swift.packageResolve(type)
 }

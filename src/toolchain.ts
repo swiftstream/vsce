@@ -1,4 +1,4 @@
-import { currentToolchain, Webber } from "./webber"
+import { currentToolchain, Stream } from "./streams/stream"
 
 export class Toolchain {
     private path: string = `/swift/toolchains/${currentToolchain}`
@@ -7,14 +7,14 @@ export class Toolchain {
     get libPath(): string { return `${this.path}/usr/lib` }
     get swiftPath(): string { return `${this.binPath}/swift` }
 
-    constructor(private webber: Webber) {}
+    constructor(private stream: Stream) {}
 
     async prepare() {
 
     }
 
     async checkVersion() {
-        const result = await this.webber.bash.execute({
+        const result = await this.stream.bash.execute({
             path: this.swiftPath,
             description: 'check swift toolchain version',
             isCancelled: () => false

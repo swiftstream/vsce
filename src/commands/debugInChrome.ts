@@ -1,6 +1,6 @@
 import { commands, window } from "vscode"
 import { createDebugConfigIfNeeded } from "../helpers/createDebugConfigIfNeeded"
-import { isDebugging, setDebugging } from "../webber"
+import { isDebugging, setDebugging } from "../streams/web/webStream"
 import { sidebarTreeView } from "../extension"
 
 export async function debugInChromeCommand() {

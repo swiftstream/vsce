@@ -1,6 +1,7 @@
 import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process'
 import { isNull } from 'util'
-import { LogLevel, print } from './webber'
+import { print } from './streams/stream'
+import { LogLevel } from './streams/stream'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
 
 export class Bash {

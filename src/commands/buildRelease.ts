@@ -1,6 +1,8 @@
 import * as fs from 'fs'
-import { projectDirectory, sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildProdFolder, buildStatus, clearStatus, currentProdPort, isBuildingRelease, LogLevel, print, serviceWorkerTargetName, setBuildingRelease, status, StatusType } from "../webber"
+import { projectDirectory, sidebarTreeView, currentStream } from "../extension"
+import { appTargetName, buildProdFolder, currentProdPort, isBuildingRelease, serviceWorkerTargetName, setBuildingRelease } from "../streams/web/webStream"
+import { buildStatus, clearStatus, print, status, StatusType } from '../streams/stream'
+import { LogLevel } from '../streams/stream'
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -21,7 +23,7 @@ import { proceedAdditionalJS } from "./build/proceedAdditionalJS"
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
 export async function buildReleaseCommand(successCallback?: any) {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuildingRelease) return
 	setBuildingRelease(true)
 	sidebarTreeView?.refresh()
@@ -68,7 +70,7 @@ export async function buildReleaseCommand(successCallback?: any) {
 		}
 		// Phase 3: Retrieve executable Swift targets
 		print('🔳 Phase 3: Retrieve executable Swift targets', LogLevel.Verbose)
-		const targetsDump = await webber.swift.getTargets()
+		const targetsDump = await currentStream.swift.getTargets()
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0

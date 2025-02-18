@@ -1,7 +1,9 @@
 import * as fs from 'fs'
-import { projectDirectory, webber } from "../../extension"
-import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from "../../helpers/filesHelper"
-import { appTargetName, buildDevFolder, buildProdFolder, buildStatus, LogLevel, print, webSourcesFolder } from "../../webber"
+import { projectDirectory, webStream } from '../../extension'
+import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from '../../helpers/filesHelper'
+import { appTargetName, buildDevFolder, buildProdFolder, webSourcesFolder } from '../../streams/web/webStream'
+import { buildStatus, print } from '../../streams/stream'
+import { LogLevel } from '../../streams/stream'
 import { WebpackMode } from '../../webpack'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 
@@ -30,7 +32,7 @@ export async function buildWebSourcesForAllTargets(options: { targets: string[],
     }
 }
 async function buildWebSources(options: { target: string, isServiceWorker: boolean, release: boolean, force: boolean }) {
-    if (!webber) throw `webber is null`
+    if (!webStream) throw `webStream is null`
     if (!options.force && doesDependenciesPresent() && !doesModifiedAnyJSTSFile(options.target)) {
         print(`buildWebSources skipping for ${options.target} target because force == false and nothing was modified`, LogLevel.Verbose)
         return
@@ -42,15 +44,15 @@ async function buildWebSources(options: { target: string, isServiceWorker: boole
         options.force = true
         print(`Web sources: initial npm install`, LogLevel.Verbose)
         buildStatus(`Building ${options.target} web target dependencies`)
-        await webber.npmWeb.install()
+        await webStream.npmWeb.install()
     }
     buildStatus(`Building ${options.target} web target sources`)
     const bundlePath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
-    await webber.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
+    await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath })) {
         print(`🌳 Second attempt for \`${options.target}\` web target`, LogLevel.Detailed)
         buildStatus(`Building ${options.target} web target sources (2nd attempt)`)
-        await webber.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
+        await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
     }
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath }))
         throw `${options.target} web target build failed`

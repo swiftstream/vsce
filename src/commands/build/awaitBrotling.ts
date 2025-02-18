@@ -1,4 +1,5 @@
-import { buildStatus, isDebugBrotliEnabled } from "../../webber"
+import { isDebugBrotliEnabled } from "../../streams/web/webStream"
+import { buildStatus } from '../../streams/stream'
 
 export interface AwaitBrotlingParams {
     release: boolean,

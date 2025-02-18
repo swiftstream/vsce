@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
 import { window } from "vscode"
-import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort, setPendingNewProdPort } from "../webber"
+import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort, setPendingNewProdPort } from "../streams/web/webStream"
 import { innerProdPort, projectDirectory } from "../extension"
 
 export async function portProdCommand() {

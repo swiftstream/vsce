@@ -2,7 +2,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { ShellExecution, Task, TaskDefinition, tasks, TaskScope, Terminal, Uri, window, workspace } from 'vscode'
 import { extensionContext, projectDirectory, sidebarTreeView } from '../extension'
-import { LogLevel, Webber, buildProdFolder, print } from '../webber'
+import { WebStream, buildProdFolder } from '../streams/web/webStream'
+import { print } from '../streams/stream'
+import { LogLevel } from '../streams/stream'
 import { buildReleaseCommand } from '../commands/buildRelease'
 import { BashError, BashResult } from '../bash'
 import toml from '@iarna/toml'
@@ -17,7 +19,7 @@ export class CloudFeature {
     binPath?: string
 
     constructor (
-        public webber: Webber,
+        public webStream: WebStream,
         public name: string,
         public featureRepository: string,
         public featureName: string,
@@ -55,7 +57,7 @@ export class CloudFeature {
     }
 
     private updateIsInstalled = async () => {
-        const v = this.webber.bash.which(this.binName)
+        const v = this.webStream.bash.which(this.binName)
         this.isInstalled = v != undefined
         const devcontainerConfig = await this.getDevcontainerConfig()
         var features: any = devcontainerConfig.features ?? {}
@@ -291,13 +293,13 @@ export class CloudFeature {
 
     execute = async (args: string[], cwd: string): Promise<BashResult> => {
         if (!this.binPath)
-            this.binPath = await this.webber.bash.which(this.binName)
+            this.binPath = await this.webStream.bash.which(this.binName)
         if (!this.binPath)
             throw `Path to ${this.binName} is undefined`
         print(`executing ${this.binName} ${args.join(' ')}`, LogLevel.Verbose)
         var env = process.env
         env.VSCODE_CWD = ''
-        const result = await this.webber.bash.execute({
+        const result = await this.webStream.bash.execute({
             path: this.binPath!,
             description: this.name,
             cwd: cwd,

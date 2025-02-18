@@ -1,17 +1,20 @@
 import * as fs from 'fs'
-import { currentLoggingLevel, LogLevel, print, Webber } from './webber'
-import { projectDirectory, sidebarTreeView, sidebarTreeViewContainer } from './extension'
+import { print } from './streams/stream'
+import { LogLevel } from './streams/stream'
+import { currentLoggingLevel } from './streams/stream'
+import { projectDirectory, sidebarTreeView } from './extension'
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
+import { Stream } from './streams/stream'
 
 export class Swift {
-    constructor(private webber: Webber) {}
+    constructor(private stream: Stream) {}
 
     private async execute(args: string[]): Promise<string> {
         var env = process.env
         env.WEBBER = 'TRUE'
-        const result = await this.webber.bash.execute({
-            path: this.webber.toolchain.swiftPath,
+        const result = await this.stream.bash.execute({
+            path: this.stream.toolchain.swiftPath,
             description: `get executable target`,
             cwd: projectDirectory,
             env: env,
@@ -82,7 +85,7 @@ export class Swift {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
         try {
-            const result = await this.webber.bash.execute({
+            const result = await this.stream.bash.execute({
                 path: executablePath,
                 description: `grab PWA manifest`,
                 cwd: projectDirectory,
@@ -101,7 +104,7 @@ export class Swift {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
         }
         try {
-            const result = await this.webber.bash.execute({
+            const result = await this.stream.bash.execute({
                 path: executablePath,
                 description: `grab Index`,
                 cwd: projectDirectory,
@@ -129,8 +132,8 @@ export class Swift {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const result = await this.webber.bash.execute({
-                path: this.webber.toolchain.swiftPath,
+            const result = await this.stream.bash.execute({
+                path: this.stream.toolchain.swiftPath,
                 description: `resolve dependencies for ${type}`,
                 cwd: projectDirectory,
                 isCancelled: () => false
@@ -219,9 +222,9 @@ export class Swift {
         var env = process.env
         try {
             if (options.isCancelled()) return
-            print(`🧰 ${this.webber.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
-            const result = await this.webber.bash.execute({
-                path: this.webber.toolchain.swiftPath,
+            print(`🧰 ${this.stream.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
+            const result = await this.stream.bash.execute({
+                path: this.stream.toolchain.swiftPath,
                 description: `build swift`,
                 cwd: projectDirectory,
                 env: env,

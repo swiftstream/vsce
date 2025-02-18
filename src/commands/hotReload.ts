@@ -1,7 +1,7 @@
-import { sidebarTreeView, webber } from "../extension"
-import { isHotReloadEnabled } from "../webber"
+import { sidebarTreeView, webStream } from "../extension"
+import { isHotReloadEnabled } from "../streams/web/webStream"
 
 export function hotReloadCommand() {
-	webber?.setHotReload(!isHotReloadEnabled)
+	webStream?.setHotReload(!isHotReloadEnabled)
 	sidebarTreeView?.refresh()
 }

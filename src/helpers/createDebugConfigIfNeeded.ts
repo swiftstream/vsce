@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
 import { Uri, workspace } from "vscode"
-import { currentDevPort } from "../webber"
+import { currentDevPort } from "../streams/web/webStream"
 import { projectDirectory } from "../extension"
 
 export async function createDebugConfigIfNeeded(): Promise<any> {

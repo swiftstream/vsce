@@ -1,11 +1,13 @@
 import * as fs from 'fs'
 import path from 'path'
-import { projectDirectory, sidebarTreeView, webber } from "../extension"
-import { buildDevFolder, isDebugGzipEnabled, LogLevel, print } from "../webber"
+import { projectDirectory, sidebarTreeView, webStream } from "../extension"
+import { buildDevFolder, isDebugGzipEnabled } from "../streams/web/webStream"
+import { print } from '../streams/stream'
+import { LogLevel } from '../streams/stream'
 
 export function debugGzipCommand() {
     const newValue = !isDebugGzipEnabled
-    webber?.setDebugGzip(newValue)
+    webStream?.setDebugGzip(newValue)
     if (!newValue) {
         const folder = path.join(projectDirectory!, buildDevFolder)
         const files = fs.readdirSync(folder).filter((x) => path.extname(x) == '.gz')

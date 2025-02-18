@@ -1,6 +1,9 @@
 import * as fs from 'fs'
-import { projectDirectory, sidebarTreeView, webber } from "../extension"
-import { appTargetName, buildStatus, currentDevPort, isAnyHotBuilding, isBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, LogLevel, print, serviceWorkerTargetName, setBuilding, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService, status, StatusType } from "../webber"
+import { projectDirectory, sidebarTreeView, currentStream } from "../extension"
+import { appTargetName, currentDevPort, isAnyHotBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, serviceWorkerTargetName, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService } from "../streams/web/webStream"
+import { buildStatus, print, status, StatusType } from '../streams/stream'
+import { setBuilding } from '../streams/stream'
+import { isBuilding, LogLevel } from '../streams/stream'
 import { window } from 'vscode'
 import { isString } from '../helpers/isString'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -25,7 +28,7 @@ export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
 
 export async function buildCommand() {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuilding || isAnyHotBuilding()) { return }
 	setBuilding(true)
 	sidebarTreeView?.refresh()
@@ -77,7 +80,7 @@ export async function buildCommand() {
 		wsSendBuildProgress(15)
 		// Phase 3: Retrieve Swift targets
 		print('🔳 Phase 3: Retrieve Swift targets', LogLevel.Verbose)
-		const targetsDump = await webber.swift.getTargets()
+		const targetsDump = await currentStream.swift.getTargets()
 		cachedSwiftTargets = targetsDump
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
@@ -220,7 +223,7 @@ interface HotRebuildSwiftParams {
 let awaitingHotRebuildSwift: HotRebuildSwiftParams[] = []
 
 export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
 		if (!isBuilding) {
 			if (awaitingHotRebuildSwift.filter((x) => x.target == params.target).length == 0) {
@@ -246,7 +249,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 		print('🔳 Retrieve Swift targets', LogLevel.Verbose)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webber.swift.getTargets()
+			targetsDump = await currentStream.swift.getTargets()
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -403,7 +406,7 @@ export async function hotRebuildSwift(params: HotRebuildSwiftParams = {}) {
 let awaitingHotRebuildCSS = false
 
 export async function hotRebuildCSS() {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuilding || isHotBuildingCSS) {
 		if (!isBuilding) {
 			print(`👉 Delay CSS hot rebuild call`, LogLevel.Verbose)
@@ -459,7 +462,7 @@ interface HotRebuildJSParams {
 let awaitingHotRebuildJS: HotRebuildJSParams[] = []
 
 export async function hotRebuildJS(params: HotRebuildJSParams) {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuilding || isHotBuildingHTML || isHotBuildingSwift || isHotBuildingJS) {
 		if (!isBuilding) {
 			if (awaitingHotRebuildJS.filter((x) => x.path == params.path).length == 0) {
@@ -493,7 +496,7 @@ export async function hotRebuildJS(params: HotRebuildJSParams) {
 		print('🔥 Hot Rebuilding JS', LogLevel.Detailed)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webber.swift.getTargets()
+			targetsDump = await currentStream.swift.getTargets()
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -536,7 +539,7 @@ export async function hotRebuildJS(params: HotRebuildJSParams) {
 let awaitingHotRebuildHTML = false
 
 export async function hotRebuildHTML() {
-	if (!webber) return
+	if (!currentStream) return
 	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
 		if (!isBuilding) {
 			print(`👉 Delay HTML hot rebuild call`, LogLevel.Verbose)
@@ -549,7 +552,7 @@ export async function hotRebuildHTML() {
 		let isPWA = cachedIsPWA
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webber.swift.getTargets()
+			targetsDump = await currentStream.swift.getTargets()
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)

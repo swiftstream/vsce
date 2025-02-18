@@ -1,19 +1,20 @@
 import { BashResult } from './bash'
-import { LogLevel, print, Webber } from './webber'
+import { print } from './streams/stream'
+import { LogLevel, Stream } from './streams/stream'
 import { projectDirectory } from './extension'
 
 export class Pgrep {
     private binPath?: string
 
-    constructor(private webber: Webber) {}
+    constructor(private stream: Stream) {}
 
     private async execute(args: string[], cwd: string): Promise<BashResult> {
         if (!this.binPath)
-            this.binPath = await this.webber.bash.which('pgrep')
+            this.binPath = await this.stream.bash.which('pgrep')
         if (!this.binPath)
             throw 'Path to gzip is undefined'
         print(`executing pgrep ${args.join(' ')}`, LogLevel.Verbose)
-        const result = await this.webber.bash.execute({
+        const result = await this.stream.bash.execute({
             path: this.binPath!,
             description: `pgrep`,
             cwd: cwd,

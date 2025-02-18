@@ -38,34 +38,10 @@
     "configuration": {
       "title": "Swift Stream",
       "properties": {
-        "web.hotReload": {
+        "stream.loggingLevel": {
           "order": 1,
-          "type": "boolean",
-          "default": true,
-          "description": "Hot reload in the browser whenever any file saved"
-        },
-        "web.hotRebuild": {
-          "order": 2,
-          "type": "boolean",
-          "default": true,
-          "description": "Hot rebuild whenever any file saved"
-        },
-        "web.debugGzip": {
-          "order": 3,
-          "type": "boolean",
-          "default": true,
-          "description": "Compress WASM files with Gzip during a debug build."
-        },
-        "web.debugBrotli": {
-          "order": 4,
-          "type": "boolean",
-          "default": true,
-          "description": "Compress WASM files with Brotli during a debug build."
-        },
-        "web.loggingLevel": {
-          "order": 5,
           "type": "string",
-          "description": "Building process log level",
+          "description": "Swift Stream general log level",
           "enum": [
             "Normal",
             "Detailed",
@@ -74,6 +50,30 @@
           ],
           "default": "Normal",
           "uniqueItems": true
+        },
+        "web.hotReload": {
+          "order": 2,
+          "type": "boolean",
+          "default": true,
+          "description": "Hot reload in the browser whenever any file saved"
+        },
+        "web.hotRebuild": {
+          "order": 3,
+          "type": "boolean",
+          "default": true,
+          "description": "Hot rebuild whenever any file saved"
+        },
+        "web.debugGzip": {
+          "order": 4,
+          "type": "boolean",
+          "default": true,
+          "description": "Compress WASM files with Gzip during a debug build."
+        },
+        "web.debugBrotli": {
+          "order": 5,
+          "type": "boolean",
+          "default": true,
+          "description": "Compress WASM files with Brotli during a debug build."
         },
         "web.appTargetName": {
           "order": 6,

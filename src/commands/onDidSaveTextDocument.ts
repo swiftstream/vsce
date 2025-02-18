@@ -1,6 +1,8 @@
 import { TextDocument } from "vscode";
 import { isInContainer, projectDirectory } from "../extension";
-import { currentDevCrawlerPort, currentDevPort, currentProdPort, isHotRebuildEnabled, LogLevel, print, setPendingNewDevCrawlerPort, setPendingNewDevPort, setPendingNewProdPort, webSourcesFolder } from "../webber";
+import { currentDevCrawlerPort, currentDevPort, currentProdPort, isHotRebuildEnabled, setPendingNewDevCrawlerPort, setPendingNewDevPort, setPendingNewProdPort, webSourcesFolder } from "../streams/web/webStream";
+import { print } from '../streams/stream';
+import { LogLevel } from '../streams/stream';
 import { generateChecksum } from "../helpers/filesHelper";
 import { hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from "./build";
 import { readPortsFromDevContainer } from "../helpers/readPortsFromDevContainer";

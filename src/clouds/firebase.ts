@@ -1,15 +1,15 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { buildProdFolder, indexFile, Webber } from '../webber'
+import { buildProdFolder, indexFile, WebStream } from '../streams/web/webStream'
 import { projectDirectory, sidebarTreeView } from '../extension'
 import { ProgressLocation, window } from 'vscode'
 
 import { CloudFeature } from './cloudFeature'
 
 export class Firebase extends CloudFeature {
-    constructor(webber: Webber) {
+    constructor(webStream: WebStream) {
         super(
-            webber,
+            webStream,
             'Firebase',
             'devcontainers-contrib/features',
             'firebase-cli', '2', { version: 'latest', install: '${FIREBASE_CLI:-false}' },

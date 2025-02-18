@@ -1,6 +1,7 @@
 import { window } from "vscode"
-import { currentLoggingLevel, LogLevel } from "../webber"
-import { sidebarTreeView, webber } from "../extension"
+import { LogLevel } from '../streams/stream'
+import { currentLoggingLevel } from '../streams/stream'
+import { sidebarTreeView, currentStream } from "../extension"
 
 export async function loggingLevelCommand() {
 	const newLoggingLevel = await window.showQuickPick([
@@ -12,6 +13,6 @@ export async function loggingLevelCommand() {
 		title: currentLoggingLevel,
 		placeHolder: 'Select new logging level'
 	})
-	webber?.setLoggingLevel(newLoggingLevel as LogLevel)
+	currentStream?.setLoggingLevel(newLoggingLevel as LogLevel)
 	sidebarTreeView?.refresh()
 }
