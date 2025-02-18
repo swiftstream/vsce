@@ -22,6 +22,22 @@
 		}
 	],
 	"pure": [
+        {
+            "name": "DEVELOPMENT-SNAPSHOT-2025-02-15",
+            "version": { "major": 6, "minor": 2, "patch": 0 },
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/development/ubuntu2004-aarch64/swift-DEVELOPMENT-SNAPSHOT-2025-02-15-a/swift-DEVELOPMENT-SNAPSHOT-2025-02-15-a-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/development/ubuntu2004/swift-DEVELOPMENT-SNAPSHOT-2025-02-15-a/swift-DEVELOPMENT-SNAPSHOT-2025-02-15-a-ubuntu20.04.tar.gz"
+            }
+		},
+        {
+            "name": "6.1-DEVELOPMENT-SNAPSHOT-2025-02-14",
+            "version": { "major": 6, "minor": 1, "patch": 0 },
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.1-branch/ubuntu2004-aarch64/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-02-14-a/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-02-14-a-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.1-branch/ubuntu2004/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-02-14-a/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-02-14-a-ubuntu20.04.tar.gz"
+            }
+		},
 		{
             "name": "6.0.3-RELEASE",
             "version": { "major": 6, "minor": 0, "patch": 3 },
