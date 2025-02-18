@@ -21,7 +21,7 @@
             "artifact_url": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.0.1/swift-6.0.1-RELEASE-android-24-0.1.artifactbundle.tar.gz"
 		}
 	],
-	"server": [
+	"pure": [
 		{
             "name": "6.0.3-RELEASE",
             "version": { "major": 6, "minor": 0, "patch": 3 },

@@ -25,7 +25,12 @@ export async function toolchainCommand(selectedType?: string) {
 		if (!response.ok) throw new Error('Toolchains response was not ok')
 		const text = await response.text()
 		const json = JSON5.parse(text)
-		const key = `${mode}`.toLowerCase()
+		let key: string = `${mode}`.toLowerCase()
+		switch (mode) {
+			case ExtensionMode.Android: break
+			case ExtensionMode.Web: break
+			default: key = 'pure'
+		}
 		const filtered = json[key]
 		return filtered
 	}
