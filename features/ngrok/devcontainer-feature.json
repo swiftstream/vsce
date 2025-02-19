@@ -1,0 +1,14 @@
+{
+    "id": "ngrok-cli",
+    "name": "Ngrok CLI",
+    "description": "Installs the Ngrok CLI.",
+    "version": "1.0.0",
+    "options": {
+      "version": {
+        "type": "string",
+        "default": "3.7.1",
+        "description": "Version of the Ngrok CLI to install"
+      }
+    }
+  }
+  
