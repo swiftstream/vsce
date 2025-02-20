@@ -5,7 +5,7 @@ set -e
 # Read version from the environment variable (set by devcontainer feature)
 NGROK_VERSION="${VERSION:-3.7.1}"
 
-# Detect system architecture (amd64 or arm64)
+# Detect system architecture
 ARCH=$(uname -m)
 if [[ "$ARCH" == "x86_64" ]]; then
     ARCH="amd64"
