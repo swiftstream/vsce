@@ -107,8 +107,8 @@ export async function activate(context: ExtensionContext) {
 
 	if (projectDirectory) {
 		// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
-		await switchToProjectMode()
 		startWebSocketServer()
+		await switchToTreeViewMode()
 	}
 }
 
@@ -135,7 +135,7 @@ async function openProjectCommand() {
 	await openProject(folderUri)
 }
 
-async function switchToProjectMode() {
+async function switchToTreeViewMode() {
 	commands.executeCommand('setContext', 'swiftstream.state', WebberState.ProjectMode)
 	// await webStream.prepare(undefined)
 	sidebarTreeView = new SidebarTreeView()
