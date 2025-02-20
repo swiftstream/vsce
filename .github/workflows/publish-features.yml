@@ -17,13 +17,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Install Dev Container CLI
+        run: npm install -g @devcontainers/cli
+
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.FEATURES_WRITE_SECRET }}" | docker login ghcr.io -u USERNAME --password-stdin
 
       - name: Build & Push Features
         run: |
-          for feature in features/*; do
-            feature_name=$(basename $feature)
-            docker build -t ghcr.io/swiftstream/vsce/features/$feature_name:1 $feature
-            docker push ghcr.io/swiftstream/vsce/features/$feature_name:1
+          for feature in ./features/*; do
+            if [ -d "$feature" ]; then
+              echo "Publishing feature: $(basename "$feature")"
+              devcontainer features publish --namespace ghcr.io/swiftstream/vsce "$feature"
+            fi
           done
