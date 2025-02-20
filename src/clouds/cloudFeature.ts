@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { ShellExecution, Task, TaskDefinition, tasks, TaskScope, Terminal, Uri, window, workspace } from 'vscode'
+import { commands, ShellExecution, Task, TaskDefinition, tasks, TaskScope, Terminal, Uri, window, workspace } from 'vscode'
 import { extensionContext, projectDirectory, sidebarTreeView } from '../extension'
 import { WebStream, buildProdFolder } from '../streams/web/webStream'
 import { print } from '../streams/stream'
@@ -12,9 +12,11 @@ import JSON5 from 'json5'
 
 export class CloudFeature {
     isInstalled: boolean = false
+    isPendingContainerRebuild: boolean = false
     isDeploying: boolean = false
     isLoggingIn: boolean = false
     isDeintegrating: boolean = false
+    isDeintegrated: boolean = false
 
     binPath?: string
 
@@ -190,6 +192,22 @@ export class CloudFeature {
     }
 
     add = async (): Promise<void> => {
+        if (this.isPendingContainerRebuild) {
+            const rebuildAction = 'Rebuild the Container'
+            const revertAction = `Remove ${this.name} from devcontainer.json`
+            switch (await window.showQuickPick([
+                rebuildAction,
+                revertAction
+            ], {
+                placeHolder: ``
+            })) {
+                case rebuildAction:
+                    return await commands.executeCommand('remote-containers.rebuildContainer')
+                case revertAction:
+                    return await this.removePending()
+                default: return
+            }
+        }
         const devcontainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
         const devcontainerContent = await workspace.fs.readFile(Uri.file(devcontainerPath))
         const devcontainerConfig = JSON5.parse(devcontainerContent.toString())
@@ -203,7 +221,32 @@ export class CloudFeature {
         features[`${repo}:${this.featureVersion}`] = this.featureParams
         devcontainerConfig.features = features
         fs.writeFileSync(devcontainerPath, JSON.stringify(devcontainerConfig, null, '\t'))
-        window.showInformationMessage(`${this.name} CLI has been added, please Rebuild the container.`)
+        if (this.isDeintegrated) {
+            this.isDeintegrated = false
+            await this.updateIsInstalled()
+        } else {
+            this.isPendingContainerRebuild = true
+            window.showInformationMessage(`${this.name} CLI has been added, please Rebuild the container.`)
+        }
+        sidebarTreeView?.refresh()
+    }
+
+    removePending = async (): Promise<void> => {
+        if (this.isInstalled) return
+        const devcontainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
+        const devcontainerContent = await workspace.fs.readFile(Uri.file(devcontainerPath))
+        const devcontainerConfig = JSON5.parse(devcontainerContent.toString())
+        const repo = this.repositoryAddress()
+        var features: any = devcontainerConfig.features ?? {}
+        const check = Object.keys(features).find((x) => x.startsWith(repo))
+        if (check != undefined) {
+            delete features[check]
+            devcontainerConfig.features = features
+            this.isPendingContainerRebuild = false
+            fs.writeFileSync(devcontainerPath, JSON.stringify(devcontainerConfig, null, '\t'))
+            window.showInformationMessage(`${this.name} CLI has been removed from devcontainer.json`)
+            sidebarTreeView?.refresh()
+        }
     }
 
     login = async (callback: any) => {
@@ -270,8 +313,11 @@ export class CloudFeature {
             sidebarTreeView?.refresh()
             return
         }
-        this.logout(async () => {
+        const removeFiles = () => {
             fs.rmSync(path.join(projectDirectory!, this.name), { recursive: true, force: true })
+        }
+        this.logout(async () => {
+            removeFiles()
             const devcontainerConfig = await this.getDevcontainerConfig()
             const repo = this.repositoryAddress()
             var features: any = devcontainerConfig.features ?? {}
@@ -287,6 +333,7 @@ export class CloudFeature {
             }
             await this.updateIsInstalled()
             this.isDeintegrating = false
+            this.isDeintegrated = true
             sidebarTreeView?.refresh()
         })
     }

@@ -156,17 +156,22 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(new Dependency(SideTreeItem.Heroku, 'Heroku', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('heroku3')))
 			if (webStream?.yandex.isInstalled === true)
 				items.push(new Dependency(SideTreeItem.YandexCloud, 'Yandex Cloud', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('yandexcloud3')))
-			if (
-				webStream?.alibaba.isInstalled === false
-				|| webStream?.azure.isInstalled === false
-				|| webStream?.cloudflare.isInstalled === false
-				|| webStream?.digitalocean.isInstalled === false
-				|| webStream?.firebase.isInstalled === false
-				|| webStream?.flyio.isInstalled === false
-				|| webStream?.heroku.isInstalled === false
-				|| webStream?.vercel.isInstalled === false
-				|| webStream?.yandex.isInstalled === false
-			) items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+			var inactiveProviders: boolean[] = [
+				webStream?.alibaba.isInstalled === false,
+				webStream?.azure.isInstalled === false,
+				webStream?.cloudflare.isInstalled === false,
+				webStream?.digitalocean.isInstalled === false,
+				webStream?.heroku.isInstalled === false,
+				webStream?.vercel.isInstalled === false,
+				webStream?.yandex.isInstalled === false
+			]
+			var activeProviders: boolean[] = [
+				webStream?.firebase.isInstalled === false,
+				webStream?.flyio.isInstalled === false
+			]
+			if (activeProviders.includes(true)) {
+				items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+			}
 		} else if (element.id == SideTreeItem.Firebase) {
 			if (await webStream?.firebase.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
@@ -176,83 +181,83 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				if (fullDeployMode != undefined) {
 					items.push(new Dependency(SideTreeItem.FirebaseDeployMode, 'Deploy Mode', fullDeployMode ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings'))
 				}
-				items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webStream.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webStream?.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.Azure) {
 			if (await webStream?.azure.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.AzureSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.AzureDeploy, webStream.azure.isLoggingIn ? 'Logging in' : webStream.azure.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.azure.isLoggingIn || webStream.azure.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.AzureDeintegrate, webStream.azure.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.azure.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.AzureDeintegrate, webStream?.azure.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.azure.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.Alibaba) {
 			if (await webStream?.alibaba.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.AlibabaSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.AlibabaDeploy, webStream.alibaba.isLoggingIn ? 'Logging in' : webStream.alibaba.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.alibaba.isLoggingIn || webStream.alibaba.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.AlibabaDeintegrate, webStream.alibaba.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.alibaba.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.AlibabaDeintegrate, webStream?.alibaba.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.alibaba.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.Vercel) {
 			if (await webStream?.vercel.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.VercelSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.VercelDeploy, webStream.vercel.isLoggingIn ? 'Logging in' : webStream.vercel.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.vercel.isLoggingIn || webStream.vercel.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.VercelDeintegrate, webStream.vercel.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.vercel.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.VercelDeintegrate, webStream?.vercel.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.vercel.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.FlyIO) {
 			if (await webStream?.flyio.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.FlyIOSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.FlyIODeploy, webStream.flyio.isLoggingIn ? 'Logging in' : webStream.flyio.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.flyio.isLoggingIn || webStream.flyio.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.FlyIODeintegrate, webStream.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.FlyIODeintegrate, webStream?.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.Cloudflare) {
 			if (await webStream?.cloudflare.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.CloudflareSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.CloudflareDeploy, webStream.cloudflare.isLoggingIn ? 'Logging in' : webStream.cloudflare.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.cloudflare.isLoggingIn || webStream.cloudflare.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.CloudflareDeintegrate, webStream.cloudflare.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.cloudflare.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.CloudflareDeintegrate, webStream?.cloudflare.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.cloudflare.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.DigitalOcean) {
 			if (await webStream?.digitalocean.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.DigitalOceanSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.DigitalOceanDeploy, webStream.digitalocean.isLoggingIn ? 'Logging in' : webStream.digitalocean.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.digitalocean.isLoggingIn || webStream.digitalocean.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.DigitalOceanDeintegrate, webStream.digitalocean.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.digitalocean.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.DigitalOceanDeintegrate, webStream?.digitalocean.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.digitalocean.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.Heroku) {
 			if (await webStream?.heroku.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.HerokuSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.HerokuDeploy, webStream.heroku.isLoggingIn ? 'Logging in' : webStream.heroku.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.heroku.isLoggingIn || webStream.heroku.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.HerokuDeintegrate, webStream.heroku.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.heroku.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.HerokuDeintegrate, webStream?.heroku.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.heroku.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.YandexCloud) {
 			if (await webStream?.yandex.isPresentInProject() === false) {
 				items.push(new Dependency(SideTreeItem.YandexCloudSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
 			} else if (webStream) {
 				items.push(new Dependency(SideTreeItem.YandexCloudDeploy, webStream.yandex.isLoggingIn ? 'Logging in' : webStream.yandex.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.yandex.isLoggingIn || webStream.yandex.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				items.push(new Dependency(SideTreeItem.YandexCloudDeintegrate, webStream.yandex.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream.yandex.isDeintegrating ? 'sync~spin' : 'trash'))
 			}
+			items.push(new Dependency(SideTreeItem.YandexCloudDeintegrate, webStream?.yandex.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.yandex.isDeintegrating ? 'sync~spin' : 'trash'))
 		} else if (element.id == SideTreeItem.AddCloudProvider) {
 			if (webStream?.firebase.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
+				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', webStream?.firebase.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
 			// if (webStream?.azure.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAzure, 'Azure', '', TreeItemCollapsibleState.None, this.fileIcon('azure3')))
+			// 	items.push(new Dependency(SideTreeItem.AddAzure, 'Azure', webStream?.azure.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('azure3')))
 			// if (webStream?.alibaba.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAlibaba, 'Alibaba Cloud', '', TreeItemCollapsibleState.None, this.fileIcon('alibabacloud3')))
+			// 	items.push(new Dependency(SideTreeItem.AddAlibaba, 'Alibaba Cloud', webStream?.alibaba.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('alibabacloud3')))
 			// if (webStream?.vercel.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddVercel, 'Vercel', '', TreeItemCollapsibleState.None, this.fileIcon('vercel-dark3', 'vercel-light3')))
+			// 	items.push(new Dependency(SideTreeItem.AddVercel, 'Vercel', webStream?.vercel.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('vercel-dark3', 'vercel-light3')))
 			if (webStream?.flyio.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', '', TreeItemCollapsibleState.None, this.fileIcon('flyio3')))
+				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', webStream?.flyio.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('flyio3')))
 			// if (webStream?.cloudflare.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddCloudflare, 'Cloudflare', '', TreeItemCollapsibleState.None, this.fileIcon('cloudflare3')))
+			// 	items.push(new Dependency(SideTreeItem.AddCloudflare, 'Cloudflare', webStream?.cloudflare.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('cloudflare3')))
 			// if (webStream?.digitalocean.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddDigitalOcean, 'DigitalOcean', '', TreeItemCollapsibleState.None, this.fileIcon('digitalocean3')))
+			// 	items.push(new Dependency(SideTreeItem.AddDigitalOcean, 'DigitalOcean', webStream?.digitalocean.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('digitalocean3')))
 			// if (webStream?.heroku.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddHeroku, 'Heroku', '', TreeItemCollapsibleState.None, this.fileIcon('heroku3')))
+			// 	items.push(new Dependency(SideTreeItem.AddHeroku, 'Heroku', webStream?.heroku.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('heroku3')))
 			// if (webStream?.yandex.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddYandexCloud, 'Yandex Cloud', '', TreeItemCollapsibleState.None, this.fileIcon('yandexcloud3')))
+			// 	items.push(new Dependency(SideTreeItem.AddYandexCloud, 'Yandex Cloud', webStream?.yandex.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('yandexcloud3')))
 		} else if (element?.id == SideTreeItem.Project) {
 			items = [
 				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
