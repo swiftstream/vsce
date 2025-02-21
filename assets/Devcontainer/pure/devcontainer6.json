@@ -1,25 +1,19 @@
-// For format details, see https://aka.ms/devcontainer.json.
-// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-	"name": "swifpack",
+	"name": "swiftstream",
 	"build": {
-        // Path is relative to the devcontainer.json file.
         "dockerfile": "Dockerfile",
 		"args": {}
     },
 	"containerEnv": {
-		// project mode for the swift.stream extension
-		"S_MODE": "SERVER",
-		// from https://www.swift.org/download
-		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz",
-		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0.2-release/ubuntu2004-aarch64/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04-aarch64.tar.gz",
-		// semver
+		"S_MODE": "PURE",
+		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.0.3-release/ubuntu2004/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-ubuntu20.04.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.0.3-release/ubuntu2004-aarch64/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-ubuntu20.04-aarch64.tar.gz",
 		"S_VERSION_MAJOR": "6",
 		"S_VERSION_MINOR": "0",
-		"S_VERSION_PATCH": "2"
+		"S_VERSION_PATCH": "3"
 	},
 	"appPort": [
-		"8080:8888"
+		
 	],
 	"postStartCommand": "cmd.sh",
 	"customizations": {
@@ -29,11 +23,11 @@
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
-				"swift.path": "/swift/toolchains/6.0.2-RELEASE/usr/bin",
+				"swift.path": "/swift/toolchains/6.0.3-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
 				},
-				"lldb.library": "/swift/toolchains/6.0.2-RELEASE/usr/lib/liblldb.so",
+				"lldb.library": "/swift/toolchains/6.0.3-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
@@ -45,11 +39,9 @@
 			}
 		}
 	},
-	// Adds the `ptrace` capability required for debugger.
 	"capAdd": [
 		"SYS_PTRACE"
 	],
-	// Adds volume for swift toolchains.
 	"mounts": [
 		{
 			"source": "swift-toolchains",

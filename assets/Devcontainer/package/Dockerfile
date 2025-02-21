@@ -1,1 +1,0 @@
-FROM swiftstream/server-dev:latest

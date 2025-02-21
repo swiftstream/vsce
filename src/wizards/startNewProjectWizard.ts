@@ -684,7 +684,7 @@ async function createNewProjectFiles(
 					}
 				})()
 				break
-			case 'package':
+			case 'pure':
 				const packageType = selectedValues['package-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
