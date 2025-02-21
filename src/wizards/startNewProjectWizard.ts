@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { commands, extensions, Uri, ViewColumn, WebviewPanel, window } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
-import { defaultServerPort, defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext } from '../extension'
+import { defaultServerPort, defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory } from '../extension'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
 import { webSourcesFolder } from '../streams/web/webStream'
@@ -51,6 +51,14 @@ export async function startNewProjectWizard() {
 				break
 			case 'getUserHomePath':
 				webViewPanel?.webview.postMessage({ type: 'userHomePath', data: { path: os.homedir() } })
+				break
+			case 'checkIfPathPredefined':
+				const p = isInContainer() ? projectDirectory : undefined
+				if (!p) return
+				webViewPanel?.webview.postMessage({ type: 'predefinedPath', data: {
+					path: p,
+					name: p ? osPath.parse(p).base : undefined
+				} })
 				break
 			case 'selectFolder':
 				const folderPath = (await selectFolder('Please select a folder for the project', 'Select'))?.fsPath

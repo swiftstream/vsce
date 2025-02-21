@@ -11,6 +11,9 @@ body {
 body.vscode-light .backLogo {
     background-image: url("__LF__/swiftstream-light.png");
 }
+.disabled {
+    cursor: default!important;
+}
 .svgIcon {
     color: var(--vscode-editor-foreground); 
 }

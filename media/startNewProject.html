@@ -54,6 +54,16 @@
                 folder = payload.path
                 updateFolderLabel(payload.path)
                 break
+            case 'predefinedPath':
+                folder = payload.path
+                name = payload.name
+                nameInput.value = payload.name
+                nameInput.blur()
+                nameInput.disabled = true
+                folderLabel.classList.add('disabled')
+                folderButton.classList.add('disabled')
+                updateFolderLabel(payload.path)
+                break
             case 'setProjectFolder':
                 folder = payload.path
                 updateFolderLabel(folder)
@@ -76,6 +86,9 @@
             }
         })
         vscode.postMessage({ command: 'getUserHomePath', payload: {} })
+        setTimeout(() => {
+            vscode.postMessage({ command: 'checkIfPathPredefined', payload: {} })
+        }, 100)
         function toggleElementsVisibility(show, elements) {
             Array.from(elements).forEach((el) => el.style.display = show ? 'block' : 'none')
         }
@@ -109,6 +122,7 @@
             checkValues()
         })
         function selectFolder() {
+            if (nameInput.disabled) return
             vscode.postMessage({ command: 'selectFolder', payload: { type: 'setProjectFolder' } })
         }
         folderLabel.addEventListener('click', selectFolder)
@@ -242,7 +256,7 @@
                 { type: 'server', title: 'Server', sublevel: serverStreamLevel },
                 //{ type: 'android', title: 'Android', sublevel: androidStreamLevel },
                 //{ type: 'embedded', title: 'Embedded', sublevel: embeddedStreamLevel },
-                { type: 'package', title: 'Package', logo: 'logo-package', sublevel: packageLevel }
+                { type: 'pure', title: 'Package', logo: 'logo-package', sublevel: packageLevel }
             ]
         }
         function clearContainer(container) {
