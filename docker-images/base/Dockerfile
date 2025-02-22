@@ -7,6 +7,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 # e.g. for `ubuntu:focal` it should be `ubuntu20.04`
 ENV S_TOOLCHAIN_PLATFORM="ubuntu20.04"
 
+# Image version, should be increased with any major change
+ENV S_IMAGE_VERSION=100
+
 # update packages
 RUN apt-get update && apt-get upgrade -y
 
