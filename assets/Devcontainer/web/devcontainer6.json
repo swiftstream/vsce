@@ -1,5 +1,5 @@
 {
-	"name": "webber",
+	"name": "swiftstream",
 	"build": {
         "dockerfile": "Dockerfile",
 		"args": {}
