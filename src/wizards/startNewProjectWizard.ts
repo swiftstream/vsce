@@ -483,7 +483,7 @@ async function createNewProjectFiles(
 				let serverType = selectedValues['server-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer.json`)
+				await copyDevContainerFile(`devcontainer6.json`, `devcontainer.json`)
 				await (async function () {
 					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 					if (devContainerContent) {
@@ -688,7 +688,7 @@ async function createNewProjectFiles(
 				const packageType = selectedValues['package-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer.json`)
+				await copyDevContainerFile(`devcontainer6.json`, `devcontainer.json`)
 				await (async function () {
 					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 					if (devContainerContent) {
