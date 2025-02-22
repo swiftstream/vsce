@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import JSON5 from 'json5'
 import { ProgressLocation, window } from 'vscode'
 import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from '../streams/stream'
-import { extensionMode, ExtensionMode, projectDirectory } from '../extension'
+import { extensionStream, ExtensionStream, projectDirectory } from '../extension'
 
 export async function toolchainCommand(selectedType?: string) {
 	const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`
@@ -20,15 +20,15 @@ export async function toolchainCommand(selectedType?: string) {
 		mode: string,
 		artifact_url?: string
 	}
-	async function getTags<Tag>(mode: ExtensionMode): Promise<Tag[]> {
+	async function getTags<Tag>(mode: ExtensionStream): Promise<Tag[]> {
 		const response = await fetch(`${toolchainsURL}`)
 		if (!response.ok) throw new Error('Toolchains response was not ok')
 		const text = await response.text()
 		const json = JSON5.parse(text)
 		let key: string = `${mode}`.toLowerCase()
 		switch (mode) {
-			case ExtensionMode.Android: break
-			case ExtensionMode.Web: break
+			case ExtensionStream.Android: break
+			case ExtensionStream.Web: break
 			default: key = 'pure'
 		}
 		const filtered = json[key]
@@ -53,7 +53,7 @@ export async function toolchainCommand(selectedType?: string) {
 		cancellable: false
 	}, async (progress, token) => {
 		try {
-			tags = await getTags(extensionMode)
+			tags = await getTags(extensionStream)
 			if (selectedType && selectedType.length > 0)
 				afterLoadingClosure()
 		} catch(error: any) {
@@ -100,7 +100,7 @@ export async function toolchainCommand(selectedType?: string) {
 			devContainerJson.containerEnv.S_VERSION_MAJOR = `${selectedTag.version.major}`
 			devContainerJson.containerEnv.S_VERSION_MINOR = `${selectedTag.version.minor}`
 			devContainerJson.containerEnv.S_VERSION_PATCH = `${selectedTag.version.patch}`
-			if (extensionMode == ExtensionMode.Web) {
+			if (extensionStream == ExtensionStream.Web) {
 				if (selectedTag.artifact_urls) {
 					devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = selectedTag.artifact_urls.wasi
 					devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = selectedTag.artifact_urls.wasip1_threads

@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws'
-import { ExtensionMode, extensionMode } from '../extension'
+import { ExtensionStream, extensionStream } from '../extension'
 import { isHotReloadEnabled } from '../streams/web/webStream'
 
 let wss: WebSocketServer | undefined
@@ -9,9 +9,9 @@ function broadcast(data: any) {
 }
 
 export function startWebSocketServer() {
-    wss = extensionMode == ExtensionMode.Web ? new WebSocketServer({ port: 3050 }) : undefined
+    wss = extensionStream == ExtensionStream.Web ? new WebSocketServer({ port: 3050 }) : undefined
     if (!wss) return
-    if (extensionMode != ExtensionMode.Web) return
+    if (extensionStream != ExtensionStream.Web) return
     wss.on('connection', (ws) => {
         ws.on('message', (message) => {
             console.log('🌎 ws received: %s', message)

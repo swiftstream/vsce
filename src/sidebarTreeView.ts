@@ -3,7 +3,7 @@ import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
 import { currentDevPort, isBuildingRelease, isDebugging, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, pendingNewDevPort, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, currentDevCrawlerPort, pendingNewDevCrawlerPort, isDebugGzipEnabled, isDebugBrotliEnabled } from './streams/web/webStream'
 import { isBuilding, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel, currentToolchain, pendingNewToolchain } from './streams/stream'
-import { extensionContext, ExtensionMode, extensionMode, isInContainer, currentStream, webStream } from './extension'
+import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream, webStream } from './extension'
 import { doesPackageCheckedOut, KnownPackage } from './commands/build/helpers'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 
@@ -288,11 +288,11 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			if (items.length == 0)
 				items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
 		} else if (element?.id == SideTreeItem.Support) {
-			if (extensionMode == ExtensionMode.Web) {
+			if (extensionStream == ExtensionStream.Web) {
 				items.push(new Dependency(SideTreeItem.WebDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-			} else if (extensionMode == ExtensionMode.Android) {
+			} else if (extensionStream == ExtensionStream.Android) {
 				items.push(new Dependency(SideTreeItem.AndroidDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-			} else if (extensionMode == ExtensionMode.Server) {
+			} else if (extensionStream == ExtensionStream.Server) {
 				if (doesPackageCheckedOut(KnownPackage.Vapor)) {
 					items.push(new Dependency(SideTreeItem.VaporDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
 				} else if (doesPackageCheckedOut(KnownPackage.Hummingbird)) {
