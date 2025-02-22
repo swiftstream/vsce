@@ -12,9 +12,9 @@ export async function copyFile(
 ): Promise<boolean> {
     try {
         if (isWin) {
-            fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).fsPath, destPath)
+            fs.cpSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).fsPath, destPath, { force: true })
         } else {
-            fs.copyFileSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, destPath)
+            fs.cpSync(Uri.file(extensionContext.asAbsolutePath(sourcePath)).path, destPath, { force: true })
         }
         return true
     } catch (err) {
