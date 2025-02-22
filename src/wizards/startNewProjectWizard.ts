@@ -702,8 +702,13 @@ async function createNewProjectFiles(
 				break
 			default: break
 		}
-		// MARK: OPEN PROJECT
-		await openProject(Uri.parse(isWin ? `file:///${path}` : path), webViewPanel)
+		if (isInContainer()) {
+			// MARK: RELOAD WINDOW
+			await commands.executeCommand('workbench.action.reloadWindow')
+		} else {
+			// MARK: OPEN PROJECT
+			await openProject(Uri.parse(isWin ? `file:///${path}` : path), webViewPanel)
+		}
 	} catch (error) {
 		webViewPanel?.webview.postMessage({ type: 'creatingFailed', data: {} })
 		window.showErrorMessage(`Unable to create project: ${error}`)
