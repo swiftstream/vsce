@@ -5,8 +5,6 @@ import { Swift } from "../swift"
 import { Toolchain } from "../toolchain"
 import { extensionContext, isInContainer, projectDirectory, sidebarTreeView } from "../extension"
 import { SideTreeItem } from "../sidebarTreeView"
-import { reopenInContainerCommand, whyReopenInContainerCommand } from "../commands/reopenInContainer"
-import { startNewProjectWizard } from "../wizards/startNewProjectWizard"
 import { clearBuildCacheCommand } from "../commands/clearBuildCache"
 import { toolchainCommand } from "../commands/toolchain"
 import { loggingLevelCommand } from "../commands/loggingLevel"
@@ -58,9 +56,6 @@ export class Stream {
             showOutput()
         }))
         extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WhyReopenInContainer, whyReopenInContainerCommand))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewProject, startNewProjectWizard))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))

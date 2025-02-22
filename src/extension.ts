@@ -2,8 +2,9 @@ import * as fs from 'fs'
 import { ExtensionContext, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
 import { ExtensionState } from './enums/ExtensionState'
 import { selectFolder } from './helpers/selectFolderHelper'
-import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
-import { Dependency, SidebarTreeView } from './sidebarTreeView'
+import { reopenInContainerCommand, whyReopenInContainerCommand } from "./commands/reopenInContainer"
+import { startNewProjectWizard } from "./wizards/startNewProjectWizard"
+import { Dependency, SidebarTreeView, SideTreeItem } from './sidebarTreeView'
 import { abortBuildingRelease, WebStream } from './streams/web/webStream'
 import { abortBuilding, Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
@@ -115,6 +116,9 @@ const updateExtensionState = (state: ExtensionState) => commands.executeCommand(
 }
 
 function registerCommands() {
+	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
+	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WhyReopenInContainer, whyReopenInContainerCommand))
+	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewProject, startNewProjectWizard))
 	extensionContext.subscriptions.push(commands.registerCommand('openProject', openProjectCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('startNewProjectWizard', startNewProjectWizard))
 	extensionContext.subscriptions.push(commands.registerCommand('runDebugging', debugInChromeCommand))
