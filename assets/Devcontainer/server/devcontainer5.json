@@ -1,0 +1,57 @@
+{
+	"name": "swiftstream",
+	"build": {
+        "dockerfile": "Dockerfile",
+		"args": {}
+    },
+	"containerEnv": {
+		"S_MODE": "SERVER",
+		"S_TOOLCHAIN_URL_X86": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_x86_64.tar.gz",
+		"S_TOOLCHAIN_URL_ARM": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_aarch64.tar.gz",
+		"S_VERSION_MAJOR": "5",
+		"S_VERSION_MINOR": "10",
+		"S_VERSION_PATCH": "0"
+	},
+	"appPort": [
+		"8080:8080"
+	],
+	"postStartCommand": "cmd.sh",
+	"customizations": {
+		"vscode": {
+    		"extensions": [
+				"swiftlang.swift-vscode"
+			],
+			"settings": {
+				"extensions.ignoreRecommendations": true,
+				"swift.path": "/swift/toolchains/5.10.0-RELEASE/usr/bin",
+				"swift.swiftEnvironmentVariables": {
+					"DEVELOPER_DIR": "public"
+				},
+				"lldb.library": "/swift/toolchains/5.10.0-RELEASE/usr/lib/liblldb.so",
+				"lldb.launch.expressions": "native",
+				"swift.disableAutoResolve": false,
+				"swift.autoGenerateLaunchConfigurations": true,
+				"swift.backgroundCompilation": false,
+				"swift.showCreateSwiftProjectInWelcomePage": false,
+				"editor.semanticHighlighting.enabled": true,
+				"editor.fontFamily": "Verdana, Verdana, Menlo, Monaco, 'Courier New', monospace",
+				"editor.codeLensFontFamily": "Verdana, Verdana, Menlo, Monaco, 'Courier New', monospace"
+			}
+		}
+	},
+	"capAdd": [
+		"SYS_PTRACE"
+	],
+	"mounts": [
+		{
+			"source": "swift-toolchains",
+			"target": "/swift/toolchains",
+			"type": "volume"
+		},
+		{
+			"source": "swift-sdks",
+			"target": "/root/.swiftpm/swift-sdks",
+			"type": "volume"
+		}
+	]
+}
