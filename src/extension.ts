@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { ExtensionContext, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
-import { WebberState } from './enums/WebberStateEnum'
+import { ExtensionState } from './enums/ExtensionState'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { startNewProjectWizard as startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView } from './sidebarTreeView'
@@ -96,7 +96,7 @@ export async function activate(context: ExtensionContext) {
 	registerCommands()
 
 	if (!projectDirectory) {
-		commands.executeCommand('setContext', 'swiftstream.state', WebberState.NoProjectFolder)
+		updateExtensionState(ExtensionState.NoProjectFolder)
 		return
 	}
 
@@ -109,6 +109,8 @@ export async function activate(context: ExtensionContext) {
 		// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
 		startWebSocketServer()
 		await switchToTreeViewMode()
+
+const updateExtensionState = (state: ExtensionState) => commands.executeCommand('setContext', 'swiftstream.state', state)
 	}
 }
 

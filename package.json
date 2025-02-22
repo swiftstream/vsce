@@ -210,7 +210,7 @@
         "when": "swiftstream.state == NoProjectFolder"
       },
       {
-        "view": "explorer",
+        "view": "swiftstreamSidebar",
         "contents": "[Create Swift Project](command:startNewProjectWizard)",
         "when": "swiftstream.state == EmptyProjectFolder"
       },
@@ -218,6 +218,21 @@
         "view": "swiftstreamSidebar",
         "contents": "Ready to create a project?\n[Start New Project](command:startNewProjectWizard)\n[Open project](command:openProject)",
         "when": "swiftstream.state == NoProjectFolder"
+      },
+      {
+        "view": "swiftstreamSidebar",
+        "contents": "Your `devcontainer.json` has an invalid configuration.\nWould you like to replace it with a valid one?\n[Fix configuration](command:fixWrongProjectConfiguration)\nDon't worry, existing configuration will be backed up.",
+        "when": "swiftstream.state == WrongProjectConfiguration"
+      },
+      {
+        "view": "swiftstreamSidebar",
+        "contents": "Additional setup is required to activate the extension for this project\n[Setup](command:setupAlienProject)",
+        "when": "swiftstream.state == MissingProjectConfiguration"
+      },
+      {
+        "view": "swiftstreamSidebar",
+        "contents": "`Package.swift` is required to activate the extension\n[Initialize project](command:initializeProjectInCurrentFolder)",
+        "when": "swiftstream.state == MissingSwiftPackage"
       }
     ],
     "taskDefinitions": [
