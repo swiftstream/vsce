@@ -28,6 +28,7 @@
     		"extensions": [
 				"swiftstream.swiftstream",
 				"swiftlang.swift-vscode",
+				"mateocerquetella.xcode-12-theme",
 				"ms-vscode.wasm-dwarf-debugging"
 			],
 			"settings": {

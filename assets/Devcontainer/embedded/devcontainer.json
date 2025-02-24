@@ -20,7 +20,8 @@
 	"customizations": {
 		"vscode": {
     		"extensions": [
-				"swiftlang.swift-vscode"
+				"swiftlang.swift-vscode",
+				"mateocerquetella.xcode-12-theme"
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
