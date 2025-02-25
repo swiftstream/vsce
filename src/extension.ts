@@ -12,7 +12,6 @@ import { abortBuilding, Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
 import { buildCommand } from './commands/build'
 import { debugInChromeCommand } from './commands/debugInChrome'
-import { onDidSaveTextDocument } from './commands/onDidSaveTextDocument'
 import { startWebSocketServer } from './commands/webSocketServer'
 import { openProject } from './helpers/openProject'
 import { AndroidStream } from './streams/android/androidStream'
@@ -64,7 +63,9 @@ export async function activate(context: ExtensionContext) {
     projectDirectory = (workspace.workspaceFolders && (workspace.workspaceFolders.length > 0))
 		? workspace.workspaceFolders[0].uri.fsPath : undefined
 	
-	workspace.onDidSaveTextDocument(onDidSaveTextDocument)
+	workspace.onDidSaveTextDocument((document) => {
+		currentStream?.onDidSaveTextDocument(document)
+	})
 	
 	// Open folder name
 	let folderName = workspace.name

@@ -32,7 +32,8 @@ import { Brotli } from '../../brotli'
 import { portDevCrawlerCommand } from '../../commands/portDevCrawler'
 import { debugGzipCommand } from '../../commands/debugGzip'
 import { debugBrotliCommand } from '../../commands/debugBrotli'
-import { Stream } from '../stream'
+import { LogLevel, print, Stream } from '../stream'
+import { generateChecksum } from '../../helpers/filesHelper'
 
 export var isHotBuildingCSS = false
 export var isHotBuildingJS = false
@@ -364,6 +365,96 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudSetup, this.yandex.setup))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeploy, this.yandex.deploy))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeintegrate, this.yandex.deintegrate))
+	}
+
+	hotReloadHashes: any = {}
+	
+	async onDidSaveTextDocument(document: TextDocument) {
+		super.onDidSaveTextDocument(document)
+		if (!isInContainer) return
+		if (!isHotRebuildEnabled) return
+		// if (document.isDirty) return
+		if (document.uri.scheme === 'file') {
+			const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
+			print(`onDidSaveTextDocument languageId: ${document.languageId}`, LogLevel.Unbearable)
+			async function goThroughHashCheck(ctx: WebStream, handler: () => Promise<void>) {
+				const oldChecksum = ctx.hotReloadHashes[document.uri.path]
+				const newChecksum = generateChecksum(document.getText())
+				print(`Checking ${document.uri.path.split('/').pop()}\noldChecksum: ${oldChecksum}\nnewChecksum: ${newChecksum}`, LogLevel.Unbearable)
+				if (oldChecksum && oldChecksum === newChecksum) {
+					print(`Skipping hot realod, file wasn't changed: ${document.uri.path.split('/').pop()}`, LogLevel.Verbose)
+				} else {
+					try {
+						await handler()
+						ctx.hotReloadHashes[document.uri.path] = newChecksum
+					} catch (error) {
+						const json = JSON.stringify(error)
+						print(`${document.uri.path.split('/').pop()} failed to hot realod: ${json === '{}' ? error : json}`, LogLevel.Verbose)
+					}
+				}
+			}
+			// Swift
+			if (['swift'].includes(document.languageId)) {
+				// Package.swift
+				if (document.uri.path === `${projectDirectory}/Package.swift`) {
+					await goThroughHashCheck(this, async () => {
+						await hotRebuildSwift()
+					})
+				}
+				// Swift sources
+				else if (document.uri.path.startsWith(`${projectDirectory}/Sources/`)) {
+					const target = `${document.uri.path}`.replace(`${projectDirectory}/Sources/`, '').split('/')[0]
+					if (target) {
+						await goThroughHashCheck(this, async () => {
+							await hotRebuildSwift({ target: target })
+						})
+					}
+				}
+			}
+			// Web sources
+			else if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesFolder}`)) {
+				// CSS
+				if (['css', 'scss', 'sass'].includes(document.languageId)) {
+					await goThroughHashCheck(this, async () => {
+						await hotRebuildCSS()
+					})
+				}
+				// JavaScript
+				else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesFolder}/tsconfig.json`) {
+					await goThroughHashCheck(this, async () => {
+						await hotRebuildJS({ path: document.uri.path })
+					})
+				}
+				// HTML
+				else if (['html'].includes(document.languageId.toLowerCase())) {
+					await goThroughHashCheck(this, async () => {
+						await hotRebuildHTML()
+					})
+				}
+			}
+			// VSCode configuration files
+			else if (document.languageId === 'jsonc' && document.uri.scheme === 'file') {
+				// devcontainer.json
+				if (document.uri.path == devContainerPath) {
+					const readPorts = await readPortsFromDevContainer()
+					if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
+						setPendingNewDevPort(`${readPorts.devPort}`)
+					} else {
+						setPendingNewDevPort(undefined)
+					}
+					if (readPorts.devCrawlerPortPresent && `${readPorts.devCrawlerPort}` != currentDevCrawlerPort) {
+						setPendingNewDevCrawlerPort(`${readPorts.devCrawlerPort}`)
+					} else {
+						setPendingNewDevCrawlerPort(undefined)
+					}
+					if (readPorts.prodPortPresent && `${readPorts.prodPort}` != currentProdPort) {
+						setPendingNewProdPort(`${readPorts.prodPort}`)
+					} else {
+						setPendingNewProdPort(undefined)
+					}
+				}
+			}
+		}
 	}
 
 	onDidRenameFiles(event: FileRenameEvent) {

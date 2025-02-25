@@ -1,4 +1,4 @@
-import { window, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent } from "vscode"
+import { window, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from "vscode"
 import { Bash } from "../bash"
 import { Pgrep } from "../pgrep"
 import { Swift } from "../swift"
@@ -63,6 +63,10 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, discussionsCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, submitAnIssueCommand))
     }
+
+	async onDidSaveTextDocument(document: TextDocument) {
+		if (!isInContainer) return
+	}
 }
 
 // MARK: Toolchain
