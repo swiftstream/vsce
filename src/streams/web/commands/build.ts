@@ -1,27 +1,27 @@
 import * as fs from 'fs'
-import { projectDirectory, sidebarTreeView, currentStream } from "../extension"
-import { appTargetName, currentDevPort, isAnyHotBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, serviceWorkerTargetName, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService } from "../streams/web/webStream"
-import { buildStatus, print, status, StatusType } from '../streams/stream'
-import { setBuilding } from '../streams/stream'
-import { isBuilding, LogLevel } from '../streams/stream'
+import { projectDirectory, sidebarTreeView, currentStream } from "../../../extension"
+import { appTargetName, currentDevPort, isAnyHotBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, serviceWorkerTargetName, setHotBuildingCSS, setHotBuildingHTML, setHotBuildingJS, setHotBuildingSwift, setRecompilingApp, setRecompilingService } from "../webStream"
+import { buildStatus, print, status, StatusType } from '../../stream'
+import { setBuilding } from '../../stream'
+import { isBuilding, LogLevel } from '../../stream'
 import { window } from 'vscode'
-import { isString } from '../helpers/isString'
-import { TimeMeasure } from '../helpers/timeMeasureHelper'
-import { resolveSwiftDependencies } from './build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../swift'
+import { isString } from '../../../helpers/isString'
+import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
+import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
+import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../../../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
 import { buildWebSourcesForAllTargets } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
-import { proceedBundledResources } from "./build/proceedBundledResources"
-import { proceedCSS } from "./build/proceedCSS"
-import { proceedHTML } from "./build/proceedHTML"
-import { proceedIndex } from "./build/proceedIndex"
-import { proceedWasmFile } from "./build/proceedWasmFile"
-import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
-import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "./webSocketServer"
-import { listOfAdditionalJSFiles, proceedAdditionalJS } from "./build/proceedAdditionalJS"
+import { proceedBundledResources } from './build/proceedBundledResources'
+import { proceedCSS } from './build/proceedCSS'
+import { proceedHTML } from './build/proceedHTML'
+import { proceedIndex } from './build/proceedIndex'
+import { proceedWasmFile } from './build/proceedWasmFile'
+import { awaitGzipping, shouldAwaitGzipping } from './build/awaitGzipping'
+import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from "../../../commands/webSocketServer"
+import { listOfAdditionalJSFiles, proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
 export let cachedSwiftTargets: SwiftTargets | undefined

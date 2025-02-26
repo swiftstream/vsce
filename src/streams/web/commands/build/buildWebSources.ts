@@ -1,11 +1,11 @@
 import * as fs from 'fs'
-import { projectDirectory, webStream } from '../../extension'
-import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from '../../helpers/filesHelper'
-import { appTargetName, buildDevFolder, buildProdFolder, webSourcesFolder } from '../../streams/web/webStream'
-import { buildStatus, print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { WebpackMode } from '../../webpack'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { projectDirectory, webStream } from '../../../../extension'
+import { getLastModifiedDate, LastModifiedDateType, wasFileModified, wasPathModified } from '../../../../helpers/filesHelper'
+import { appTargetName, buildDevFolder, buildProdFolder, webSourcesFolder } from '../../../../streams/web/webStream'
+import { buildStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { WebpackMode } from '../../../../webpack'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 
 export async function buildWebSourcesForAllTargets(options: { targets: string[], release: boolean, force: boolean, parallel: boolean }) {
     if (!options.parallel) {

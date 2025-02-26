@@ -1,8 +1,8 @@
-import { currentStream } from "../../extension";
-import { TimeMeasure } from "../../helpers/timeMeasureHelper";
-import { Index } from "../../swift";
-import { print } from '../../streams/stream';
-import { LogLevel } from '../../streams/stream';
+import { currentStream } from '../../../../extension'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { Index } from '../../../../swift'
+import { print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
 
 export async function proceedIndex(options: { target: string, release: boolean }): Promise<Index | undefined> {
     if (!currentStream) throw `webStream is null`

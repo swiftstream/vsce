@@ -1,10 +1,10 @@
-import { projectDirectory } from "../../extension";
-import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified, wasPathModified } from "../../helpers/filesHelper";
-import { TimeMeasure } from "../../helpers/timeMeasureHelper";
-import { SwiftBuildType } from "../../swift";
-import { buildStatus, clearStatus, print } from '../../streams/stream';
-import { LogLevel } from '../../streams/stream';
-import { buildSwiftTarget } from "./helpers";
+import { projectDirectory } from '../../../../extension'
+import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified, wasPathModified } from '../../../../helpers/filesHelper'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { SwiftBuildType } from '../../../../swift'
+import { buildStatus, clearStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { buildSwiftTarget } from '../../../../commands/build/helpers'
 
 export async function buildExecutableTarget(options: { type: SwiftBuildType, target: string, release: boolean, force: boolean, isCancelled: () => boolean }) {
         if (!options.force && !doesModifiedAnySwiftFile(options.type)) {

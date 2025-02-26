@@ -1,11 +1,11 @@
 import * as fs from 'fs'
 import * as sass from 'sass'
-import { projectDirectory, currentStream } from '../../extension'
-import { buildDevFolder, buildProdFolder, webSourcesFolder } from '../../streams/web/webStream'
-import { buildStatus, print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { projectDirectory, currentStream } from '../../../../extension'
+import { buildDevFolder, buildProdFolder, webSourcesFolder } from '../../../../streams/web/webStream'
+import { buildStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../../../helpers/filesHelper'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 
 export async function proceedCSS(options: { force: boolean, release: boolean }) {
     if (!currentStream) throw `webStream is null`

@@ -1,5 +1,5 @@
-import { isDebugBrotliEnabled } from "../../streams/web/webStream"
-import { buildStatus } from '../../streams/stream'
+import { isDebugBrotliEnabled } from '../../../../streams/web/webStream'
+import { buildStatus } from '../../../../streams/stream'
 
 export interface AwaitBrotlingParams {
     release: boolean,

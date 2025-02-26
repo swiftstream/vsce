@@ -1,5 +1,7 @@
-import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent } from 'vscode'
+import { commands, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent } from 'vscode'
 import { Stream } from '../stream'
+import { SideTreeItem } from '../../sidebarTreeView'
+import { extensionContext } from '../../extension'
 
 export class ServerStream extends Stream {
     constructor() {

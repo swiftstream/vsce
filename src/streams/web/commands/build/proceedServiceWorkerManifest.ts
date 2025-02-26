@@ -1,10 +1,10 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { buildDevFolder, buildProdFolder, serviceWorkerTargetName, webSourcesFolder } from "../../streams/web/webStream"
-import { print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { projectDirectory, currentStream } from '../../extension'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { buildDevFolder, buildProdFolder, serviceWorkerTargetName, webSourcesFolder } from '../../../../streams/web/webStream'
+import { print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { projectDirectory, currentStream } from '../../../../extension'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 
 export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }): Promise<any> {
     if (!currentStream) throw `webStream is null`

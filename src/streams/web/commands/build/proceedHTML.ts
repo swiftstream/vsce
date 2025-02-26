@@ -1,11 +1,11 @@
 import * as fs from 'fs'
-import { projectDirectory } from '../../extension'
-import { buildDevFolder, buildProdFolder, indexFile, webSourcesFolder } from '../../streams/web/webStream'
-import { buildStatus, print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../helpers/filesHelper'
-import { Index, SplashData } from '../../swift'
+import { projectDirectory } from '../../../../extension'
+import { buildDevFolder, buildProdFolder, indexFile, webSourcesFolder } from '../../../../streams/web/webStream'
+import { buildStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../../../helpers/filesHelper'
+import { Index, SplashData } from '../../../../swift'
 
 const managedBy = `managedBy="webber"`
 

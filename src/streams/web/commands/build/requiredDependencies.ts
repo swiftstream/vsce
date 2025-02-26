@@ -1,4 +1,4 @@
-import { doesPackageCheckedOut, KnownPackage } from "./helpers"
+import { doesPackageCheckedOut, KnownPackage } from '../../../../commands/build/helpers'
 
 export async function checkRequiredDependencies() {
     var result: { missing: string[] } = { missing: [] }

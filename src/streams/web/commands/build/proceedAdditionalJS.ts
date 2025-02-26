@@ -1,10 +1,10 @@
 import * as fs from 'fs'
 import { JSDOM } from 'jsdom'
-import { TimeMeasure } from "../../helpers/timeMeasureHelper"
-import { projectDirectory } from '../../extension'
-import { buildDevFolder, buildProdFolder, indexFile, webSourcesFolder } from '../../streams/web/webStream'
-import { buildStatus, print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { projectDirectory } from '../../../../extension'
+import { buildDevFolder, buildProdFolder, indexFile, webSourcesFolder } from '../../../../streams/web/webStream'
+import { buildStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
 
 export async function proceedAdditionalJS(options: { release: boolean, executableTargets: string[], exactFile?: string }) {
     const webFolder = `${projectDirectory}/${webSourcesFolder}`

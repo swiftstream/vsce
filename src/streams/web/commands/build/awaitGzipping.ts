@@ -1,5 +1,5 @@
-import { isDebugGzipEnabled } from "../../streams/web/webStream"
-import { buildStatus } from '../../streams/stream'
+import { isDebugGzipEnabled } from '../../../../streams/web/webStream'
+import { buildStatus } from '../../../../streams/stream'
 
 export interface AwaitGzippingParams {
     release: boolean,

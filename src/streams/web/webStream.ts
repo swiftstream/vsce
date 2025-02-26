@@ -1,16 +1,16 @@
 import * as fs from 'fs'
-import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent } from 'vscode'
+import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument } from 'vscode'
 import { SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream } from '../../extension'
 import { readPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { createDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
-import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from '../../commands/build'
+import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
+import { buildReleaseCommand } from './commands/buildRelease'
 import { debugInChromeCommand } from '../../commands/debugInChrome'
 import { hotReloadCommand } from '../../commands/hotReload'
 import { hotRebuildCommand } from '../../commands/hotRebuild'
-import { buildReleaseCommand } from '../../commands/buildRelease'
 import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCommand } from '../../commands/newFile'
 import { portDevCommand } from '../../commands/portDev'
 import { portProdCommand } from '../../commands/portProd'
@@ -285,7 +285,6 @@ export class WebStream extends Stream {
 
 	registerCommands() {
 		super.registerCommands()
-		console.log(`webStream registerCommands this: ${this}`)
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
@@ -471,5 +470,13 @@ export class WebStream extends Stream {
 		if (event.files.find((f) => f.path == `${projectDirectory}/Firebase`)) {
 			sidebarTreeView?.refresh()
 		}
+	}
+
+	async buildDebug() {
+		await buildCommand()
+	}
+
+	async buildRelease(successCallback?: any) {
+		await buildReleaseCommand(successCallback)
 	}
 }

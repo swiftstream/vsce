@@ -1,12 +1,12 @@
 import * as fs from 'fs'
-import { projectDirectory, webStream } from '../../extension'
-import { webSourcesFolder } from '../../streams/web/webStream'
-import { buildStatus, print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
-import { SwiftBuildType } from '../../swift'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { doesPackageCheckedOut, KnownPackage } from './helpers'
+import { projectDirectory, webStream } from '../../../../extension'
+import { webSourcesFolder } from '../../../../streams/web/webStream'
+import { buildStatus, print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../../../helpers/filesHelper'
+import { SwiftBuildType } from '../../../../swift'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { doesPackageCheckedOut, KnownPackage } from '../../../../commands/build/helpers'
 
 export async function buildJavaScriptKit(options: { force: boolean }) {
     if (!webStream) throw `webStream is null`

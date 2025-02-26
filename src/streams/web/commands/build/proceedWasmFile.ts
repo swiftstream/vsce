@@ -1,10 +1,10 @@
 import * as fs from 'fs'
-import { TimeMeasure } from '../../helpers/timeMeasureHelper'
-import { buildDevFolder, buildProdFolder, isDebugBrotliEnabled, isDebugGzipEnabled } from '../../streams/web/webStream'
-import { print } from '../../streams/stream'
-import { LogLevel } from '../../streams/stream'
-import { projectDirectory, webStream } from '../../extension'
-import { SwiftBuildType } from '../../swift'
+import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { buildDevFolder, buildProdFolder, isDebugBrotliEnabled, isDebugGzipEnabled } from '../../../../streams/web/webStream'
+import { print } from '../../../../streams/stream'
+import { LogLevel } from '../../../../streams/stream'
+import { projectDirectory, webStream } from '../../../../extension'
+import { SwiftBuildType } from '../../../../swift'
 
 export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void, gzipDisabled: () => void, brotliSuccess: () => void, brotliFail: (any) => void, brotliDisabled: () => void }): Promise<any> {
     if (!webStream) throw `webStream is null`

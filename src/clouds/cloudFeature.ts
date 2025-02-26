@@ -1,11 +1,10 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { commands, ShellExecution, Task, TaskDefinition, tasks, TaskScope, Terminal, Uri, window, workspace } from 'vscode'
-import { extensionContext, projectDirectory, sidebarTreeView } from '../extension'
+import { currentStream, extensionContext, projectDirectory, sidebarTreeView } from '../extension'
 import { WebStream, buildProdFolder } from '../streams/web/webStream'
 import { print } from '../streams/stream'
 import { LogLevel } from '../streams/stream'
-import { buildReleaseCommand } from '../commands/buildRelease'
 import { BashError, BashResult } from '../bash'
 import toml from '@iarna/toml'
 import JSON5 from 'json5'
@@ -87,7 +86,7 @@ export class CloudFeature {
     isReleaseBuilt = (): boolean => {
         if (!fs.existsSync(path.join(projectDirectory!, buildProdFolder))) {
             window.showWarningMessage(`Make a release build before deploying`, 'Build Release').then((answer) => {
-                if (answer == 'Build Release') buildReleaseCommand(() => {
+                if (answer == 'Build Release') currentStream?.buildRelease(() => {
                     return window.showInformationMessage(`Release build succeeded. Continue to Firebase deployment?`, 'Deploy').then((answer) => {
                         if (answer == 'Deploy') this.deploy()
                     })

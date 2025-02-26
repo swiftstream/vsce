@@ -5,9 +5,8 @@ import { BashError, BashResult } from '../bash'
 import { buildProdFolder, indexFile, WebStream } from '../streams/web/webStream'
 import { print } from '../streams/stream'
 import { LogLevel } from '../streams/stream'
-import { extensionContext, projectDirectory, sidebarTreeView } from '../extension'
+import { currentStream, extensionContext, projectDirectory, sidebarTreeView } from '../extension'
 import { ProgressLocation, ShellExecution, Task, TaskDefinition, tasks, TaskScope, Terminal, Uri, window, workspace } from 'vscode'
-import { buildReleaseCommand } from '../commands/buildRelease'
 
 export class Cloudflare {
     private binPath?: string
@@ -206,7 +205,7 @@ export class Cloudflare {
         if (this.isDeploying) return false
         if (!fs.existsSync(path.join(projectDirectory!, buildProdFolder))) {
             return window.showWarningMessage(`Make a release build before deploying`, 'Build Release').then((answer) => {
-                if (answer == 'Build Release') buildReleaseCommand(() => {
+                if (answer == 'Build Release') currentStream?.buildRelease(() => {
                     return window.showInformationMessage(`Release build succeeded. Continue to Firebase deployment?`, 'Deploy').then((answer) => {
                         if (answer == 'Deploy') this.deploy()
                     })

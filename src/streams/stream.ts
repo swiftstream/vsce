@@ -67,6 +67,14 @@ export class Stream {
 	async onDidSaveTextDocument(document: TextDocument) {
 		if (!isInContainer) return
 	}
+
+	async buildDebug() {
+		print('stream.build not implemented', LogLevel.Detailed)
+	}
+	
+	async buildRelease(successCallback?: any) {
+		print('stream.buildRelease not implemented', LogLevel.Detailed)
+	}
 }
 
 // MARK: Toolchain
