@@ -63,6 +63,20 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		return { light: path.join(__filename, '..', '..', 'assets', 'icons', `${light}.svg`), dark: path.join(__filename, '..', '..', 'assets', 'icons', `${dark ?? light}.svg`) }
 	}
 
+	private fillNewErrors(): Dependency | undefined {
+		for (let i = 0; i < this.errorCommands.length; i++) {
+			this.errorCommands[i].dispose()
+		}
+		this.errorCommands = []
+		if (this.errors.length > 0) {
+			const eCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'error')?.length ?? 0).reduce((s, a) => s + a, 0)
+			const wCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'warning')?.length ?? 0).reduce((s, a) => s + a, 0)
+			const nCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'note')?.length ?? 0).reduce((s, a) => s + a, 0)
+			return new Dependency(SideTreeItem.Errors, eCount > 0 ? 'Errors' : wCount > 0 ? 'Warnings' : 'Notes', `${eCount + wCount + nCount}`, TreeItemCollapsibleState.Expanded, `bracket-error::charts.${eCount > 0 ? 'red' : wCount > 0 ? 'orange' : 'white'}`, false)
+		}
+		return undefined
+	}
+
 	async getChildren(element?: Dependency): Promise<Dependency[]> {
 		var items: Dependency[] = []
 		if (!isInContainer() && !env.S_DEV) {
@@ -87,15 +101,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
 			// items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
 			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
-			for (let i = 0; i < this.errorCommands.length; i++) {
-				this.errorCommands[i].dispose()
-			}
-			this.errorCommands = []
-			if (this.errors.length > 0) {
-				const eCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'error')?.length ?? 0).reduce((s, a) => s + a, 0)
-				const wCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'warning')?.length ?? 0).reduce((s, a) => s + a, 0)
-				const nCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'note')?.length ?? 0).reduce((s, a) => s + a, 0)
-				items.push(new Dependency(SideTreeItem.Errors, eCount > 0 ? 'Errors' : wCount > 0 ? 'Warnings' : 'Notes', `${eCount + wCount + nCount}`, TreeItemCollapsibleState.Expanded, `bracket-error::charts.${eCount > 0 ? 'red' : wCount > 0 ? 'orange' : 'white'}`, false))
+			const errorsItem = this.fillNewErrors()
+			if (errorsItem) {
+				items.push(errorsItem)
 			}
 		} else if (element?.id == SideTreeItem.Errors) {
 			for (let i = 0; i < this.errors.length; i++) {
