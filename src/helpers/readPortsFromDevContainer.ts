@@ -21,7 +21,7 @@ export async function readPortsFromDevContainer(): Promise<{
         }
     function extractPort(port: string): number | undefined {
         var appPortsString = ''
-        const index = appPorts.findIndex((x) => x == port)
+        const index = appPorts.findIndex((x) => x.endsWith(`:${port}`))
         if (index <= -1)
             return undefined
         appPortsString = appPorts[index]
