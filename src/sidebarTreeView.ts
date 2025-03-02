@@ -463,12 +463,11 @@ export enum SideTreeItem {
 		UpdateWeb = 'UpdateWeb',
 		UpdateJSKit = 'UpdateJSKit',
 	Support = 'Support',
-		WebDocumentation = 'WebDocumentation',
-		AndroidDocumentation = 'AndroidDocumentation',
-		VaporDocumentation = 'VaporDocumentation',
-		HummingbirdDocumentation = 'HummingbirdDocumentation',
-		ServerDocumentation = 'ServerDocumentation',
+		Documentation = 'Documentation',
 		Repository = 'Repository',
 		Discussions = 'Discussions',
-		SubmitAnIssue = 'SubmitAnIssue'
+		SubmitAnIssue = 'SubmitAnIssue',
+		OpenDiscord = 'OpenDiscord',
+		OpenTelegram = 'OpenTelegram',
+		OpenSwiftForums = 'OpenSwiftForums'
 }

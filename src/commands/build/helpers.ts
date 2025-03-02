@@ -8,7 +8,8 @@ export enum KnownPackage {
 	JavaScriptKit = 'JavaScriptKit',
 	Web = 'web',
 	Vapor = 'vapor',
-	Hummingbird = 'hummingbird'
+	Hummingbird = 'hummingbird',
+	Droid = 'droid'
 }
 export function doesPackageCheckedOut(packageName: KnownPackage): boolean {
 	const value = fs.existsSync(`${projectDirectory}/.build/checkouts/${packageName}/Package.swift`)
