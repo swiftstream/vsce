@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import { projectDirectory, sidebarTreeView } from "../extension"
-import { buildDevFolder } from "../streams/web/webStream"
-import { isClearedBuildCache, isClearingBuildCache, setClearedBuildCache, setClearingBuildCache } from '../streams/stream'
+import { currentStream, projectDirectory, sidebarTreeView } from '../extension'
+import { buildDevFolder } from '../streams/web/webStream'
+import { isClearedBuildCache, isClearingBuildCache } from '../streams/stream'
 import { print, status, StatusType } from '../streams/stream'
 import { isBuilding, LogLevel } from '../streams/stream'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
@@ -10,7 +10,7 @@ import { createSymlinkFoldersIfNeeded } from '../swift'
 export function clearBuildCacheCommand() {
 	if (isBuilding) return
 	if (isClearingBuildCache || isClearedBuildCache) return
-	setClearingBuildCache(true)
+	currentStream?.setClearingBuildCache(true)
 	sidebarTreeView?.refresh()
 	const swiftPMCache = `/root/.cache/org.swift.swiftpm`
 	const buildCacheFolder = `${projectDirectory}/.build`
@@ -26,13 +26,13 @@ export function clearBuildCacheCommand() {
 	createSymlinkFoldersIfNeeded()
 	measure.finish()
 	function afterClearing() {
-		setClearingBuildCache(false)
-		setClearedBuildCache(true)
+		currentStream?.setClearingBuildCache(false)
+		currentStream?.setClearedBuildCache(true)
 		sidebarTreeView?.refresh()
 		status('check', `Cleared Build Cache in ${measure.time}ms`, StatusType.Success)
 		print(`🧹 Cleared Build Cache in ${measure.time}ms`, LogLevel.Detailed)
 		setTimeout(() => {
-			setClearedBuildCache(false)
+			currentStream?.setClearedBuildCache(false)
 			sidebarTreeView?.refresh()
 		}, 1000)
 	}

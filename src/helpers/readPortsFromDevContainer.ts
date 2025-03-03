@@ -1,5 +1,5 @@
-import { Uri, workspace } from "vscode"
-import { innerDevCrawlerPort, innerDevPort, innerProdPort, projectDirectory } from "../extension"
+import { Uri, workspace } from 'vscode'
+import { innerDevCrawlerPort, innerDevPort, innerProdPort, projectDirectory } from '../extension'
 import JSON5 from 'json5'
 
 export async function readPortsFromDevContainer(): Promise<{

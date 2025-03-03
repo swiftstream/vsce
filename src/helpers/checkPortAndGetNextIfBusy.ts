@@ -1,4 +1,4 @@
-import { Socket } from "net";
+import { Socket } from 'net'
 
 // Credits to https://stackoverflow.com/a/66116887/1001057
 export async function checkPortAndGetNextIfBusy(port: number): Promise<number> {

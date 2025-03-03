@@ -1,8 +1,8 @@
 import * as fs from 'fs'
 import JSON5 from 'json5'
-import { window } from "vscode"
-import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort, setPendingNewDevCrawlerPort } from "../streams/web/webStream"
-import { innerDevCrawlerPort, projectDirectory } from "../extension"
+import { window } from 'vscode'
+import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort } from '../webStream'
+import { innerDevCrawlerPort, projectDirectory, webStream } from '../../../extension'
 
 export async function portDevCrawlerCommand() {
     const port = await window.showInputBox({
@@ -42,6 +42,6 @@ export async function portDevCrawlerCommand() {
             }
         }
         fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
-        setPendingNewDevCrawlerPort(`${port}`)
+        webStream?.setPendingNewDevCrawlerPort(`${port}`)
     }
 }

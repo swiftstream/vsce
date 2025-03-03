@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { isRunningCrawlServer, setRunningCrawlServer, WebStream } from './streams/web/webStream'
+import { isRunningCrawlServer, WebStream } from './streams/web/webStream'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { ShellExecution, Task, TaskProvider, tasks, TaskScope, Terminal } from 'vscode'
@@ -66,13 +66,13 @@ export class CrawlServer {
         tasks.onDidStartTaskProcess((e) => {
             if (e.execution.task.name === `Run ${CrawlTaskProvider.CrawlType}`) {
                 print(`🕵️‍♂️ Crawl Server started`, LogLevel.Detailed)
-                setRunningCrawlServer(true)
+                this.webStream.setRunningCrawlServer(true)
                 sidebarTreeView?.refresh()
             }
         })
         tasks.onDidEndTaskProcess((e) => {
             if (e.execution.task.name === `Run ${CrawlTaskProvider.CrawlType}`) {
-                setRunningCrawlServer(false)
+                this.webStream.setRunningCrawlServer(false)
                 sidebarTreeView?.refresh()
                 if (e.exitCode) {
                     if (e.exitCode === 0) {

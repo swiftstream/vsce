@@ -1,4 +1,27 @@
-import { currentToolchain, Stream } from "./streams/stream"
+import { isInContainer, sidebarTreeView } from './extension'
+import { Stream } from './streams/stream'
+
+export var currentToolchain: string = `${getToolchainNameFromURL()}`
+export var pendingNewToolchain: string | undefined
+
+export function getToolchainNameFromURL(url: string | undefined = undefined): string | undefined {
+    const value: string | undefined = url ?? process.env.S_TOOLCHAIN_URL_X86
+    if (!value) return 'undefined'
+    return value.split('/').pop()
+        ?.replace(/^swift-/, '')
+        .replace(/(\.tar\.gz|\.zip)$/, '')
+        .replace(/(-ubuntu20\.04|-aarch64|_x86_64|_aarch64|-a)/g, '')
+}
+
+export function setPendingNewToolchain(value: string | undefined) {
+    if (!isInContainer() && value) {
+        currentToolchain = value
+        pendingNewToolchain = undefined
+    } else {
+        pendingNewToolchain = value
+    }
+    sidebarTreeView?.refresh()
+}
 
 export class Toolchain {
     private path: string = `/swift/toolchains/${currentToolchain}`

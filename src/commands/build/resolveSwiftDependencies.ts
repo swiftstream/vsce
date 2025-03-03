@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { projectDirectory, currentStream } from "../../extension"
+import { projectDirectory, currentStream } from '../../extension'
 import { buildStatus, print } from '../../streams/stream'
 import { LogLevel } from '../../streams/stream'
 import { SwiftBuildType } from '../../swift'

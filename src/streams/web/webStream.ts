@@ -1,6 +1,6 @@
 import * as fs from 'fs'
-import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument } from 'vscode'
-import { SideTreeItem } from '../../sidebarTreeView'
+import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
+import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream } from '../../extension'
 import { readPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { createDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
@@ -8,14 +8,12 @@ import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
 import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
 import { buildReleaseCommand } from './commands/buildRelease'
-import { debugInChromeCommand } from '../../commands/debugInChrome'
-import { hotReloadCommand } from '../../commands/hotReload'
-import { hotRebuildCommand } from '../../commands/hotRebuild'
+import { debugInChromeCommand } from './commands/debugInChrome'
+import { hotReloadCommand } from './commands/hotReload'
 import { newFilePageCommand, newFileClassCommand, newFileJSCommand, newFileCSSCommand } from '../../commands/newFile'
-import { portDevCommand } from '../../commands/portDev'
-import { portProdCommand } from '../../commands/portProd'
-import { updateWebCommand, updateJSKitCommand } from '../../commands/suggestions'
-import { webDocumentationCommand, androidDocumentationCommand, vaporDocumentationCommand, hummingbirdDocumentationCommand, serverDocumentationCommand } from '../../commands/support'
+import { portDevCommand } from './commands/portDev'
+import { portProdCommand } from './commands/portProd'
+import { updateWebCommand, updateJSKitCommand } from './commands/suggestions'
 import { Gzip } from '../../gzip'
 import { Wasm } from '../../wasm'
 import { CrawlServer } from '../../crawlServer'
@@ -29,11 +27,12 @@ import { Heroku } from '../../clouds/heroku'
 import { Vercel } from '../../clouds/vercel'
 import { Yandex } from '../../clouds/yandex'
 import { Brotli } from '../../brotli'
-import { portDevCrawlerCommand } from '../../commands/portDevCrawler'
-import { debugGzipCommand } from '../../commands/debugGzip'
-import { debugBrotliCommand } from '../../commands/debugBrotli'
-import { LogLevel, print, Stream } from '../stream'
+import { portDevCrawlerCommand } from './commands/portDevCrawler'
+import { isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
 import { generateChecksum } from '../../helpers/filesHelper'
+import { debugGzipCommand } from './commands/debugGzip'
+import { debugBrotliCommand } from './commands/debugBrotli'
+import { startWebSocketServer } from './commands/webSocketServer'
 
 export var isHotBuildingCSS = false
 export var isHotBuildingJS = false
@@ -42,48 +41,13 @@ export var isHotBuildingSwift = false
 export var isAnyHotBuilding: () => boolean = () => {
 	return isHotBuildingCSS || isHotBuildingJS || isHotBuildingHTML || isHotBuildingSwift
 }
-export function setHotBuildingCSS(active: boolean) {
-	isHotBuildingCSS = active
-	isRecompilingCSS = active
-}
-export function setHotBuildingJS(active: boolean) {
-	isHotBuildingJS = active
-	isRecompilingJS = active
-}
-export function setHotBuildingHTML(active: boolean) {
-	isHotBuildingHTML = active
-	isRecompilingHTML = active
-}
-export function setHotBuildingSwift(active: boolean) {
-	isHotBuildingSwift = active
-	if (!active) {
-		isRecompilingApp = false
-		isRecompilingService = false
-	}
-}
 export var isDebugging = false
-export function setDebugging(active: boolean) {
-	isDebugging = active
-	commands.executeCommand('setContext', 'isDebugging', active)
-}
 export var isHotReloadEnabled = false
-export var isHotRebuildEnabled = false
 export var isDebugGzipEnabled = false
 export var isDebugBrotliEnabled = false
 export var isBuildingRelease = false
 export var abortBuildingRelease: (() => void) | undefined
-export function setAbortBuildingRelease(handler: () => void | undefined) {
-	abortBuildingRelease = handler
-}
-export function setBuildingRelease(active: boolean) {
-	if (!active) abortBuildingRelease = undefined
-	isBuildingRelease = active
-	commands.executeCommand('setContext', 'isBuildingRelease', active)
-}
 export var isRunningCrawlServer = false
-export function setRunningCrawlServer(active: boolean) {
-	isRunningCrawlServer = active
-}
 export var indexFile = 'main.html'
 export var webSourcesFolder = 'WebSources'
 export var appTargetName = 'App'
@@ -107,49 +71,18 @@ export var canRecompileServiceTarget = () => {
 	return fs.existsSync(`${projectDirectory}/.build/debug/${serviceWorkerTargetName}`)
 }
 export var isRecompilingApp = false
-export function setRecompilingApp(active: boolean) { isRecompilingApp = active }
-export var isRecompilingService = false
-export function setRecompilingService(active: boolean) { isRecompilingService = active }
-export var isRecompilingJS = false
-export var isRecompilingCSS = false
-export var isRecompilingHTML = false
-export var containsRecommendations = true // TODO: check if contains any recommendations
-export var containsUpdateForWeb = true // TODO: check if Web could be updated
-export var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
+var isRecompilingService = false
+var isRecompilingJS = false
+var isRecompilingCSS = false
+var isRecompilingHTML = false
+var containsUpdateForWeb = true // TODO: check if Web could be updated
+var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 export var currentDevPort: string = `${defaultWebDevPort}`
 export var currentDevCrawlerPort: string = `${defaultWebCrawlerPort}`
 export var currentProdPort: string = `${defaultWebProdPort}`
 export var pendingNewDevPort: string | undefined
 export var pendingNewDevCrawlerPort: string | undefined
 export var pendingNewProdPort: string | undefined
-
-export function setPendingNewDevPort(value: string | undefined) {
-	if (!isInContainer() && value) {
-		currentDevPort = value
-		pendingNewDevPort = undefined
-	} else {
-		pendingNewDevPort = value
-	}
-	sidebarTreeView?.refresh()
-}
-export function setPendingNewDevCrawlerPort(value: string | undefined) {
-	if (!isInContainer() && value) {
-		currentDevCrawlerPort = value
-		pendingNewDevCrawlerPort = undefined
-	} else {
-		pendingNewDevCrawlerPort = value
-	}
-	sidebarTreeView?.refresh()
-}
-export function setPendingNewProdPort(value: string | undefined) {
-	if (!isInContainer() && value) {
-		currentProdPort = value
-		pendingNewProdPort = undefined
-	} else {
-		pendingNewProdPort = value
-	}
-	sidebarTreeView?.refresh()
-}
 
 export class WebStream extends Stream {
 	public npmWeb: NPM
@@ -175,7 +108,7 @@ export class WebStream extends Stream {
 		super()
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			if (e.configuration.type.includes('chrome')) {
-				setDebugging(false)
+				this.setDebugging(false)
 				sidebarTreeView?.refresh()
 			}
 		}))
@@ -201,6 +134,7 @@ export class WebStream extends Stream {
 	private _configureWeb = async () => {
 		if (!projectDirectory) return
 		const readPorts = await readPortsFromDevContainer()
+		console.dir({ readPorts: readPorts })
 		currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
 		currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
 		currentDevCrawlerPort = `${readPorts.devCrawlerPort ?? defaultWebCrawlerPort}`
@@ -214,14 +148,13 @@ export class WebStream extends Stream {
 			pathToWasm: `${projectDirectory}/${buildDevFolder}/${appTargetName.toLowerCase()}.wasm`,
 			debug: true
 		})
+		startWebSocketServer()
 	}
 
 	async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
 		super.onDidChangeConfiguration(event)
 		if (event.affectsConfiguration('web.hotReload'))
 			this.setHotReload()
-		if (event.affectsConfiguration('web.hotRebuild'))
-			this.setHotRebuild()
 		if (event.affectsConfiguration('web.debugGzip'))
 			this.setDebugGzip()
 		if (event.affectsConfiguration('web.debugBrotli'))
@@ -237,12 +170,6 @@ export class WebStream extends Stream {
 	setHotReload(value?: boolean) {
 		isHotReloadEnabled = value ?? workspace.getConfiguration().get('web.hotReload') as boolean
 		if (value === true || value === false) workspace.getConfiguration().update('web.hotReload', value)
-		sidebarTreeView?.refresh()
-	}
-
-	setHotRebuild(value?: boolean) {
-		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('web.hotRebuild') as boolean
-		if (value === true || value === false) workspace.getConfiguration().update('web.hotRebuild', value)
 		sidebarTreeView?.refresh()
 	}
 
@@ -283,25 +210,103 @@ export class WebStream extends Stream {
 		sidebarTreeView?.refresh()
 	}
 
+	setRecompilingService(active: boolean) {
+		isRecompilingService = active
+	}
+
+
+	setHotBuildingCSS(active: boolean) {
+		isHotBuildingCSS = active
+		isRecompilingCSS = active
+	}
+	
+	setHotBuildingJS(active: boolean) {
+		isHotBuildingJS = active
+		isRecompilingJS = active
+	}
+	
+	setHotBuildingHTML(active: boolean) {
+		isHotBuildingHTML = active
+		isRecompilingHTML = active
+	}
+	
+	setHotBuildingSwift(active: boolean) {
+		isHotBuildingSwift = active
+		if (!active) {
+			isRecompilingApp = false
+			isRecompilingService = false
+		}
+	}
+	
+	setDebugging(active: boolean) {
+		isDebugging = active
+		commands.executeCommand('setContext', 'isDebugging', active)
+	}
+	
+	setAbortBuildingRelease(handler: () => void | undefined) {
+		abortBuildingRelease = handler
+	}
+	
+	setBuildingRelease(active: boolean) {
+		if (!active) abortBuildingRelease = undefined
+		isBuildingRelease = active
+		commands.executeCommand('setContext', 'isBuildingRelease', active)
+	}
+	
+	setRunningCrawlServer(active: boolean) {
+		isRunningCrawlServer = active
+	}
+	
+	setRecompilingApp(active: boolean) {
+		isRecompilingApp = active
+	}
+	
+	setPendingNewDevPort(value: string | undefined) {
+		if (!isInContainer() && value) {
+			currentDevPort = value
+			pendingNewDevPort = undefined
+		} else {
+			pendingNewDevPort = value
+		}
+		sidebarTreeView?.refresh()
+	}
+
+	setPendingNewDevCrawlerPort(value: string | undefined) {
+		if (!isInContainer() && value) {
+			currentDevCrawlerPort = value
+			pendingNewDevCrawlerPort = undefined
+		} else {
+			pendingNewDevCrawlerPort = value
+		}
+		sidebarTreeView?.refresh()
+	}
+	
+	setPendingNewProdPort(value: string | undefined) {
+		if (!isInContainer() && value) {
+			currentProdPort = value
+			pendingNewProdPort = undefined
+		} else {
+			pendingNewProdPort = value
+		}
+		sidebarTreeView?.refresh()
+	}
+
 	registerCommands() {
 		super.registerCommands()
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, buildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotReload, hotReloadCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugGzip, debugGzipCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugBrotli, debugBrotliCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFilePage, newFilePageCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileClass, newFileClassCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileJS, newFileJSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileSCSS, newFileCSSCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, buildReleaseCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileApp, () => {
-			hotRebuildSwift({ target: appTargetName })
+			hotRebuildSwift(this, { target: appTargetName })
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileService, () => {
-			hotRebuildSwift({ target: serviceWorkerTargetName })
+			hotRebuildSwift(this, { target: serviceWorkerTargetName })
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, hotRebuildJS))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, hotRebuildCSS))
@@ -311,11 +316,6 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevCrawlerPort, portDevCrawlerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateWeb, updateWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WebDocumentation, webDocumentationCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AndroidDocumentation, androidDocumentationCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.VaporDocumentation, vaporDocumentationCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HummingbirdDocumentation, hummingbirdDocumentationCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ServerDocumentation, serverDocumentationCommand))
 		
 		// Cloud Providers
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddFirebase, this.firebase.add))
@@ -397,7 +397,7 @@ export class WebStream extends Stream {
 				// Package.swift
 				if (document.uri.path === `${projectDirectory}/Package.swift`) {
 					await goThroughHashCheck(this, async () => {
-						await hotRebuildSwift()
+						await hotRebuildSwift(this)
 					})
 				}
 				// Swift sources
@@ -405,7 +405,7 @@ export class WebStream extends Stream {
 					const target = `${document.uri.path}`.replace(`${projectDirectory}/Sources/`, '').split('/')[0]
 					if (target) {
 						await goThroughHashCheck(this, async () => {
-							await hotRebuildSwift({ target: target })
+							await hotRebuildSwift(this, { target: target })
 						})
 					}
 				}
@@ -415,19 +415,19 @@ export class WebStream extends Stream {
 				// CSS
 				if (['css', 'scss', 'sass'].includes(document.languageId)) {
 					await goThroughHashCheck(this, async () => {
-						await hotRebuildCSS()
+						await hotRebuildCSS(this)
 					})
 				}
 				// JavaScript
 				else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesFolder}/tsconfig.json`) {
 					await goThroughHashCheck(this, async () => {
-						await hotRebuildJS({ path: document.uri.path })
+						await hotRebuildJS(this, { path: document.uri.path })
 					})
 				}
 				// HTML
 				else if (['html'].includes(document.languageId.toLowerCase())) {
 					await goThroughHashCheck(this, async () => {
-						await hotRebuildHTML()
+						await hotRebuildHTML(this)
 					})
 				}
 			}
@@ -437,19 +437,19 @@ export class WebStream extends Stream {
 				if (document.uri.path == devContainerPath) {
 					const readPorts = await readPortsFromDevContainer()
 					if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
-						setPendingNewDevPort(`${readPorts.devPort}`)
+						this.setPendingNewDevPort(`${readPorts.devPort}`)
 					} else {
-						setPendingNewDevPort(undefined)
+						this.setPendingNewDevPort(undefined)
 					}
 					if (readPorts.devCrawlerPortPresent && `${readPorts.devCrawlerPort}` != currentDevCrawlerPort) {
-						setPendingNewDevCrawlerPort(`${readPorts.devCrawlerPort}`)
+						this.setPendingNewDevCrawlerPort(`${readPorts.devCrawlerPort}`)
 					} else {
-						setPendingNewDevCrawlerPort(undefined)
+						this.setPendingNewDevCrawlerPort(undefined)
 					}
 					if (readPorts.prodPortPresent && `${readPorts.prodPort}` != currentProdPort) {
-						setPendingNewProdPort(`${readPorts.prodPort}`)
+						this.setPendingNewProdPort(`${readPorts.prodPort}`)
 					} else {
-						setPendingNewProdPort(undefined)
+						this.setPendingNewProdPort(undefined)
 					}
 				}
 			}
@@ -473,10 +473,215 @@ export class WebStream extends Stream {
 	}
 
 	async buildDebug() {
-		await buildCommand()
+		await buildCommand(this)
 	}
 
 	async buildRelease(successCallback?: any) {
 		await buildReleaseCommand(successCallback)
+	}
+
+	// MARK: Side Bar Tree View Items
+
+	async debugActionItems(): Promise<Dependency[]> {
+		return [
+			new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
+			new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console')
+		]
+	}
+
+	async debugOptionItems(): Promise<Dependency[]> {
+		return [
+			new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline'),
+			new Dependency(SideTreeItem.DebugGzip, 'Gzip', isDebugGzipEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugGzipEnabled ? 'pass::charts.green' : 'circle-large-outline'),
+			new Dependency(SideTreeItem.DebugBrotli, 'Brotli', isDebugBrotliEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugBrotliEnabled ? 'pass::charts.green' : 'circle-large-outline')
+		]
+	}
+
+	async releaseItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		if (this.firebase.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('firebase3')))
+		if (this.azure.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Azure, 'Azure', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('azure3')))
+		if (this.alibaba.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Alibaba, 'Alibaba Cloud', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('alibabacloud3')))
+		if (this.vercel.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Vercel, 'Vercel', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('vercel-dark3', 'vercel-light3')))
+		if (this.flyio.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.FlyIO, 'Fly.io', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('flyio3')))
+		if (this.cloudflare.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Cloudflare, 'Cloudflare', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('cloudflare3')))
+		if (this.digitalocean.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.DigitalOcean, 'DigitalOcean', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('digitalocean3')))
+		if (this.heroku.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.Heroku, 'Heroku', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('heroku3')))
+		if (this.yandex.isInstalled === true)
+			items.push(new Dependency(SideTreeItem.YandexCloud, 'Yandex Cloud', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('yandexcloud3')))
+		var inactiveProviders: boolean[] = [
+			this.alibaba.isInstalled === false,
+			this.azure.isInstalled === false,
+			this.cloudflare.isInstalled === false,
+			this.digitalocean.isInstalled === false,
+			this.heroku.isInstalled === false,
+			this.vercel.isInstalled === false,
+			this.yandex.isInstalled === false
+		]
+		var activeProviders: boolean[] = [
+			this.firebase.isInstalled === false,
+			this.flyio.isInstalled === false
+		]
+		if (activeProviders.includes(true)) {
+			items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+		}
+		return items
+	}
+
+	async projectItems(): Promise<Dependency[]> {
+		// return [
+		// 	new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
+		// 	new Dependency(SideTreeItem.NewFileClass, 'New Class', '', TreeItemCollapsibleState.None, 'file-code'),
+		// 	new Dependency(SideTreeItem.NewFileJS, 'New JS', '', TreeItemCollapsibleState.None, 'file-code'),
+		// 	new Dependency(SideTreeItem.NewFileSCSS, 'New CSS', '', TreeItemCollapsibleState.None, 'file-code')
+		// ]
+		return []
+	}
+
+	async maintenanceItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		if (await containsAppTarget() && canRecompileAppTarget())
+			items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', appTargetName, TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
+		if (await containsServiceTarget() && canRecompileServiceTarget())
+			items.push(new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', serviceWorkerTargetName, TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'))
+		items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
+		items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingCSS ? 'sync~spin' : 'symbol-color'))
+		items.push(new Dependency(SideTreeItem.RecompileHTML, isRecompilingHTML ? 'Recompiling' : 'Recompile', 'HTML', TreeItemCollapsibleState.None, isRecompilingHTML ? 'sync~spin' : 'compass'))
+		return items
+	}
+
+	async settingsItems(): Promise<Dependency[]> {
+		return [
+			new Dependency(SideTreeItem.DevPort, 'Port (debug)', `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
+			new Dependency(SideTreeItem.ProdPort, 'Port (release)', `${currentProdPort} ${pendingNewProdPort && pendingNewProdPort != currentProdPort ? `(${pendingNewProdPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
+			new Dependency(SideTreeItem.DevCrawlerPort, 'Port (crawler)', `${currentDevCrawlerPort} ${pendingNewDevCrawlerPort && pendingNewDevCrawlerPort != currentDevCrawlerPort ? `(${pendingNewDevCrawlerPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower')
+		]
+	}
+
+	async isThereAnyRecommendation(): Promise<boolean> {
+		return false
+	}
+
+	async recommendationsItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		if (containsUpdateForWeb)
+			items.push(new Dependency(SideTreeItem.UpdateWeb, 'Update Web to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		if (containsUpdateForJSKit)
+			items.push(new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		if (items.length == 0)
+			items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
+		return items
+	}
+
+	async customItems(element: Dependency): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		switch (element.id) {
+		case SideTreeItem.Azure:
+			if (await this.azure.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.AzureSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.AzureDeploy, this.azure.isLoggingIn ? 'Logging in' : this.azure.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.azure.isLoggingIn || this.azure.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.AzureDeintegrate, this.azure.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.azure.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.Alibaba:
+			if (await this.alibaba.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.AlibabaSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.AlibabaDeploy, this.alibaba.isLoggingIn ? 'Logging in' : this.alibaba.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.alibaba.isLoggingIn || this.alibaba.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.AlibabaDeintegrate, this.alibaba.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.alibaba.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.Vercel:
+			if (await this.vercel.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.VercelSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.VercelDeploy, this.vercel.isLoggingIn ? 'Logging in' : this.vercel.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.vercel.isLoggingIn || this.vercel.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.VercelDeintegrate, this.vercel.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.vercel.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.Firebase:
+			if (await this.firebase.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.FirebaseDeploy, this.firebase.isLoggingIn ? 'Logging in' : this.firebase.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.firebase.isLoggingIn || this.firebase.isDeploying ? 'sync~spin' : 'cloud-upload'))
+				const fullDeployMode = this.firebase.getFullDeployMode()
+				if (fullDeployMode != undefined) {
+					items.push(new Dependency(SideTreeItem.FirebaseDeployMode, 'Deploy Mode', fullDeployMode ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings'))
+				}
+			}
+			items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, this.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.FlyIO:
+			if (await this.flyio.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.FlyIOSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.FlyIODeploy, this.flyio.isLoggingIn ? 'Logging in' : this.flyio.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.flyio.isLoggingIn || this.flyio.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.FlyIODeintegrate, this.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.Cloudflare:
+			if (await this.cloudflare.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.CloudflareSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.CloudflareDeploy, this.cloudflare.isLoggingIn ? 'Logging in' : this.cloudflare.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.cloudflare.isLoggingIn || this.cloudflare.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.CloudflareDeintegrate, this.cloudflare.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.cloudflare.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.DigitalOcean:
+			if (await this.digitalocean.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.DigitalOceanSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.DigitalOceanDeploy, this.digitalocean.isLoggingIn ? 'Logging in' : this.digitalocean.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.digitalocean.isLoggingIn || this.digitalocean.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.DigitalOceanDeintegrate, this.digitalocean.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.digitalocean.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.Heroku:
+			if (await this.heroku.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.HerokuSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.HerokuDeploy, this.heroku.isLoggingIn ? 'Logging in' : this.heroku.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.heroku.isLoggingIn || this.heroku.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.HerokuDeintegrate, this.heroku.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.heroku.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.YandexCloud:
+			if (await this.yandex.isPresentInProject() === false) {
+				items.push(new Dependency(SideTreeItem.YandexCloudSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
+			} else {
+				items.push(new Dependency(SideTreeItem.YandexCloudDeploy, this.yandex.isLoggingIn ? 'Logging in' : this.yandex.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.yandex.isLoggingIn || this.yandex.isDeploying ? 'sync~spin' : 'cloud-upload'))
+			}
+			items.push(new Dependency(SideTreeItem.YandexCloudDeintegrate, this.yandex.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.yandex.isDeintegrating ? 'sync~spin' : 'trash'))
+			break
+		case SideTreeItem.AddCloudProvider:
+			if (this.firebase.isInstalled === false)
+				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', this.firebase.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('firebase3')))
+			// if (this.azure.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddAzure, 'Azure', this.azure.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('azure3')))
+			// if (this.alibaba.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddAlibaba, 'Alibaba Cloud', this.alibaba.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('alibabacloud3')))
+			// if (this.vercel.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddVercel, 'Vercel', this.vercel.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('vercel-dark3', 'vercel-light3')))
+			if (this.flyio.isInstalled === false)
+				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', this.flyio.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('flyio3')))
+			// if (this.cloudflare.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddCloudflare, 'Cloudflare', this.cloudflare.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('cloudflare3')))
+			// if (this.digitalocean.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddDigitalOcean, 'DigitalOcean', this.digitalocean.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('digitalocean3')))
+			// if (this.heroku.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddHeroku, 'Heroku', this.heroku.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('heroku3')))
+			// if (this.yandex.isInstalled === false)
+			// 	items.push(new Dependency(SideTreeItem.AddYandexCloud, 'Yandex Cloud', this.yandex.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('yandexcloud3')))
+			break
+		default: break
+		}
+		return items
 	}
 }

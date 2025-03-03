@@ -51,17 +51,17 @@
           "default": "Normal",
           "uniqueItems": true
         },
-        "web.hotReload": {
+        "swift.hotRebuild": {
           "order": 2,
           "type": "boolean",
           "default": true,
-          "description": "Hot reload in the browser whenever any file saved"
+          "description": "Hot rebuild whenever any file saved"
         },
-        "web.hotRebuild": {
+        "web.hotReload": {
           "order": 3,
           "type": "boolean",
           "default": true,
-          "description": "Hot rebuild whenever any file saved"
+          "description": "Hot reload in the browser whenever any file saved"
         },
         "web.debugGzip": {
           "order": 4,

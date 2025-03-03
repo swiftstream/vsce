@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws'
-import { ExtensionStream, extensionStream } from '../extension'
-import { isHotReloadEnabled } from '../streams/web/webStream'
+import { ExtensionStream, extensionStream } from '../../../extension'
+import { isHotReloadEnabled } from '../webStream'
 
 let wss: WebSocketServer | undefined
 

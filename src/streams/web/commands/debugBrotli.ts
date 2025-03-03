@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import path from 'path'
-import { projectDirectory, sidebarTreeView, webStream } from "../extension"
-import { buildDevFolder, isDebugBrotliEnabled } from "../streams/web/webStream"
-import { print } from '../streams/stream'
-import { LogLevel } from '../streams/stream'
+import { projectDirectory, sidebarTreeView, webStream } from '../../../extension'
+import { buildDevFolder, isDebugBrotliEnabled } from '../../../streams/web/webStream'
+import { print } from '../../../streams/stream'
+import { LogLevel } from '../../../streams/stream'
 
 export function debugBrotliCommand() {
     const newValue = !isDebugBrotliEnabled

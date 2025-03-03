@@ -1,5 +1,7 @@
-import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent } from 'vscode'
-import { Stream } from '../stream'
+import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from 'vscode'
+import { LogLevel, print, Stream } from '../stream'
+import { Dependency } from '../../sidebarTreeView'
+import { isInContainer } from '../../extension'
 
 export class EmbeddedStream extends Stream {
     constructor() {
@@ -31,4 +33,30 @@ export class EmbeddedStream extends Stream {
         super.onDidDeleteFiles(event)
 
     }
+        
+    async onDidSaveTextDocument(document: TextDocument) {
+        if (!isInContainer) return
+    }
+
+    // MARK: Building
+
+    async buildDebug() {
+        print('stream.build not implemented', LogLevel.Detailed)
+    }
+
+    async buildRelease(successCallback?: any) {
+        print('stream.buildRelease not implemented', LogLevel.Detailed)
+    }
+
+    // MARK: Side Bar Tree View Items
+
+    async debugActionItems(): Promise<Dependency[]> { return [] }
+    async debugOptionItems(): Promise<Dependency[]> { return [] }
+    async releaseItems(): Promise<Dependency[]> { return [] }
+    async projectItems(): Promise<Dependency[]> { return [] }
+    async maintenanceItems(): Promise<Dependency[]> { return [] }
+    async settingsItems(): Promise<Dependency[]> { return [] }
+    async isThereAnyRecommendation(): Promise<boolean> { return false }
+    async recommendationsItems(): Promise<Dependency[]> { return [] }
+    async customItems(element: Dependency): Promise<Dependency[]> { return [] }
 }

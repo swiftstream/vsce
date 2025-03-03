@@ -1,31 +1,30 @@
 import * as fs from 'fs'
-import { projectDirectory, sidebarTreeView, currentStream } from '../../../extension'
-import { appTargetName, buildProdFolder, currentProdPort, isBuildingRelease, serviceWorkerTargetName, setBuildingRelease } from '../../../streams/web/webStream'
+import { projectDirectory, sidebarTreeView } from '../../../extension'
+import { appTargetName, buildProdFolder, currentProdPort, isBuildingRelease, serviceWorkerTargetName, WebStream } from '../../../streams/web/webStream'
 import { buildStatus, clearStatus, print, status, StatusType } from '../../../streams/stream'
 import { LogLevel } from '../../../streams/stream'
 import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../../../swift'
+import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType } from '../../../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
 import { buildWebSourcesForAllTargets } from './build/buildWebSources'
 import { proceedServiceWorkerManifest } from './build/proceedServiceWorkerManifest'
-import { proceedBundledResources } from "./build/proceedBundledResources"
-import { proceedCSS } from "./build/proceedCSS"
-import { proceedHTML } from "./build/proceedHTML"
-import { proceedIndex } from "./build/proceedIndex"
-import { proceedWasmFile } from "./build/proceedWasmFile"
-import { awaitGzipping, shouldAwaitGzipping } from "./build/awaitGzipping"
-import { proceedAdditionalJS } from "./build/proceedAdditionalJS"
+import { proceedBundledResources } from './build/proceedBundledResources'
+import { proceedCSS } from './build/proceedCSS'
+import { proceedHTML } from './build/proceedHTML'
+import { proceedIndex } from './build/proceedIndex'
+import { proceedWasmFile } from './build/proceedWasmFile'
+import { awaitGzipping, shouldAwaitGzipping } from './build/awaitGzipping'
+import { proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
-export async function buildReleaseCommand(successCallback?: any) {
-	if (!currentStream) return
+export async function buildReleaseCommand(webStream: WebStream, successCallback?: any) {
 	if (isBuildingRelease) return
-	setBuildingRelease(true)
+	webStream.setBuildingRelease(true)
 	sidebarTreeView?.refresh()
 	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
@@ -64,13 +63,13 @@ export async function buildReleaseCommand(successCallback?: any) {
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 			if (result == 'Retry') {
 				print(`Going to retry release build command`, LogLevel.Verbose)
-				buildReleaseCommand()
+				buildReleaseCommand(webStream)
 			}
 			return
 		}
 		// Phase 3: Retrieve executable Swift targets
 		print('🔳 Phase 3: Retrieve executable Swift targets', LogLevel.Verbose)
-		const targetsDump = await currentStream.swift.getTargets()
+		const targetsDump = await webStream.swift.getTargets()
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0
@@ -165,11 +164,11 @@ export async function buildReleaseCommand(successCallback?: any) {
 		print(`✅ Release Build Succeeded in ${measure.time}ms`)
 		print(`🌐 Test in browser at https://127.0.0.1:${currentProdPort}`)
 		console.log(`Release Build Succeeded in ${measure.time}ms`)
-		setBuildingRelease(false)
+		webStream.setBuildingRelease(false)
 		sidebarTreeView?.refresh()
 		if (successCallback) successCallback()
 	} catch (error: any) {
-		setBuildingRelease(false)
+		webStream.setBuildingRelease(false)
 		sidebarTreeView?.refresh()
 		const text = `Release Build Failed`
 		if (isString(error)) {

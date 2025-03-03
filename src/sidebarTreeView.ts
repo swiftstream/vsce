@@ -1,11 +1,12 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
-import { currentDevPort, isBuildingRelease, isDebugging, isHotRebuildEnabled, isHotReloadEnabled, isRecompilingApp, isRecompilingCSS, isRecompilingJS, isRecompilingService, containsUpdateForWeb as containsUpdateForWeb, containsUpdateForJSKit, containsServiceTarget, pendingNewDevPort, pendingNewProdPort, currentProdPort, isAnyHotBuilding, serviceWorkerTargetName, appTargetName, containsAppTarget, isRecompilingHTML, canRecompileAppTarget, canRecompileServiceTarget, isRunningCrawlServer, currentDevCrawlerPort, pendingNewDevCrawlerPort, isDebugGzipEnabled, isDebugBrotliEnabled, WebStream } from './streams/web/webStream'
-import { isBuilding, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel, currentToolchain, pendingNewToolchain } from './streams/stream'
-import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream, webStream } from './extension'
-import { doesPackageCheckedOut, KnownPackage } from './commands/build/helpers'
+import { isBuildingRelease, isAnyHotBuilding } from './streams/web/webStream'
+import { isBuilding, isHotRebuildEnabled, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel } from './streams/stream'
+import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
+import { isCIS } from './helpers/language'
+import { currentToolchain, pendingNewToolchain } from './toolchain'
 
 export interface ErrorInFile {
 	type: string,
@@ -94,16 +95,23 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			return items
 		}
 		if (element == null) {
-			items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, TreeItemCollapsibleState.Expanded, 'coffee', false))
-			items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Collapsed, 'cloud-upload', false))
-			// items.push(new Dependency(SideTreeItem.Project, 'Project', '', TreeItemCollapsibleState.Collapsed, 'package', false))
-			items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
-			items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
-			// items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
-			items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
-			const errorsItem = this.fillNewErrors()
-			if (errorsItem) {
-				items.push(errorsItem)
+			if (currentStream) {
+				items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, TreeItemCollapsibleState.Expanded, 'coffee', false))
+				items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Collapsed, 'cloud-upload', false))
+				const projectItems = await currentStream!.projectItems()
+				if (projectItems.length > 0) {
+					items.push(new Dependency(SideTreeItem.Project, 'Project', '', TreeItemCollapsibleState.Collapsed, 'package', false))
+				}
+				items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
+				items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
+				if (await currentStream?.isThereAnyRecommendation() == true) {
+					items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
+				}
+				items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
+				const errorsItem = this.fillNewErrors()
+				if (errorsItem) {
+					items.push(errorsItem)
+				}
 			}
 		} else if (element?.id == SideTreeItem.Errors) {
 			for (let i = 0; i < this.errors.length; i++) {
@@ -134,193 +142,52 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					items.push(new Dependency(commandId, `${place.line}: ${place.description}`, '', TreeItemCollapsibleState.None, place.type == 'note' ? 'edit::charts.white' : place.type == 'warning' ? 'alert::charts.orange' : 'error::charts.red', true))
 				}
 			}
-		} else if (element?.id == SideTreeItem.Debug) {
-			items = []
-			items.push(new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
-			if (currentStream instanceof WebStream) {
-				items.push(new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'))
-				items.push(new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console'))
-			}			
-			items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-			if (currentStream instanceof WebStream) {
-				items.push(new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-				items.push(new Dependency(SideTreeItem.DebugGzip, 'Gzip', isDebugGzipEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugGzipEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-				items.push(new Dependency(SideTreeItem.DebugBrotli, 'Brotli', isDebugBrotliEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugBrotliEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-			}
-		} else if (element.id == SideTreeItem.Release) {
-			items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
-			if (currentStream instanceof WebStream) {
-				if (webStream?.firebase.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('firebase3')))
-				if (webStream?.azure.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Azure, 'Azure', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('azure3')))
-				if (webStream?.alibaba.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Alibaba, 'Alibaba Cloud', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('alibabacloud3')))
-				if (webStream?.vercel.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Vercel, 'Vercel', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('vercel-dark3', 'vercel-light3')))
-				if (webStream?.flyio.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.FlyIO, 'Fly.io', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('flyio3')))
-				if (webStream?.cloudflare.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Cloudflare, 'Cloudflare', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('cloudflare3')))
-				if (webStream?.digitalocean.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.DigitalOcean, 'DigitalOcean', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('digitalocean3')))
-				if (webStream?.heroku.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.Heroku, 'Heroku', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('heroku3')))
-				if (webStream?.yandex.isInstalled === true)
-					items.push(new Dependency(SideTreeItem.YandexCloud, 'Yandex Cloud', '', TreeItemCollapsibleState.Collapsed, this.fileIcon('yandexcloud3')))
-				var inactiveProviders: boolean[] = [
-					webStream?.alibaba.isInstalled === false,
-					webStream?.azure.isInstalled === false,
-					webStream?.cloudflare.isInstalled === false,
-					webStream?.digitalocean.isInstalled === false,
-					webStream?.heroku.isInstalled === false,
-					webStream?.vercel.isInstalled === false,
-					webStream?.yandex.isInstalled === false
-				]
-				var activeProviders: boolean[] = [
-					webStream?.firebase.isInstalled === false,
-					webStream?.flyio.isInstalled === false
-				]
-				if (activeProviders.includes(true)) {
-					items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
+		} else if (element?.id) {
+			switch (element.id) {
+			case SideTreeItem.Debug:
+				// Actions
+				items.push(new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
+				if (currentStream) items.push(...(await currentStream.debugActionItems()))
+				// Options
+				items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
+				if (currentStream) items.push(...(await currentStream.debugOptionItems()))
+				break
+			case SideTreeItem.Release:
+				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
+				if (currentStream) items.push(...(await currentStream.releaseItems()))
+				break
+			case SideTreeItem.Project:
+				if (currentStream) items.push(...(await currentStream.projectItems()))
+				break
+			case SideTreeItem.Maintenance:
+				items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
+				if (currentStream) items.push(...(await currentStream.maintenanceItems()))
+				break
+			case SideTreeItem.Settings:
+				items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
+				if (currentStream) items.push(...(await currentStream.settingsItems()))
+				items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
+				break
+			case SideTreeItem.Recommendations:
+				if (currentStream) items.push(...(await currentStream.recommendationsItems()))
+				break
+			case SideTreeItem.Support:
+				items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
+					items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
+					items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
+					items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
 				}
-			}
-		} else if (element.id == SideTreeItem.Firebase) {
-			if (await webStream?.firebase.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.FirebaseDeploy, webStream.firebase.isLoggingIn ? 'Logging in' : webStream.firebase.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.firebase.isLoggingIn || webStream.firebase.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				const fullDeployMode = webStream?.firebase.getFullDeployMode()
-				if (fullDeployMode != undefined) {
-					items.push(new Dependency(SideTreeItem.FirebaseDeployMode, 'Deploy Mode', fullDeployMode ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings'))
+				items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
+				if (isCIS()) {
+					items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
 				}
+				items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
+				break
+			default: break
 			}
-			items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, webStream?.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.Azure) {
-			if (await webStream?.azure.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.AzureSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.AzureDeploy, webStream.azure.isLoggingIn ? 'Logging in' : webStream.azure.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.azure.isLoggingIn || webStream.azure.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.AzureDeintegrate, webStream?.azure.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.azure.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.Alibaba) {
-			if (await webStream?.alibaba.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.AlibabaSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.AlibabaDeploy, webStream.alibaba.isLoggingIn ? 'Logging in' : webStream.alibaba.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.alibaba.isLoggingIn || webStream.alibaba.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.AlibabaDeintegrate, webStream?.alibaba.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.alibaba.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.Vercel) {
-			if (await webStream?.vercel.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.VercelSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.VercelDeploy, webStream.vercel.isLoggingIn ? 'Logging in' : webStream.vercel.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.vercel.isLoggingIn || webStream.vercel.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.VercelDeintegrate, webStream?.vercel.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.vercel.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.FlyIO) {
-			if (await webStream?.flyio.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.FlyIOSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.FlyIODeploy, webStream.flyio.isLoggingIn ? 'Logging in' : webStream.flyio.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.flyio.isLoggingIn || webStream.flyio.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.FlyIODeintegrate, webStream?.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.Cloudflare) {
-			if (await webStream?.cloudflare.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.CloudflareSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.CloudflareDeploy, webStream.cloudflare.isLoggingIn ? 'Logging in' : webStream.cloudflare.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.cloudflare.isLoggingIn || webStream.cloudflare.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.CloudflareDeintegrate, webStream?.cloudflare.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.cloudflare.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.DigitalOcean) {
-			if (await webStream?.digitalocean.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.DigitalOceanSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.DigitalOceanDeploy, webStream.digitalocean.isLoggingIn ? 'Logging in' : webStream.digitalocean.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.digitalocean.isLoggingIn || webStream.digitalocean.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.DigitalOceanDeintegrate, webStream?.digitalocean.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.digitalocean.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.Heroku) {
-			if (await webStream?.heroku.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.HerokuSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.HerokuDeploy, webStream.heroku.isLoggingIn ? 'Logging in' : webStream.heroku.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.heroku.isLoggingIn || webStream.heroku.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.HerokuDeintegrate, webStream?.heroku.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.heroku.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.YandexCloud) {
-			if (await webStream?.yandex.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.YandexCloudSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else if (webStream) {
-				items.push(new Dependency(SideTreeItem.YandexCloudDeploy, webStream.yandex.isLoggingIn ? 'Logging in' : webStream.yandex.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, webStream.yandex.isLoggingIn || webStream.yandex.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.YandexCloudDeintegrate, webStream?.yandex.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, webStream?.yandex.isDeintegrating ? 'sync~spin' : 'trash'))
-		} else if (element.id == SideTreeItem.AddCloudProvider) {
-			if (webStream?.firebase.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', webStream?.firebase.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('firebase3')))
-			// if (webStream?.azure.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAzure, 'Azure', webStream?.azure.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('azure3')))
-			// if (webStream?.alibaba.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAlibaba, 'Alibaba Cloud', webStream?.alibaba.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('alibabacloud3')))
-			// if (webStream?.vercel.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddVercel, 'Vercel', webStream?.vercel.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('vercel-dark3', 'vercel-light3')))
-			if (webStream?.flyio.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', webStream?.flyio.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('flyio3')))
-			// if (webStream?.cloudflare.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddCloudflare, 'Cloudflare', webStream?.cloudflare.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('cloudflare3')))
-			// if (webStream?.digitalocean.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddDigitalOcean, 'DigitalOcean', webStream?.digitalocean.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('digitalocean3')))
-			// if (webStream?.heroku.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddHeroku, 'Heroku', webStream?.heroku.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('heroku3')))
-			// if (webStream?.yandex.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddYandexCloud, 'Yandex Cloud', webStream?.yandex.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, this.fileIcon('yandexcloud3')))
-		} else if (element?.id == SideTreeItem.Project) {
-			items = [
-				new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
-				new Dependency(SideTreeItem.NewFileClass, 'New Class', '', TreeItemCollapsibleState.None, 'file-code'),
-				new Dependency(SideTreeItem.NewFileJS, 'New JS', '', TreeItemCollapsibleState.None, 'file-code'),
-				new Dependency(SideTreeItem.NewFileSCSS, 'New CSS', '', TreeItemCollapsibleState.None, 'file-code')
-			]
-		} else if (element.id == SideTreeItem.Maintenance) {
-			items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
-			if (currentStream instanceof WebStream) {
-				if (await containsAppTarget() && canRecompileAppTarget())
-					items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', appTargetName, TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
-					if (await containsServiceTarget() && canRecompileServiceTarget())
-						items.push(new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', serviceWorkerTargetName, TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'))
-					items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
-					items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingCSS ? 'sync~spin' : 'symbol-color'))
-					items.push(new Dependency(SideTreeItem.RecompileHTML, isRecompilingHTML ? 'Recompiling' : 'Recompile', 'HTML', TreeItemCollapsibleState.None, isRecompilingHTML ? 'sync~spin' : 'compass'))
-			}
-		} else if (element.id == SideTreeItem.Settings) {
-			items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
-			items.push(new Dependency(SideTreeItem.DevPort, 'Port (debug)', `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
-			if (currentStream instanceof WebStream) {
-				items.push(new Dependency(SideTreeItem.ProdPort, 'Port (release)', `${currentProdPort} ${pendingNewProdPort && pendingNewProdPort != currentProdPort ? `(${pendingNewProdPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
-				items.push(new Dependency(SideTreeItem.DevCrawlerPort, 'Port (crawler)', `${currentDevCrawlerPort} ${pendingNewDevCrawlerPort && pendingNewDevCrawlerPort != currentDevCrawlerPort ? `(${pendingNewDevCrawlerPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'))
-			}
-			items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
-		} else if (element?.id == SideTreeItem.Recommendations) {
-			if (containsUpdateForWeb)
-				items.push(new Dependency(SideTreeItem.UpdateWeb, 'Update Web to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
-			if (containsUpdateForJSKit)
-				items.push(new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
-			if (items.length == 0)
-				items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
-		} else if (element?.id == SideTreeItem.Support) {
-			if (extensionStream == ExtensionStream.Web) {
-				items.push(new Dependency(SideTreeItem.WebDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-			} else if (extensionStream == ExtensionStream.Android) {
-				items.push(new Dependency(SideTreeItem.AndroidDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-			} else if (extensionStream == ExtensionStream.Server) {
-				if (doesPackageCheckedOut(KnownPackage.Vapor)) {
-					items.push(new Dependency(SideTreeItem.VaporDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-				} else if (doesPackageCheckedOut(KnownPackage.Hummingbird)) {
-					items.push(new Dependency(SideTreeItem.HummingbirdDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-				} else {
-					items.push(new Dependency(SideTreeItem.ServerDocumentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-				}
-			}
-			items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
-			items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
-			items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
+		} else if (currentStream && element) {
+			items.push(...(await currentStream.customItems(element)))
 		}
 		return items
 	}

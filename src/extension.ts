@@ -1,18 +1,17 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSON5 from 'json5'
-import { ExtensionContext, TextDocumentChangeEvent, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
+import { ExtensionContext, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
 import { ExtensionState } from './enums/ExtensionState'
 import { selectFolder } from './helpers/selectFolderHelper'
-import { reopenInContainerCommand, whyReopenInContainerCommand } from "./commands/reopenInContainer"
-import { startNewProjectWizard } from "./wizards/startNewProjectWizard"
+import { reopenInContainerCommand, whyReopenInContainerCommand } from './commands/reopenInContainer'
+import { startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView, SideTreeItem } from './sidebarTreeView'
 import { abortBuildingRelease, WebStream } from './streams/web/webStream'
 import { abortBuilding, Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
 import { buildCommand } from './streams/web/commands/build'
-import { debugInChromeCommand } from './commands/debugInChrome'
-import { startWebSocketServer } from './commands/webSocketServer'
+import { debugInChromeCommand } from './streams/web/commands/debugInChrome'
 import { openProject } from './helpers/openProject'
 import { AndroidStream } from './streams/android/androidStream'
 import { EmbeddedStream } from './streams/embedded/embeddedStream'
@@ -66,7 +65,7 @@ export async function activate(context: ExtensionContext) {
 	workspace.onDidSaveTextDocument((document) => {
 		currentStream?.onDidSaveTextDocument(document)
 	})
-	
+
 	// Open folder name
 	let folderName = workspace.name
 
@@ -181,7 +180,6 @@ const activateServerStream = async (): Promise<boolean> => {
 const activateWebStream = async (): Promise<boolean> => {
 	webStream = new WebStream()
 	currentStream = webStream
-	startWebSocketServer()
 	return true
 }
 

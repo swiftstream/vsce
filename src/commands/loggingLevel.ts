@@ -1,7 +1,7 @@
-import { window } from "vscode"
+import { window } from 'vscode'
 import { LogLevel } from '../streams/stream'
 import { currentLoggingLevel } from '../streams/stream'
-import { sidebarTreeView, currentStream } from "../extension"
+import { sidebarTreeView, currentStream } from '../extension'
 
 export async function loggingLevelCommand() {
 	const newLoggingLevel = await window.showQuickPick([

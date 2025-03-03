@@ -1,4 +1,4 @@
-import { env, Uri, window } from "vscode"
+import { env, Uri } from 'vscode'
 
 export function openWebDocumentation() {
 	env.openExternal(Uri.parse('https://swifweb.com'))

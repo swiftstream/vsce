@@ -1,14 +1,16 @@
-import { window, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from "vscode"
-import { Bash } from "../bash"
-import { Pgrep } from "../pgrep"
-import { Swift } from "../swift"
-import { Toolchain } from "../toolchain"
-import { extensionContext, isInContainer, projectDirectory, sidebarTreeView } from "../extension"
-import { SideTreeItem } from "../sidebarTreeView"
-import { clearBuildCacheCommand } from "../commands/clearBuildCache"
-import { toolchainCommand } from "../commands/toolchain"
-import { loggingLevelCommand } from "../commands/loggingLevel"
-import { discussionsCommand, repositoryCommand, submitAnIssueCommand } from "../commands/support"
+import { window, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from 'vscode'
+import { Bash } from '../bash'
+import { Pgrep } from '../pgrep'
+import { Swift } from '../swift'
+import { Toolchain } from '../toolchain'
+import { currentStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
+import { Dependency, SideTreeItem } from '../sidebarTreeView'
+import { clearBuildCacheCommand } from '../commands/clearBuildCache'
+import { toolchainCommand } from '../commands/toolchain'
+import { loggingLevelCommand } from '../commands/loggingLevel'
+import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openSwiftStreamDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums } from '../commands/support'
+import { hotRebuildCommand } from '../commands/hotRebuild'
+import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 
 export class Stream {
     public bash: Bash
@@ -35,6 +37,8 @@ export class Stream {
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('stream.loggingLevel'))
 			this.setLoggingLevel()
+		if (event.affectsConfiguration('swift.hotRebuild'))
+			this.setHotRebuild()
     }
 
     setLoggingLevel(value?: LogLevel) {
@@ -56,65 +60,179 @@ export class Stream {
             showOutput()
         }))
         extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, async () => await currentStream?.buildDebug() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Repository, repositoryCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, discussionsCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, submitAnIssueCommand))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
+			if (isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebDocumentation()
+			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidDocumentation()
+			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
+				openVaporDocumentation()
+			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				openHummingbirdDocumentation()
+			} else {
+				openSwiftStreamDocumentation()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Repository, () => {
+			if (isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebRepository()
+			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidRepository()
+			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
+				openVaporRepository()
+			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				openHummingbirdRepository()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, async () => {
+			if (isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebDiscussions()
+			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidDiscussions()
+			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
+				openVaporDiscussions()
+			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				openHummingbirdDiscussions()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, async () => {
+			if (isPackagePresentInResolved(KnownPackage.Web)) {
+				submitWebIssue()
+			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
+				submitAndroidIssue()
+			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
+				submitVaporIssue()
+			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				submitHummingbirdIssue()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenDiscord, async () => {
+			const openSwiftStream = 'Official Swift.Stream Community in Discord'
+			const openVapor = 'Official Vapor Community in Discord'
+			const openHummingbird = 'Official Hummingbird Community in Discord'
+			if (isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebDiscord()
+			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidDiscord()
+			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
+				switch (await window.showQuickPick([
+					openSwiftStream,
+					openVapor
+				], {
+					placeHolder: `Choose the community`
+				})) {
+					case openSwiftStream:
+						openSwiftStreamServerDiscord()
+						break
+					case openVapor:
+						openVaporDiscord()
+						break
+					default: break
+				}
+			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				switch (await window.showQuickPick([
+					openSwiftStream,
+					openHummingbird
+				], {
+					placeHolder: `Choose the community`
+				})) {
+					case openSwiftStream:
+						openSwiftStreamServerDiscord()
+						break
+					case openHummingbird:
+						openHummingbirdDiscord()
+						break
+					default: break
+				}
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenTelegram, () => {
+			if (extensionStream == ExtensionStream.Web || isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebTelegram()
+			} else if (extensionStream == ExtensionStream.Android || isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidTelegram()
+			} else {
+				openServerTelegram()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenSwiftForums, () => {
+			if (extensionStream == ExtensionStream.Web || isPackagePresentInResolved(KnownPackage.Web)) {
+				openWebForums()
+			} else if (extensionStream == ExtensionStream.Android || isPackagePresentInResolved(KnownPackage.Droid)) {
+				openAndroidForums()
+			} else if (extensionStream == ExtensionStream.Server || isPackagePresentInResolved(KnownPackage.Vapor) || isPackagePresentInResolved(KnownPackage.Hummingbird)) {
+				openServerForums()
+			} else {
+				openSwiftForums()
+			}
+		}))
     }
 
 	async onDidSaveTextDocument(document: TextDocument) {
 		if (!isInContainer) return
+		if (!isHotRebuildEnabled) return
 	}
+
+	// MARK: Building
 
 	async buildDebug() {
 		print('stream.build not implemented', LogLevel.Detailed)
 	}
-	
+
 	async buildRelease(successCallback?: any) {
 		print('stream.buildRelease not implemented', LogLevel.Detailed)
 	}
-}
 
-// MARK: Toolchain
+	// MARK: Side Bar Tree View Items
 
-export var currentToolchain: string = `${getToolchainNameFromURL()}`
-export var pendingNewToolchain: string | undefined
-export function getToolchainNameFromURL(url: string | undefined = undefined): string | undefined {
-    const value: string | undefined = url ?? process.env.S_TOOLCHAIN_URL_X86
-    if (!value) return 'undefined'
-    return value.split('/').pop()
-        ?.replace(/^swift-/, '')
-        .replace(/(\.tar\.gz|\.zip)$/, '')
-        .replace(/(-ubuntu20\.04|-aarch64|_x86_64|_aarch64|-a)/g, '')
-}
-export function setPendingNewToolchain(value: string | undefined) {
-    if (!isInContainer() && value) {
-        currentToolchain = value
-        pendingNewToolchain = undefined
-    } else {
-        pendingNewToolchain = value
-    }
-    sidebarTreeView?.refresh()
+	async debugActionItems(): Promise<Dependency[]> { return [] }
+	async debugOptionItems(): Promise<Dependency[]> { return [] }
+	async releaseItems(): Promise<Dependency[]> { return [] }
+	async projectItems(): Promise<Dependency[]> { return [] }
+	async maintenanceItems(): Promise<Dependency[]> { return [] }
+	async settingsItems(): Promise<Dependency[]> { return [] }
+	async isThereAnyRecommendation(): Promise<boolean> { return false }
+	async recommendationsItems(): Promise<Dependency[]> { return [] }
+	async customItems(element: Dependency): Promise<Dependency[]> { return [] }
+
+	setAbortBuilding(handler: () => void | undefined) {
+		abortBuilding = handler
+	}
+
+	setBuilding(active: boolean) {
+		if (!active) abortBuilding = undefined
+		isBuilding = active
+		commands.executeCommand('setContext', 'isBuilding', active)
+	}
+	
+	setHotRebuild(value?: boolean) {
+		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swift.hotRebuild') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('swift.hotRebuild', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setClearingBuildCache(active: boolean) {
+		isClearingBuildCache = active
+	}
+
+	setClearedBuildCache(active: boolean) {
+		isClearedBuildCache = active
+	}
 }
 
 // MARK: Building
 
 export var isBuilding = false
 export var abortBuilding: (() => void) | undefined
-export function setAbortBuilding(handler: () => void | undefined) {
-	abortBuilding = handler
-}
-export function setBuilding(active: boolean) {
-	if (!active) abortBuilding = undefined
-	isBuilding = active
-	commands.executeCommand('setContext', 'isBuilding', active)
-}
+export var isHotRebuildEnabled = false
 export var isClearingBuildCache = false
-export function setClearingBuildCache(active: boolean) { isClearingBuildCache = active }
 export var isClearedBuildCache = false
-export function setClearedBuildCache(active: boolean) { isClearedBuildCache = active }
 
 // MARK: Print
 

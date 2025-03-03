@@ -1,4 +1,4 @@
-import { OpenDialogOptions, window } from "vscode"
+import { OpenDialogOptions, window } from 'vscode'
 
 export async function selectFolder(title: string, button: string) {
 	const options: OpenDialogOptions = {

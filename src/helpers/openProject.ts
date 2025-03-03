@@ -1,4 +1,4 @@
-import { commands, extensions, Uri, WebviewPanel, window } from "vscode"
+import { commands, extensions, Uri, WebviewPanel } from 'vscode'
 
 async function openProjectInContainer(folderUri: Uri, webViewPanel: WebviewPanel | undefined): Promise<boolean> {
     const extension = extensions.getExtension('ms-vscode-remote.remote-containers')
