@@ -1,16 +1,16 @@
 import { commands, window } from 'vscode'
 import { createDebugConfigIfNeeded } from '../../../helpers/createDebugConfigIfNeeded'
-import { isDebugging } from '../webStream'
+import { isDebuggingInChrome } from '../webStream'
 import { sidebarTreeView, webStream } from '../../../extension'
 
 export async function debugInChromeCommand() {
-	if (isDebugging) return
+	if (isDebuggingInChrome) return
 	const debugConfig = await createDebugConfigIfNeeded()
 	if (debugConfig) {
 		await commands.executeCommand('debug.startFromConfig', debugConfig)
-		webStream?.setDebugging(true)
+		webStream?.setDebuggingInChrome(true)
 	} else {
-		webStream?.setDebugging(false)
+		webStream?.setDebuggingInChrome(false)
 		window.showWarningMessage(`Unable to find Chrome launch configuration`)
 	}
 	sidebarTreeView?.refresh()

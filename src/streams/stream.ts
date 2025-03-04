@@ -41,11 +41,19 @@ export class Stream {
 			this.setHotRebuild()
     }
 
+	isAnyHotBuilding(): boolean {
+		return isHotBuildingSwift
+	}
+
     setLoggingLevel(value?: LogLevel) {
         currentLoggingLevel = value ?? workspace.getConfiguration().get('stream.loggingLevel') as LogLevel
         if (value) workspace.getConfiguration().update('stream.loggingLevel', value)
         sidebarTreeView?.refresh()
     }
+		
+	setHotBuildingSwift(active: boolean) {
+		isHotBuildingSwift = active
+	}
 
     onDidRenameFiles(event: FileRenameEvent) {}
     onDidDeleteFiles(event: FileDeleteEvent) {}
@@ -229,6 +237,7 @@ export class Stream {
 // MARK: Building
 
 export var isBuilding = false
+export var isHotBuildingSwift = false
 export var abortBuilding: (() => void) | undefined
 export var isHotRebuildEnabled = false
 export var isClearingBuildCache = false

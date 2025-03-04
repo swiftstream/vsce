@@ -133,12 +133,12 @@
         {
           "group": "navigation@0",
           "command": "runDebugging",
-          "when": "!isDebugging"
+          "when": "!isDebuggingInChrome"
         },
         {
           "group": "navigation@0",
           "command": "stopDebugging",
-          "when": "isDebugging"
+          "when": "isDebuggingInChrome"
         },
         {
           "group": "navigation@1",

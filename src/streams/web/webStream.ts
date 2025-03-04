@@ -34,55 +34,38 @@ import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
 
-export var isHotBuildingCSS = false
-export var isHotBuildingJS = false
-export var isHotBuildingHTML = false
-export var isHotBuildingSwift = false
-export var isAnyHotBuilding: () => boolean = () => {
-	return isHotBuildingCSS || isHotBuildingJS || isHotBuildingHTML || isHotBuildingSwift
-}
-export var isDebugging = false
-export var isHotReloadEnabled = false
-export var isDebugGzipEnabled = false
-export var isDebugBrotliEnabled = false
-export var isBuildingRelease = false
-export var abortBuildingRelease: (() => void) | undefined
-export var isRunningCrawlServer = false
 export var indexFile = 'main.html'
 export var webSourcesFolder = 'WebSources'
 export var appTargetName = 'App'
 export var serviceWorkerTargetName = 'Service'
 export var buildDevFolder = 'DevPublic'
 export var buildProdFolder = 'DistPublic'
-export var containsAppTarget = async () => {
-	if (!currentStream) return false
-	const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
-	return targetsDump.executables.includes(appTargetName)
-}
-export var canRecompileAppTarget = () => {
-	return fs.existsSync(`${projectDirectory}/.build/debug/${appTargetName}`)
-}
-export var containsServiceTarget = async () => {
-	if (!currentStream) return false
-	const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
-	return targetsDump.serviceWorkers.includes(serviceWorkerTargetName)
-}
-export var canRecompileServiceTarget = () => {
-	return fs.existsSync(`${projectDirectory}/.build/debug/${serviceWorkerTargetName}`)
-}
-export var isRecompilingApp = false
-var isRecompilingService = false
-var isRecompilingJS = false
-var isRecompilingCSS = false
-var isRecompilingHTML = false
-var containsUpdateForWeb = true // TODO: check if Web could be updated
-var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
+
 export var currentDevPort: string = `${defaultWebDevPort}`
 export var currentDevCrawlerPort: string = `${defaultWebCrawlerPort}`
 export var currentProdPort: string = `${defaultWebProdPort}`
 export var pendingNewDevPort: string | undefined
 export var pendingNewDevCrawlerPort: string | undefined
 export var pendingNewProdPort: string | undefined
+
+export var isHotBuildingCSS = false
+export var isHotBuildingJS = false
+export var isHotBuildingHTML = false
+export var isDebuggingInChrome = false
+export var isHotReloadEnabled = false
+export var isDebugGzipEnabled = false
+export var isDebugBrotliEnabled = false
+export var isBuildingRelease = false
+export var abortBuildingRelease: (() => void) | undefined
+export var isRunningCrawlServer = false
+
+var isRecompilingApp = false
+var isRecompilingService = false
+var isRecompilingJS = false
+var isRecompilingCSS = false
+var isRecompilingHTML = false
+var containsUpdateForWeb = true // TODO: check if Web could be updated
+var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
 
 export class WebStream extends Stream {
 	public npmWeb: NPM
@@ -108,7 +91,7 @@ export class WebStream extends Stream {
 		super()
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			if (e.configuration.type.includes('chrome')) {
-				this.setDebugging(false)
+				this.setDebuggingInChrome(false)
 				sidebarTreeView?.refresh()
 			}
 		}))
@@ -165,6 +148,10 @@ export class WebStream extends Stream {
 			this.setAppTargetName()
 		if (event.affectsConfiguration('web.serviceWorkerTargetName'))
 			this.setServiceWorkerTargetName()
+	}
+
+	isAnyHotBuilding(): boolean {
+		return super.isAnyHotBuilding() || isHotBuildingCSS || isHotBuildingJS || isHotBuildingHTML
 	}
 
 	setHotReload(value?: boolean) {
@@ -231,16 +218,16 @@ export class WebStream extends Stream {
 	}
 	
 	setHotBuildingSwift(active: boolean) {
-		isHotBuildingSwift = active
+		super.setHotBuildingSwift(active)
 		if (!active) {
 			isRecompilingApp = false
 			isRecompilingService = false
 		}
 	}
 	
-	setDebugging(active: boolean) {
-		isDebugging = active
-		commands.executeCommand('setContext', 'isDebugging', active)
+	setDebuggingInChrome(active: boolean) {
+		isDebuggingInChrome = active
+		commands.executeCommand('setContext', 'isDebuggingInChrome', active)
 	}
 	
 	setAbortBuildingRelease(handler: () => void | undefined) {
@@ -484,7 +471,7 @@ export class WebStream extends Stream {
 
 	async debugActionItems(): Promise<Dependency[]> {
 		return [
-			new Dependency(SideTreeItem.DebugInChrome, isDebugging ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebugging ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
+			new Dependency(SideTreeItem.DebugInChrome, isDebuggingInChrome ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebuggingInChrome ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
 			new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console')
 		]
 	}
@@ -548,9 +535,9 @@ export class WebStream extends Stream {
 
 	async maintenanceItems(): Promise<Dependency[]> {
 		let items: Dependency[] = []
-		if (await containsAppTarget() && canRecompileAppTarget())
+		if (await this.containsAppTarget() && this.canRecompileAppTarget())
 			items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', appTargetName, TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
-		if (await containsServiceTarget() && canRecompileServiceTarget())
+		if (await this.containsServiceTarget() && this.canRecompileServiceTarget())
 			items.push(new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', serviceWorkerTargetName, TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'))
 		items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
 		items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingCSS ? 'sync~spin' : 'symbol-color'))
@@ -683,5 +670,27 @@ export class WebStream extends Stream {
 		default: break
 		}
 		return items
+	}
+
+	// MARK: Helpers
+
+	async containsAppTarget() {
+		if (!currentStream) return false
+		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
+		return targetsDump.executables.includes(appTargetName)
+	}
+	
+	canRecompileAppTarget() {
+		return fs.existsSync(`${projectDirectory}/.build/debug/${appTargetName}`)
+	}
+
+	async containsServiceTarget() {
+		if (!currentStream) return false
+		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
+		return targetsDump.serviceWorkers.includes(serviceWorkerTargetName)
+	}
+
+	canRecompileServiceTarget() {
+		return fs.existsSync(`${projectDirectory}/.build/debug/${serviceWorkerTargetName}`)
 	}
 }

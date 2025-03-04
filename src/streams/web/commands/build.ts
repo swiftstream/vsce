@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from '../../../extension'
-import { appTargetName, currentDevPort, isAnyHotBuilding, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, isHotBuildingSwift, serviceWorkerTargetName, WebStream } from '../webStream'
-import { buildStatus, print, status, StatusType, isBuilding, LogLevel } from '../../stream'
+import { appTargetName, currentDevPort, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, serviceWorkerTargetName, WebStream } from '../webStream'
+import { buildStatus, print, status, StatusType, isBuilding, isHotBuildingSwift, LogLevel } from '../../stream'
 import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
@@ -26,7 +26,7 @@ export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
 
 export async function buildCommand(webStream: WebStream) {
-	if (isBuilding || isAnyHotBuilding()) { return }
+	if (isBuilding || webStream.isAnyHotBuilding()) { return }
 	webStream.setBuilding(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(false)

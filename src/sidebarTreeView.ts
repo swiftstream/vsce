@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
-import { isBuildingRelease, isAnyHotBuilding } from './streams/web/webStream'
+import { isBuildingRelease } from './streams/web/webStream'
 import { isBuilding, isHotRebuildEnabled, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
@@ -143,48 +143,50 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				}
 			}
 		} else if (element?.id) {
-			switch (element.id) {
-			case SideTreeItem.Debug:
-				// Actions
-				items.push(new Dependency(SideTreeItem.Build, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || isAnyHotBuilding() ? isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
-				if (currentStream) items.push(...(await currentStream.debugActionItems()))
-				// Options
-				items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-				if (currentStream) items.push(...(await currentStream.debugOptionItems()))
-				break
-			case SideTreeItem.Release:
-				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
-				if (currentStream) items.push(...(await currentStream.releaseItems()))
-				break
-			case SideTreeItem.Project:
-				if (currentStream) items.push(...(await currentStream.projectItems()))
-				break
-			case SideTreeItem.Maintenance:
-				items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
-				if (currentStream) items.push(...(await currentStream.maintenanceItems()))
-				break
-			case SideTreeItem.Settings:
-				items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
-				if (currentStream) items.push(...(await currentStream.settingsItems()))
-				items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
-				break
-			case SideTreeItem.Recommendations:
-				if (currentStream) items.push(...(await currentStream.recommendationsItems()))
-				break
-			case SideTreeItem.Support:
-				items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-				if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
-					items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
-					items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
-					items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
+			if (currentStream) {
+				switch (element.id) {
+				case SideTreeItem.Debug:
+					// Actions
+					items.push(new Dependency(SideTreeItem.Build, isBuilding || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
+					if (currentStream) items.push(...(await currentStream.debugActionItems()))
+					// Options
+					items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
+					if (currentStream) items.push(...(await currentStream.debugOptionItems()))
+					break
+				case SideTreeItem.Release:
+					items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
+					if (currentStream) items.push(...(await currentStream.releaseItems()))
+					break
+				case SideTreeItem.Project:
+					if (currentStream) items.push(...(await currentStream.projectItems()))
+					break
+				case SideTreeItem.Maintenance:
+					items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
+					if (currentStream) items.push(...(await currentStream.maintenanceItems()))
+					break
+				case SideTreeItem.Settings:
+					items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
+					if (currentStream) items.push(...(await currentStream.settingsItems()))
+					items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
+					break
+				case SideTreeItem.Recommendations:
+					if (currentStream) items.push(...(await currentStream.recommendationsItems()))
+					break
+				case SideTreeItem.Support:
+					items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+					if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
+						items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
+						items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
+						items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
+					}
+					items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
+					if (isCIS()) {
+						items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
+					}
+					items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
+					break
+				default: break
 				}
-				items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
-				if (isCIS()) {
-					items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
-				}
-				items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
-				break
-			default: break
 			}
 		} else if (currentStream && element) {
 			items.push(...(await currentStream.customItems(element)))
