@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import JSON5 from 'json5'
 import { window } from 'vscode'
 import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort } from '../webStream'
-import { innerProdPort, projectDirectory, webStream } from '../../../extension'
+import { innerWebProdPort, projectDirectory, webStream } from '../../../extension'
 
 export async function portProdCommand() {
 	const port = await window.showInputBox({
@@ -22,7 +22,7 @@ export async function portProdCommand() {
 		}
 	})
 	if (!port) return
-	const innerPort = innerProdPort
+	const innerPort = innerWebProdPort
 	const portToReplace = pendingNewProdPort ? pendingNewProdPort : currentProdPort
 	if (port == portToReplace) return
 	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`

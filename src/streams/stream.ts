@@ -1,4 +1,4 @@
-import { window, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from 'vscode'
+import { window, debug, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, DebugSession } from 'vscode'
 import { Bash } from '../bash'
 import { Pgrep } from '../pgrep'
 import { Swift } from '../swift'
@@ -11,6 +11,17 @@ import { loggingLevelCommand } from '../commands/loggingLevel'
 import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openSwiftStreamDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums } from '../commands/support'
 import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
+import { generateChecksum } from '../helpers/filesHelper'
+
+export var isDebugging = false
+export var isBuildingDebug = false
+export var isBuildingRelease = false
+export var abortBuildingDebug: (() => void) | undefined
+export var abortBuildingRelease: (() => void) | undefined
+export var isHotBuildingSwift = false
+export var isHotRebuildEnabled = false
+export var isClearingBuildCache = false
+export var isClearedBuildCache = false
 
 export class Stream {
     public bash: Bash
@@ -29,10 +40,21 @@ export class Stream {
     private _configure = async () => {
         if (!projectDirectory) return
 		this.setLoggingLevel()
+		this.setHotRebuild()
         workspace.onDidChangeConfiguration((event) => {
             this.onDidChangeConfiguration(event)
         })
+		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
+			await this.onDidTerminateDebugSession(e)
+        }))
     }
+
+	async onDidTerminateDebugSession(session: DebugSession) {
+		if (session.configuration.type.includes('lldb')) {
+			this.setDebugging(false)
+			sidebarTreeView?.refresh()
+		}
+	}
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('stream.loggingLevel'))
@@ -68,7 +90,7 @@ export class Stream {
             showOutput()
         }))
         extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Build, async () => await currentStream?.buildDebug() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
@@ -182,15 +204,60 @@ export class Stream {
 		}))
     }
 
-	async onDidSaveTextDocument(document: TextDocument) {
-		if (!isInContainer) return
-		if (!isHotRebuildEnabled) return
+	private hotReloadHashes: any = {}
+
+	async goThroughHashCheck(document: TextDocument, handler: () => Promise<void>) {
+		const oldChecksum = this.hotReloadHashes[document.uri.path]
+		const newChecksum = generateChecksum(document.getText())
+		print(`Checking ${document.uri.path.split('/').pop()}\noldChecksum: ${oldChecksum}\nnewChecksum: ${newChecksum}`, LogLevel.Unbearable)
+		if (oldChecksum && oldChecksum === newChecksum) {
+			print(`Skipping hot realod, file wasn't changed: ${document.uri.path.split('/').pop()}`, LogLevel.Verbose)
+		} else {
+			try {
+				await handler()
+				this.hotReloadHashes[document.uri.path] = newChecksum
+			} catch (error) {
+				const json = JSON.stringify(error)
+				print(`${document.uri.path.split('/').pop()} failed to hot realod: ${json === '{}' ? error : json}`, LogLevel.Verbose)
+			}
+		}
+	}
+
+	async onDidSaveTextDocument(document: TextDocument): Promise<boolean> {
+		if (!isInContainer) return false
+		if (document.uri.scheme === 'file') {
+			// Swift
+			if (['swift'].includes(document.languageId) && isHotRebuildEnabled) {
+				// Package.swift
+				if (document.uri.path === `${projectDirectory}/Package.swift`) {
+					await this.goThroughHashCheck(document, async () => {
+						await this.hotRebuildSwift()
+					})
+					return true
+				}
+				// Swift sources
+				else if (document.uri.path.startsWith(`${projectDirectory}/Sources/`)) {
+					const target = `${document.uri.path}`.replace(`${projectDirectory}/Sources/`, '').split('/')[0]
+					if (target) {
+						await this.goThroughHashCheck(document, async () => {
+							await this.hotRebuildSwift({ target: target })
+						})
+						return true
+					}
+				}
+			}
+		}
+		return false
 	}
 
 	// MARK: Building
 
 	async buildDebug() {
 		print('stream.build not implemented', LogLevel.Detailed)
+	}
+
+	async hotRebuildSwift(params?: { target?: string }) {
+		print('stream.hotRebuildSwift not implemented or called super', LogLevel.Detailed)
 	}
 
 	async buildRelease(successCallback?: any) {
@@ -209,14 +276,29 @@ export class Stream {
 	async recommendationsItems(): Promise<Dependency[]> { return [] }
 	async customItems(element: Dependency): Promise<Dependency[]> { return [] }
 
-	setAbortBuilding(handler: () => void | undefined) {
-		abortBuilding = handler
+	setAbortBuildingDebug(handler: () => void | undefined) {
+		abortBuildingDebug = handler
 	}
 
-	setBuilding(active: boolean) {
-		if (!active) abortBuilding = undefined
-		isBuilding = active
+	setBuildingDebug(active: boolean) {
+		if (!active) abortBuildingDebug = undefined
+		isBuildingDebug = active
 		commands.executeCommand('setContext', 'isBuilding', active)
+	}
+		
+	setAbortBuildingRelease(handler: () => void | undefined) {
+		abortBuildingRelease = handler
+	}
+	
+	setBuildingRelease(active: boolean) {
+		if (!active) abortBuildingRelease = undefined
+		isBuildingRelease = active
+		commands.executeCommand('setContext', 'isBuildingRelease', active)
+	}
+		
+	setDebugging(active: boolean) {
+		isDebugging = active
+		commands.executeCommand('setContext', 'isDebugging', active)
 	}
 	
 	setHotRebuild(value?: boolean) {
@@ -233,15 +315,6 @@ export class Stream {
 		isClearedBuildCache = active
 	}
 }
-
-// MARK: Building
-
-export var isBuilding = false
-export var isHotBuildingSwift = false
-export var abortBuilding: (() => void) | undefined
-export var isHotRebuildEnabled = false
-export var isClearingBuildCache = false
-export var isClearedBuildCache = false
 
 // MARK: Print
 

@@ -1,10 +1,11 @@
 import * as fs from 'fs'
+import path from 'path'
 import JSON5 from 'json5'
 import { Uri, workspace } from 'vscode'
 import { currentDevPort } from '../streams/web/webStream'
 import { projectDirectory } from '../extension'
 
-export async function createDebugConfigIfNeeded(): Promise<any> {
+export async function createWebDebugConfigIfNeeded(): Promise<any> {
     var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
 	if (configurations)
 		for (var config of configurations) {
@@ -28,16 +29,30 @@ export async function createDebugConfigIfNeeded(): Promise<any> {
             `--unsafely-treat-insecure-origin-as-secure=https://localhost:${currentDevPort}`
         ],
         outFiles: [
-            '${workspaceFolder}/DevPublic/*.js'
+            '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}/DevPublic/*.js'
         ],
         skipFiles: [
-            '${workspaceFolder}/Sources/**',
-            '${workspaceFolder}/.build/**',
+            '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}/Sources/**',
+            '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}/.build/**',
             '**/node_modules/**',
             '**/DistPublic/**',
             '**/WebSources/**'
         ]
     }
+    return await readAndUpdateConfig((config) => {
+        if (!config.configurations) {
+            config.configurations = [newConfig]
+        } else {
+            const existingConfigurations: any[] = config.configurations
+            config.configurations = [newConfig, ...existingConfigurations]
+        }
+        return config
+    })
+}
+
+// MARK: Helpers
+
+async function readAndUpdateConfig(callback: (any) => any): Promise<any> {
     const vscodePath = `${projectDirectory}/.vscode`
     const launchPath = `${vscodePath}/launch.json`
     if (!fs.existsSync(vscodePath)) {
@@ -46,18 +61,15 @@ export async function createDebugConfigIfNeeded(): Promise<any> {
     if (!fs.existsSync(launchPath)) {
         var newLaunchContent = {
             version: '0.2.0',
-            configurations: [newConfig]
+            configurations: []
         }
+        newLaunchContent = callback(newLaunchContent)
         fs.writeFileSync(launchPath, JSON.stringify(newLaunchContent, null, '\t'))
-        return newConfig
+        return newLaunchContent
     }
     const launchContent = await workspace.fs.readFile(Uri.file(launchPath))
-    const launchParsed = JSON5.parse(launchContent.toString())
-    const existingConfigurations: any[] = launchParsed.configurations
-	var newLaunchContent = {
-        version: '0.2.0',
-        configurations: [newConfig, ...existingConfigurations]
-    }
-    fs.writeFileSync(launchPath, JSON.stringify(newLaunchContent, null, '\t'))
-    return newConfig
+    var launchParsed = JSON5.parse(launchContent.toString())
+    launchParsed = callback(launchParsed)
+    fs.writeFileSync(launchPath, JSON.stringify(launchParsed, null, '\t'))
+    return launchParsed
 }

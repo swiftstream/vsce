@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from '../../../extension'
 import { appTargetName, currentDevPort, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, serviceWorkerTargetName, WebStream } from '../webStream'
-import { buildStatus, print, status, StatusType, isBuilding, isHotBuildingSwift, LogLevel } from '../../stream'
+import { buildStatus, print, status, StatusType, isBuildingDebug, isHotBuildingSwift, LogLevel } from '../../stream'
 import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
@@ -26,8 +26,8 @@ export let cachedSwiftTargets: SwiftTargets | undefined
 let cachedIsPWA: boolean | undefined
 
 export async function buildCommand(webStream: WebStream) {
-	if (isBuilding || webStream.isAnyHotBuilding()) { return }
-	webStream.setBuilding(true)
+	if (isBuildingDebug || webStream.isAnyHotBuilding()) { return }
+	webStream.setBuildingDebug(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(false)
 	const measure = new TimeMeasure()
@@ -60,7 +60,7 @@ export async function buildCommand(webStream: WebStream) {
 		const requiredDependencies = await checkRequiredDependencies()
 		if (requiredDependencies.missing.length > 0) {
 			measure.finish()
-			webStream.setBuilding(false)
+			webStream.setBuildingDebug(false)
 			sidebarTreeView?.refresh()
 			const text = `Missing ${requiredDependencies.missing.map((x) => `\`${x}\``).join(', ')} package${requiredDependencies.missing.length > 1 ? 's' : ''}`
 			const error = `Debug Build Failed: ${text}`
@@ -190,11 +190,11 @@ export async function buildCommand(webStream: WebStream) {
 		print(`✅ Build Succeeded in ${measure.time}ms`)
 		print(`🌐 Test in browser at https://127.0.0.1:${currentDevPort}`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
 	} catch (error: any) {
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		sidebarTreeView?.refresh()
 		const text = `Debug Build Failed`
 		if (isString(error)) {
@@ -220,8 +220,8 @@ interface HotRebuildSwiftParams {
 let awaitingHotRebuildSwift: HotRebuildSwiftParams[] = []
 
 export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSwiftParams = {}) {
-	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
-		if (!isBuilding) {
+	if (isBuildingDebug || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
+		if (!isBuildingDebug) {
 			if (awaitingHotRebuildSwift.filter((x) => x.target == params.target).length == 0) {
 				print(`👉 Delay Swift hot rebuild call`, LogLevel.Verbose)
 				awaitingHotRebuildSwift.push(params)
@@ -229,7 +229,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		}
 		return
 	}
-	webStream.setBuilding(true)
+	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingSwift(true)
 	webStream.setRecompilingApp(params.target == appTargetName)
 	webStream.setRecompilingService(params.target == serviceWorkerTargetName)
@@ -370,7 +370,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		status('flame', `Hot Rebuilt Swift in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt Swift in ${measure.time}ms`)
 		console.log(`Hot Rebuilt Swift in ${measure.time}ms`)
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingSwift(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
@@ -381,7 +381,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		}
 	} catch (error) {
 		awaitingHotRebuildSwift = []
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingSwift(false)
 		sidebarTreeView?.refresh()
 		const text = `Hot Rebuild Swift Failed`
@@ -402,14 +402,14 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 let awaitingHotRebuildCSS = false
 
 export async function hotRebuildCSS(webStream: WebStream) {
-	if (isBuilding || isHotBuildingCSS) {
-		if (!isBuilding) {
+	if (isBuildingDebug || isHotBuildingCSS) {
+		if (!isBuildingDebug) {
 			print(`👉 Delay CSS hot rebuild call`, LogLevel.Verbose)
 			awaitingHotRebuildCSS = true
 		}
 		return
 	}
-	webStream.setBuilding(true)
+	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingCSS(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
@@ -421,7 +421,7 @@ export async function hotRebuildCSS(webStream: WebStream) {
 		status('flame', `Hot Rebuilt CSS in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt CSS in ${measure.time}ms`)
 		console.log(`Hot Rebuilt CSS in ${measure.time}ms`)
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingCSS(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
@@ -432,7 +432,7 @@ export async function hotRebuildCSS(webStream: WebStream) {
 		}
 	} catch (error) {
 		awaitingHotRebuildCSS = false
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingCSS(false)
 		sidebarTreeView?.refresh()
 		const text = `Hot Rebuild CSS Failed`
@@ -457,8 +457,8 @@ interface HotRebuildJSParams {
 let awaitingHotRebuildJS: HotRebuildJSParams[] = []
 
 export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSParams) {
-	if (isBuilding || isHotBuildingHTML || isHotBuildingSwift || isHotBuildingJS) {
-		if (!isBuilding) {
+	if (isBuildingDebug || isHotBuildingHTML || isHotBuildingSwift || isHotBuildingJS) {
+		if (!isBuildingDebug) {
 			if (awaitingHotRebuildJS.filter((x) => x.path == params.path).length == 0) {
 				print(`👉 Delay JS hot rebuild call`, LogLevel.Verbose)
 				awaitingHotRebuildJS.push(params)
@@ -466,7 +466,7 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		}
 		return
 	}
-	webStream.setBuilding(true)
+	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingJS(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
@@ -476,7 +476,7 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		status('flame', `Hot Rebuilt JS in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt JS in ${measure.time}ms`)
 		console.log(`Hot Rebuilt JS in ${measure.time}ms`)
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingJS(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
@@ -512,7 +512,7 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		finishHotRebuild()
 	} catch (error) {
 		awaitingHotRebuildJS = []
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingJS(false)
 		sidebarTreeView?.refresh()
 		const text = `Hot Rebuild JS Failed`
@@ -533,8 +533,8 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 let awaitingHotRebuildHTML = false
 
 export async function hotRebuildHTML(webStream: WebStream) {
-	if (isBuilding || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
-		if (!isBuilding) {
+	if (isBuildingDebug || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
+		if (!isBuildingDebug) {
 			print(`👉 Delay HTML hot rebuild call`, LogLevel.Verbose)
 			awaitingHotRebuildHTML = true
 		}
@@ -554,7 +554,7 @@ export async function hotRebuildHTML(webStream: WebStream) {
 			isPWA = targetsDump.serviceWorkers.length > 0
 			cachedIsPWA = isPWA
 		}
-		webStream.setBuilding(true)
+		webStream.setBuildingDebug(true)
 		webStream.setHotBuildingHTML(true)
 		sidebarTreeView?.refresh()
 		wsSendBuildStarted(true)
@@ -569,7 +569,7 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		status('flame', `Hot Rebuilt HTML in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt HTML in ${measure.time}ms`)
 		console.log(`Hot Rebuilt HTML in ${measure.time}ms`)
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingHTML(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
@@ -580,7 +580,7 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		}
 	} catch (error) {
 		awaitingHotRebuildHTML = false
-		webStream.setBuilding(false)
+		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingHTML(false)
 		sidebarTreeView?.refresh()
 		const text = `Hot Rebuild HTML Failed`

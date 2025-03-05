@@ -1,11 +1,11 @@
 import { commands, window } from 'vscode'
-import { createDebugConfigIfNeeded } from '../../../helpers/createDebugConfigIfNeeded'
+import { createWebDebugConfigIfNeeded } from '../../../helpers/createDebugConfigIfNeeded'
 import { isDebuggingInChrome } from '../webStream'
 import { sidebarTreeView, webStream } from '../../../extension'
 
 export async function debugInChromeCommand() {
 	if (isDebuggingInChrome) return
-	const debugConfig = await createDebugConfigIfNeeded()
+	const debugConfig = await createWebDebugConfigIfNeeded()
 	if (debugConfig) {
 		await commands.executeCommand('debug.startFromConfig', debugConfig)
 		webStream?.setDebuggingInChrome(true)

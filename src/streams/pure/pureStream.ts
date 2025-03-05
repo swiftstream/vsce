@@ -34,8 +34,11 @@ export class PureStream extends Stream {
 
     }
         
-    async onDidSaveTextDocument(document: TextDocument) {
-        if (!isInContainer) return
+    async onDidSaveTextDocument(document: TextDocument): Promise<boolean> {
+		if (await super.onDidSaveTextDocument(document)) return true
+		if (!isInContainer) return false
+
+        return false
     }
 
     // MARK: Building

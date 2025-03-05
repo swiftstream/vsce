@@ -3,12 +3,12 @@ import { currentStream, projectDirectory, sidebarTreeView } from '../extension'
 import { buildDevFolder } from '../streams/web/webStream'
 import { isClearedBuildCache, isClearingBuildCache } from '../streams/stream'
 import { print, status, StatusType } from '../streams/stream'
-import { isBuilding, LogLevel } from '../streams/stream'
+import { isBuildingDebug, LogLevel } from '../streams/stream'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { createSymlinkFoldersIfNeeded } from '../swift'
 
 export function clearBuildCacheCommand() {
-	if (isBuilding) return
+	if (isBuildingDebug) return
 	if (isClearingBuildCache || isClearedBuildCache) return
 	currentStream?.setClearingBuildCache(true)
 	sidebarTreeView?.refresh()

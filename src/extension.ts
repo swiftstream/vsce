@@ -7,8 +7,8 @@ import { selectFolder } from './helpers/selectFolderHelper'
 import { reopenInContainerCommand, whyReopenInContainerCommand } from './commands/reopenInContainer'
 import { startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView, SideTreeItem } from './sidebarTreeView'
-import { abortBuildingRelease, WebStream } from './streams/web/webStream'
-import { abortBuilding, Stream } from './streams/stream'
+import { WebStream } from './streams/web/webStream'
+import { abortBuildingDebug, abortBuildingRelease, Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
 import { buildCommand } from './streams/web/commands/build'
 import { debugInChromeCommand } from './streams/web/commands/debugInChrome'
@@ -35,22 +35,29 @@ const _stream: string = process.env.S_MODE ?? ExtensionStream.Unknown
 export const extensionStream: ExtensionStream = Object.values(ExtensionStream).includes(_stream as ExtensionStream)
 	? _stream as ExtensionStream
 	: ExtensionStream.Unknown
+
 export const defaultWebDevPort = 7700
 export const defaultWebProdPort = 8800
 export const defaultWebCrawlerPort = 9900
+export const innerWebDevPort = 443
+export const innerWebProdPort = 444
+export const innerWebDevCrawlerPort = 3080
+
 export const defaultServerPort = 8080
-export const innerDevPort = 443
-export const innerProdPort = 444
-export const innerDevCrawlerPort = 3080
+export const innerServerPort = 8080
+
 export const dockerImage = new DockerImage()
+
 export let extensionContext: ExtensionContext
 export let projectDirectory: string | undefined
+
 export let currentStream: Stream | undefined
 export let androidStream: AndroidStream | undefined
 export let embeddedStream: EmbeddedStream | undefined
 export let pureStream: PureStream | undefined
 export let serverStream: ServerStream | undefined
 export let webStream: WebStream | undefined
+
 export let sidebarTreeView: SidebarTreeView | undefined
 export let sidebarTreeViewContainer: TreeView<Dependency> | undefined
 
@@ -195,7 +202,7 @@ function registerCommands() {
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('buildDebug', buildCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingDebug', () => {
-		if (abortBuilding) abortBuilding()
+		if (abortBuildingDebug) abortBuildingDebug()
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingRelease', () => {
 		if (abortBuildingRelease) abortBuildingRelease()

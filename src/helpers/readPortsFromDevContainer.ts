@@ -1,8 +1,8 @@
 import { Uri, workspace } from 'vscode'
-import { innerDevCrawlerPort, innerDevPort, innerProdPort, projectDirectory } from '../extension'
+import { innerWebDevCrawlerPort, innerWebDevPort, innerWebProdPort, projectDirectory } from '../extension'
 import JSON5 from 'json5'
 
-export async function readPortsFromDevContainer(): Promise<{
+export async function readWebPortsFromDevContainer(): Promise<{
     devPort: number | undefined,
     devCrawlerPort: number | undefined,
     prodPort: number | undefined,
@@ -29,11 +29,11 @@ export async function readPortsFromDevContainer(): Promise<{
         return appPort
     }
     return {
-        devPort: extractPort(`${innerDevPort}`),
-        devCrawlerPort: extractPort(`${innerDevCrawlerPort}`),
-        prodPort: extractPort(`${innerProdPort}`),
-        devPortPresent: appPorts.find((x) => x === `${innerDevPort}`) != undefined,
-        devCrawlerPortPresent: appPorts.find((x) => x === `${innerDevCrawlerPort}`) != undefined,
-        prodPortPresent: appPorts.find((x) => x === `${innerProdPort}`) != undefined
+        devPort: extractPort(`${innerWebDevPort}`),
+        devCrawlerPort: extractPort(`${innerWebDevCrawlerPort}`),
+        prodPort: extractPort(`${innerWebProdPort}`),
+        devPortPresent: appPorts.findIndex((x) => x.endsWith(`:${innerWebDevPort}`)) >= 0,
+        devCrawlerPortPresent: appPorts.findIndex((x) => x.endsWith(`:${innerWebDevCrawlerPort}`)) >= 0,
+        prodPortPresent: appPorts.findIndex((x) => x.endsWith(`:${innerWebProdPort}`)) >= 0
     }
 }

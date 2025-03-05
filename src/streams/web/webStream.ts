@@ -2,11 +2,11 @@ import * as fs from 'fs'
 import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream } from '../../extension'
-import { readPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
-import { createDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
+import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
+import { createWebDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
-import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
+import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift as rebuildSwift } from './commands/build'
 import { buildReleaseCommand } from './commands/buildRelease'
 import { debugInChromeCommand } from './commands/debugInChrome'
 import { hotReloadCommand } from './commands/hotReload'
@@ -29,7 +29,6 @@ import { Yandex } from '../../clouds/yandex'
 import { Brotli } from '../../brotli'
 import { portDevCrawlerCommand } from './commands/portDevCrawler'
 import { isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
-import { generateChecksum } from '../../helpers/filesHelper'
 import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
@@ -48,15 +47,13 @@ export var pendingNewDevPort: string | undefined
 export var pendingNewDevCrawlerPort: string | undefined
 export var pendingNewProdPort: string | undefined
 
+export var isDebuggingInChrome = false
 export var isHotBuildingCSS = false
 export var isHotBuildingJS = false
 export var isHotBuildingHTML = false
-export var isDebuggingInChrome = false
 export var isHotReloadEnabled = false
 export var isDebugGzipEnabled = false
 export var isDebugBrotliEnabled = false
-export var isBuildingRelease = false
-export var abortBuildingRelease: (() => void) | undefined
 export var isRunningCrawlServer = false
 
 var isRecompilingApp = false
@@ -64,8 +61,8 @@ var isRecompilingService = false
 var isRecompilingJS = false
 var isRecompilingCSS = false
 var isRecompilingHTML = false
-var containsUpdateForWeb = true // TODO: check if Web could be updated
-var containsUpdateForJSKit = true // TODO: check if JSKit could be updated
+var containsUpdateForWeb = false // TODO: check if Web could be updated
+var containsUpdateForJSKit = false // TODO: check if JSKit could be updated
 
 export class WebStream extends Stream {
 	public npmWeb: NPM
@@ -116,14 +113,12 @@ export class WebStream extends Stream {
 
 	private _configureWeb = async () => {
 		if (!projectDirectory) return
-		const readPorts = await readPortsFromDevContainer()
-		console.dir({ readPorts: readPorts })
+		const readPorts = await readWebPortsFromDevContainer()
 		currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
 		currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
 		currentDevCrawlerPort = `${readPorts.devCrawlerPort ?? defaultWebCrawlerPort}`
-		createDebugConfigIfNeeded()
+		createWebDebugConfigIfNeeded()
 		this.setHotReload()
-		this.setHotRebuild()
 		this.setDebugGzip()
 		this.setDebugBrotli()
 		this.setWebSourcesPath()
@@ -132,6 +127,14 @@ export class WebStream extends Stream {
 			debug: true
 		})
 		startWebSocketServer()
+	}
+
+	async onDidTerminateDebugSession(session: DebugSession) {
+		await super.onDidTerminateDebugSession(session)
+		if (session.configuration.type.includes('chrome')) {
+			this.setDebuggingInChrome(false)
+			sidebarTreeView?.refresh()
+		}
 	}
 
 	async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -201,7 +204,6 @@ export class WebStream extends Stream {
 		isRecompilingService = active
 	}
 
-
 	setHotBuildingCSS(active: boolean) {
 		isHotBuildingCSS = active
 		isRecompilingCSS = active
@@ -228,16 +230,6 @@ export class WebStream extends Stream {
 	setDebuggingInChrome(active: boolean) {
 		isDebuggingInChrome = active
 		commands.executeCommand('setContext', 'isDebuggingInChrome', active)
-	}
-	
-	setAbortBuildingRelease(handler: () => void | undefined) {
-		abortBuildingRelease = handler
-	}
-	
-	setBuildingRelease(active: boolean) {
-		if (!active) abortBuildingRelease = undefined
-		isBuildingRelease = active
-		commands.executeCommand('setContext', 'isBuildingRelease', active)
 	}
 	
 	setRunningCrawlServer(active: boolean) {
@@ -290,10 +282,10 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileJS, newFileJSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewFileSCSS, newFileCSSCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileApp, () => {
-			hotRebuildSwift(this, { target: appTargetName })
+			this.hotRebuildSwift({ target: appTargetName })
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileService, () => {
-			hotRebuildSwift(this, { target: serviceWorkerTargetName })
+			this.hotRebuildSwift({ target: serviceWorkerTargetName })
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, hotRebuildJS))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, hotRebuildCSS))
@@ -352,77 +344,42 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeploy, this.yandex.deploy))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeintegrate, this.yandex.deintegrate))
 	}
-
-	hotReloadHashes: any = {}
 	
-	async onDidSaveTextDocument(document: TextDocument) {
-		super.onDidSaveTextDocument(document)
-		if (!isInContainer) return
-		if (!isHotRebuildEnabled) return
+	async onDidSaveTextDocument(document: TextDocument): Promise<boolean> {
+		if (await super.onDidSaveTextDocument(document)) return true
+		if (!isInContainer) return false
 		// if (document.isDirty) return
 		if (document.uri.scheme === 'file') {
 			const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
-			print(`onDidSaveTextDocument languageId: ${document.languageId}`, LogLevel.Unbearable)
-			async function goThroughHashCheck(ctx: WebStream, handler: () => Promise<void>) {
-				const oldChecksum = ctx.hotReloadHashes[document.uri.path]
-				const newChecksum = generateChecksum(document.getText())
-				print(`Checking ${document.uri.path.split('/').pop()}\noldChecksum: ${oldChecksum}\nnewChecksum: ${newChecksum}`, LogLevel.Unbearable)
-				if (oldChecksum && oldChecksum === newChecksum) {
-					print(`Skipping hot realod, file wasn't changed: ${document.uri.path.split('/').pop()}`, LogLevel.Verbose)
-				} else {
-					try {
-						await handler()
-						ctx.hotReloadHashes[document.uri.path] = newChecksum
-					} catch (error) {
-						const json = JSON.stringify(error)
-						print(`${document.uri.path.split('/').pop()} failed to hot realod: ${json === '{}' ? error : json}`, LogLevel.Verbose)
-					}
-				}
-			}
-			// Swift
-			if (['swift'].includes(document.languageId)) {
-				// Package.swift
-				if (document.uri.path === `${projectDirectory}/Package.swift`) {
-					await goThroughHashCheck(this, async () => {
-						await hotRebuildSwift(this)
-					})
-				}
-				// Swift sources
-				else if (document.uri.path.startsWith(`${projectDirectory}/Sources/`)) {
-					const target = `${document.uri.path}`.replace(`${projectDirectory}/Sources/`, '').split('/')[0]
-					if (target) {
-						await goThroughHashCheck(this, async () => {
-							await hotRebuildSwift(this, { target: target })
-						})
-					}
-				}
-			}
 			// Web sources
-			else if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesFolder}`)) {
+			if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesFolder}`) && isHotRebuildEnabled) {
 				// CSS
 				if (['css', 'scss', 'sass'].includes(document.languageId)) {
-					await goThroughHashCheck(this, async () => {
+					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildCSS(this)
 					})
+					return true
 				}
 				// JavaScript
 				else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesFolder}/tsconfig.json`) {
-					await goThroughHashCheck(this, async () => {
+					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildJS(this, { path: document.uri.path })
 					})
+					return true
 				}
 				// HTML
 				else if (['html'].includes(document.languageId.toLowerCase())) {
-					await goThroughHashCheck(this, async () => {
+					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildHTML(this)
 					})
+					return true
 				}
 			}
 			// VSCode configuration files
 			else if (document.languageId === 'jsonc' && document.uri.scheme === 'file') {
 				// devcontainer.json
 				if (document.uri.path == devContainerPath) {
-					const readPorts = await readPortsFromDevContainer()
+					const readPorts = await readWebPortsFromDevContainer()
 					if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
 						this.setPendingNewDevPort(`${readPorts.devPort}`)
 					} else {
@@ -438,9 +395,11 @@ export class WebStream extends Stream {
 					} else {
 						this.setPendingNewProdPort(undefined)
 					}
+					return true
 				}
 			}
 		}
+		return false
 	}
 
 	onDidRenameFiles(event: FileRenameEvent) {
@@ -461,6 +420,10 @@ export class WebStream extends Stream {
 
 	async buildDebug() {
 		await buildCommand(this)
+	}
+
+	async hotRebuildSwift(params?: { target?: string }) {
+		rebuildSwift(this, params)
 	}
 
 	async buildRelease(successCallback?: any) {

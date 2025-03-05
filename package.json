@@ -143,19 +143,19 @@
         {
           "group": "navigation@1",
           "command": "buildDebug",
-          "when": "!isBuilding"
+          "when": "!isBuildingDebug"
         },
         {
           "group": "navigation@1",
           "command": "stopBuildingDebug",
-          "when": "isBuilding"
+          "when": "isBuildingDebug"
         }
       ],
       "view/item/context": [
         {
           "group": "inline",
           "command": "stopBuildingDebug",
-          "when": "view == swiftstreamSidebar && viewItem == Build && isBuilding"
+          "when": "view == swiftstreamSidebar && viewItem == BuildDebug && isBuildingDebug"
         },
         {
           "group": "inline",

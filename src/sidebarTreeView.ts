@@ -1,8 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
-import { isBuildingRelease } from './streams/web/webStream'
-import { isBuilding, isHotRebuildEnabled, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel } from './streams/stream'
+import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingBuildCache, isClearedBuildCache, currentLoggingLevel } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
@@ -247,7 +246,7 @@ export enum SideTreeItem {
 		ReopenInContainer = 'ReopenInContainer',
 		WhyReopenInContainer = 'WhyReopenInContainer',
 		NewProject = 'NewProject',
-		Build = 'Build',
+		BuildDebug = 'BuildDebug',
 		DebugInChrome = 'DebugInChrome',
 		RunCrawlServer = 'RunCrawlServer',
 		HotReload = 'HotReload',
