@@ -13,7 +13,6 @@ import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
 
-export var isDebugging = false
 export var isBuildingDebug = false
 export var isBuildingRelease = false
 export var abortBuildingDebug: (() => void) | undefined
@@ -49,12 +48,7 @@ export class Stream {
         }))
     }
 
-	async onDidTerminateDebugSession(session: DebugSession) {
-		if (session.configuration.type.includes('lldb')) {
-			this.setDebugging(false)
-			sidebarTreeView?.refresh()
-		}
-	}
+	async onDidTerminateDebugSession(session: DebugSession) {}
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('stream.loggingLevel'))
@@ -294,11 +288,6 @@ export class Stream {
 		if (!active) abortBuildingRelease = undefined
 		isBuildingRelease = active
 		commands.executeCommand('setContext', 'isBuildingRelease', active)
-	}
-		
-	setDebugging(active: boolean) {
-		isDebugging = active
-		commands.executeCommand('setContext', 'isDebugging', active)
 	}
 	
 	setHotRebuild(value?: boolean) {

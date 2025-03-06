@@ -146,7 +146,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				switch (element.id) {
 				case SideTreeItem.Debug:
 					// Actions
-					items.push(new Dependency(SideTreeItem.Build, isBuilding || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuilding || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
+					items.push(new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
 					if (currentStream) items.push(...(await currentStream.debugActionItems()))
 					// Options
 					items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
@@ -247,14 +247,17 @@ export enum SideTreeItem {
 		WhyReopenInContainer = 'WhyReopenInContainer',
 		NewProject = 'NewProject',
 		BuildDebug = 'BuildDebug',
+		RunDebug = 'RunDebug',
 		DebugInChrome = 'DebugInChrome',
 		RunCrawlServer = 'RunCrawlServer',
+		RunNgrok = 'RunNgrok',
 		HotReload = 'HotReload',
 		HotRebuild = 'HotRebuild',
 		DebugGzip = 'DebugGzip',
 		DebugBrotli = 'DebugBrotli',
 	Release = 'Release',
 		BuildRelease = 'BuildRelease',
+		RunRelease = 'RunRelease',
 		Firebase = 'Firebase',
 			FirebaseSetup = 'FirebaseSetup',
 			FirebaseDeployMode = 'FirebaseDeployMode',
@@ -323,6 +326,7 @@ export enum SideTreeItem {
 		RecompileHTML = 'RecompileHTML',
 	Settings = 'Settings',
 		Toolchain = 'Toolchain',
+		Port = 'Port',
 		DevPort = 'DevPort',
 		DevCrawlerPort = 'DevCrawlerPort',
 		ProdPort = 'ProdPort',

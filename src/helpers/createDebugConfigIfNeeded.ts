@@ -46,7 +46,36 @@ export async function createWebDebugConfigIfNeeded(): Promise<any> {
             const existingConfigurations: any[] = config.configurations
             config.configurations = [newConfig, ...existingConfigurations]
         }
-        return config
+        return newConfig
+    })
+}
+
+export async function createServerDebugConfigIfNeeded(): Promise<any> {
+    var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
+	if (configurations)
+		for (var config of configurations) {
+			if (config.type === 'lldb' && config.name === 'Debug Server') {
+    			// Return existing configuration
+                return config
+            }
+		}
+    // Add a new configuration
+    const newConfig: any = {
+        name: 'Debug Server',
+        type: 'lldb',
+        request: 'launch',
+        program: '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}/.build/debug/MySwiftApp',
+        args: [],
+        cwd: '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}'
+    }
+    return await readAndUpdateConfig((config) => {
+        if (!config.configurations) {
+            config.configurations = [newConfig]
+        } else {
+            const existingConfigurations: any[] = config.configurations
+            config.configurations = [newConfig, ...existingConfigurations]
+        }
+        return newConfig
     })
 }
 
