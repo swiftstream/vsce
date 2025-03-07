@@ -13,7 +13,8 @@
 		"S_VERSION_PATCH": "0"
 	},
 	"appPort": [
-		"8080:8080"
+		"8080:8080",
+		"8000:80"
 	],
 	"postStartCommand": "cmd.sh",
 	"customizations": {
@@ -31,7 +32,7 @@
 				"lldb.library": "/swift/toolchains/5.10.0-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
-				"swift.autoGenerateLaunchConfigurations": true,
+				"swift.autoGenerateLaunchConfigurations": false,
 				"swift.backgroundCompilation": false,
 				"swift.showCreateSwiftProjectInWelcomePage": false,
 				"editor.semanticHighlighting.enabled": true,
@@ -53,6 +54,11 @@
 			"source": "swift-sdks",
 			"target": "/root/.swiftpm/swift-sdks",
 			"type": "volume"
+		},
+		{
+			"source": "${localWorkspaceFolder}/.devcontainer/nginx.conf",
+			"target": "/etc/nginx/nginx.conf",
+			"type": "bind"
 		}
 	]
 }
