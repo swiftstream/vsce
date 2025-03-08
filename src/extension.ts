@@ -8,7 +8,7 @@ import { reopenInContainerCommand, whyReopenInContainerCommand } from './command
 import { startNewProjectWizard } from './wizards/startNewProjectWizard'
 import { Dependency, SidebarTreeView, SideTreeItem } from './sidebarTreeView'
 import { WebStream } from './streams/web/webStream'
-import { abortBuildingDebug, abortBuildingRelease, Stream } from './streams/stream'
+import { Stream } from './streams/stream'
 import { DockerImage } from './dockerImage'
 import { buildCommand } from './streams/web/commands/build'
 import { debugInChromeCommand } from './streams/web/commands/debugInChrome'
@@ -201,11 +201,11 @@ function registerCommands() {
 		await commands.executeCommand('workbench.action.debug.stop')
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('buildDebug', buildCommand))
-	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingDebug', () => {
-		if (abortBuildingDebug) abortBuildingDebug()
+	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingDebug', async () => {
+		await currentStream?.abortBuildingDebug()
 	}))
-	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingRelease', () => {
-		if (abortBuildingRelease) abortBuildingRelease()
+	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingRelease', async () => {
+		await currentStream?.abortBuildingRelease()
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('setupAlienProject', async () => {
 		if (!projectDirectory) return

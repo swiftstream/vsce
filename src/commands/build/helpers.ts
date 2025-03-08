@@ -3,6 +3,7 @@ import { projectDirectory, currentStream } from '../../extension'
 import { print } from '../../streams/stream'
 import { LogLevel } from '../../streams/stream'
 import { SwiftBuildType } from '../../swift'
+import { AbortHandler } from '../../bash'
 
 export enum KnownPackage {
 	JavaScriptKit = 'JavaScriptKit',
@@ -29,13 +30,19 @@ export function isPackagePresentInResolved(packageName: KnownPackage): boolean {
 		return false
 	}
 }
-export async function buildSwiftTarget(options: { type: SwiftBuildType, targetName: string, release: boolean, isCancelled: () => boolean, progressHandler?: (p: string) => void }) {
-	if (!currentStream) { throw `webStream is null` }
+export async function buildSwiftTarget(options: {
+	type: SwiftBuildType,
+	targetName: string,
+	release: boolean,
+	abortHandler: AbortHandler,
+	progressHandler?: (p: string) => void
+}) {
+	if (!currentStream) { throw `stream is null` }
 	await currentStream.swift.build({
 		type: options.type,
 		targetName: options.targetName,
 		release: options.release,
-		isCancelled: options.isCancelled,
+		abortHandler: options.abortHandler,
 		progressHandler: options.progressHandler
 	})
 }

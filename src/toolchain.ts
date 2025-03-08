@@ -39,8 +39,7 @@ export class Toolchain {
     async checkVersion() {
         const result = await this.stream.bash.execute({
             path: this.swiftPath,
-            description: 'check swift toolchain version',
-            isCancelled: () => false
+            description: 'check swift toolchain version'
         }, ['--version'])
         const version = result.stdout
         if (version.length == 0)

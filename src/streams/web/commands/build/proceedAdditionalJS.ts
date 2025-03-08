@@ -5,8 +5,14 @@ import { projectDirectory } from '../../../../extension'
 import { buildDevFolder, buildProdFolder, indexFile, webSourcesFolder } from '../../../../streams/web/webStream'
 import { buildStatus, print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
+import { AbortHandler } from '../../../../bash'
 
-export async function proceedAdditionalJS(options: { release: boolean, executableTargets: string[], exactFile?: string }) {
+export async function proceedAdditionalJS(options: {
+    release: boolean,
+    executableTargets: string[],
+    exactFile?: string,
+    abortHandler: AbortHandler
+}) {
     const webFolder = `${projectDirectory}/${webSourcesFolder}`
     const buildFolder = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     function processItem(pathFrom: string): boolean {
@@ -61,6 +67,7 @@ export async function proceedAdditionalJS(options: { release: boolean, executabl
             continue
     }
     measure.finish()
+    if (options.abortHandler.isCancelled) return
     print(`🎨 Processed additional JS files in ${measure.time}ms`, LogLevel.Detailed)
 }
 

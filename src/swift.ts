@@ -6,11 +6,14 @@ import { projectDirectory, sidebarTreeView } from './extension'
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
+import { AbortHandler } from './bash'
 
 export class Swift {
     constructor(private stream: Stream) {}
 
-    private async execute(args: string[]): Promise<string> {
+    private async execute(args: string[], options?: {
+        abortHandler?: AbortHandler | undefined
+    }): Promise<string> {
         var env = process.env
         env.WEBBER = 'TRUE'
         const result = await this.stream.bash.execute({
@@ -18,14 +21,14 @@ export class Swift {
             description: `get executable target`,
             cwd: projectDirectory,
             env: env,
-            isCancelled: () => false
+            abortHandler: options?.abortHandler
         }, args)
         if (result.stderr.length > 0)
             throw result.stderr
         return result.stdout
     }
 
-    async getTargets(): Promise<SwiftTargets> {
+    async getTargets(options?: { abortHandler?: AbortHandler | undefined }): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
@@ -35,7 +38,9 @@ export class Swift {
                 executables: [],
                 serviceWorkers: []
             }
-            const dump = await this.execute(['package', 'dump-package'])
+            const dump = await this.execute(['package', 'dump-package'], {
+                abortHandler: options?.abortHandler
+            })
             const json = JSON.parse(dump)
             if (json.products.length > 0) {
                 for (let target of json.targets) {
@@ -54,13 +59,15 @@ export class Swift {
         }
     }
 
-    async packageDump(): Promise<PackageContent | undefined> {
+    async packageDump(options: { abortHandler: AbortHandler }): Promise<PackageContent | undefined> {
         const args: string[] = ['package', 'dump-package']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const result = await this.execute(args)
+            const result = await this.execute(args, {
+                abortHandler: options.abortHandler
+            })
             const json = JSON.parse(result)
             const dependencies: Dependency[] = json.dependencies
             const products: Product[] = json.products.map((x:any) => {
@@ -79,7 +86,10 @@ export class Swift {
         }
     }
 
-    async grabPWAManifest(options: { serviceWorkerTarget: string }): Promise<any> {
+    async grabPWAManifest(options: {
+        serviceWorkerTarget: string,
+        abortHandler: AbortHandler
+    }): Promise<any> {
         const executablePath = `${projectDirectory}/.build/debug/${options.serviceWorkerTarget}`
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the service target, can't retrieve manifest`
@@ -89,7 +99,7 @@ export class Swift {
                 path: executablePath,
                 description: `grab PWA manifest`,
                 cwd: projectDirectory,
-                isCancelled: () => false
+                abortHandler: options.abortHandler
             }, [])
             return JSON.parse(result.stdout)
         } catch (error: any) {
@@ -98,7 +108,10 @@ export class Swift {
         }
     }
 
-    async grabIndex(options: { target: string }): Promise<Index | undefined> {
+    async grabIndex(options: {
+        target: string,
+        abortHandler: AbortHandler
+    }): Promise<Index | undefined> {
         const executablePath = `${projectDirectory}/.build/debug/${options.target}`
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
@@ -108,7 +121,7 @@ export class Swift {
                 path: executablePath,
                 description: `grab Index`,
                 cwd: projectDirectory,
-                isCancelled: () => false
+                abortHandler: options.abortHandler
             }, ['--index'])
             const startCode = '==INDEX-START=='
             const endCode = '==INDEX-END=='
@@ -126,27 +139,43 @@ export class Swift {
         }
     }
 
-    async packageResolve(type: SwiftBuildType): Promise<void> {
-        const args: string[] = ['package', 'resolve', "--build-path", type == SwiftBuildType.Native ? './.build' : `./.build/.${type}`]
+    async packageResolve(options: {
+        type: SwiftBuildType,
+        abortHandler: AbortHandler,
+        progressHandler?: (p: string) => void
+    }): Promise<void> {
+        const args: string[] = ['package', 'resolve', "--build-path", options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`]
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
             const result = await this.stream.bash.execute({
                 path: this.stream.toolchain.swiftPath,
-                description: `resolve dependencies for ${type}`,
+                description: `resolve dependencies for ${options.type}`,
                 cwd: projectDirectory,
-                isCancelled: () => false
+                abortHandler: options.abortHandler,
+                processInstanceHandler: (process) => {
+                    options.abortHandler.addProcess(process)
+                    if (options.abortHandler.isCancelled) return
+                    if (!options.progressHandler) return
+                    process.stderr.on('data', function(msg) {
+                        if (options.abortHandler.isCancelled) return
+                        const m = msg.toString()
+                        if (m.startsWith('[')) {
+                            options.progressHandler!(m.split(']')[0].replace('[', ''))
+                        }
+                    })
+                }
             }, args)
             if (result.code != 0) {
                 if (result.stderr.length > 0) {
                     console.error({packageResolve: result.stderr})
                 }
-                throw `Unable to resolve swift packages for ${type}`
+                throw `Unable to resolve swift packages for ${options.type}`
             }
         } catch (error: any) {
             print(`error: ${isString(error) ? error : JSON.stringify(error)}`, LogLevel.Normal, true)
-            throw `Unable to resolve swift packages for ${type}`
+            throw `Unable to resolve swift packages for ${options.type}`
         }
     }
 
@@ -192,7 +221,13 @@ export class Swift {
         }
     }
 
-    async build(options: { type: SwiftBuildType, targetName: string, release: boolean, isCancelled: () => boolean, progressHandler?: (p: string) => void }) {
+    async build(options: {
+        type: SwiftBuildType,
+        targetName: string,
+        release: boolean,
+        abortHandler: AbortHandler,
+        progressHandler?: (p: string) => void
+    }) {
         print(`\`swift build\` started`, LogLevel.Verbose)
         var args: string[] = [
             'build',
@@ -221,20 +256,20 @@ export class Swift {
         }
         var env = process.env
         try {
-            if (options.isCancelled()) return
+            if (options.abortHandler.isCancelled) return
             print(`🧰 ${this.stream.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
             const result = await this.stream.bash.execute({
                 path: this.stream.toolchain.swiftPath,
                 description: `build swift`,
                 cwd: projectDirectory,
                 env: env,
-                isCancelled: options.isCancelled,
+                abortHandler: options.abortHandler,
                 processInstanceHandler: (process) => {
-                    if (options.isCancelled()) return
-                    // TODO: process.kill('SIGKILL')
+                    options.abortHandler.addProcess(process)
+                    if (options.abortHandler.isCancelled) return
                     if (!options.progressHandler) return
                     process.stdout.on('data', function(msg) {
-                        if (options.isCancelled()) return
+                        if (options.abortHandler.isCancelled) return
                         const m = msg.toString()
                         if (m.startsWith('[')) {
                             options.progressHandler!(m.split(']')[0].replace('[', ''))
@@ -242,9 +277,9 @@ export class Swift {
                     })
                 }
             }, args)
-            if (options.isCancelled()) return
-            const ending = await this.processCompilationErrors(result.stdout, options.isCancelled)
-            if (options.isCancelled()) return
+            if (options.abortHandler.isCancelled) return
+            const ending = await this.processCompilationErrors(result.stdout, () => options.abortHandler.isCancelled)
+            if (options.abortHandler.isCancelled) return
             if (ending.length > 0) {
                 print(`${ending}`, LogLevel.Detailed)
             }
@@ -261,7 +296,7 @@ export class Swift {
                     throw `Build failed with exit code ${error.error.code} ${error.stderr}`
                 }
             }
-            const ending = await this.processCompilationErrors(rawError, options.isCancelled)
+            const ending = await this.processCompilationErrors(rawError, () => options.abortHandler.isCancelled)
             sidebarTreeView?.refresh()
             throw `🥺 Unable to continue cause of failed compilation, ${ending}\n`
         }

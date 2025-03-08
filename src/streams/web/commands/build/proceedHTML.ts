@@ -6,10 +6,17 @@ import { LogLevel } from '../../../../streams/stream'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 import { findFilesRecursively, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../../../helpers/filesHelper'
 import { Index, SplashData } from '../../../../swift'
+import { AbortHandler } from '../../../../bash'
 
 const managedBy = `managedBy="webber"`
 
-export async function proceedHTML(options: { appTargetName: string, manifest?: any, index?: Index, release: boolean }) {
+export async function proceedHTML(options: {
+    appTargetName: string,
+    manifest?: any,
+    index?: Index,
+    release: boolean,
+    abortHandler: AbortHandler
+}) {
     const measure = new TimeMeasure()
     const lastModifiedDate = getLastModifiedDate(LastModifiedDateType.HTML)
     const webFolder = `${projectDirectory}/${webSourcesFolder}`
@@ -296,6 +303,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
             isIndexChanged = true
         }
     }
+    if (options.abortHandler.isCancelled) return
     // writing main.html if needed
     if (isIndexChanged) {
         const newHTML = lines.join('\n')
@@ -367,6 +375,7 @@ export async function proceedHTML(options: { appTargetName: string, manifest?: a
         }
         fs.writeFileSync(saveTo, newHTML)
     }
+    if (options.abortHandler.isCancelled) return
     saveLastModifiedDateForKey(LastModifiedDateType.HTML)
     measure.finish()
     print(`🌎 Copied HTML files in ${measure.time}ms`, LogLevel.Detailed)

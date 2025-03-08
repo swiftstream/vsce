@@ -6,8 +6,13 @@ import { buildStatus, print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { findFilesRecursively, FoundFileItem, getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey } from '../../../../helpers/filesHelper'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { AbortHandler } from '../../../../bash'
 
-export async function proceedCSS(options: { force: boolean, release: boolean }) {
+export async function proceedCSS(options: {
+    force: boolean,
+    release: boolean,
+    abortHandler: AbortHandler
+}) {
     if (!currentStream) throw `webStream is null`
     const measure = new TimeMeasure()
     const webFolder = `${projectDirectory}/${webSourcesFolder}`
@@ -29,6 +34,7 @@ export async function proceedCSS(options: { force: boolean, release: boolean }) 
     function processArray(items: FoundFileItem[], folder: string) {
         const isBuildFolder = folder === buildFolder
         for (let i = 0; i < items.length; i++) {
+            if (options.abortHandler.isCancelled) return
             const item = items[i]
             const relativePath = item.path.replace(folder, '')
             const saveTo = (isBuildFolder)
@@ -45,6 +51,7 @@ export async function proceedCSS(options: { force: boolean, release: boolean }) 
     }
     processArray(scssInBuildFolder, buildFolder)
     processArray(scssInSourcesFolder, webFolder)
+    if (options.abortHandler.isCancelled) return
     saveLastModifiedDateForKey(LastModifiedDateType.SCSS)
     measure.finish()
     print(`🎨 Processed CSS in ${measure.time}ms`, LogLevel.Detailed)

@@ -5,8 +5,19 @@ import { print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { projectDirectory, webStream } from '../../../../extension'
 import { SwiftBuildType } from '../../../../swift'
+import { AbortHandler } from '../../../../bash'
 
-export async function proceedWasmFile(options: { target: string, release: boolean, gzipSuccess: () => void, gzipFail: (any) => void, gzipDisabled: () => void, brotliSuccess: () => void, brotliFail: (any) => void, brotliDisabled: () => void }): Promise<any> {
+export async function proceedWasmFile(options: {
+    target: string,
+    release: boolean,
+    abortHandler: AbortHandler,
+    gzipSuccess: () => void,
+    gzipFail: (any) => void,
+    gzipDisabled: () => void,
+    brotliSuccess: () => void,
+    brotliFail: (any) => void,
+    brotliDisabled: () => void
+}): Promise<any> {
     if (!webStream) throw `webStream is null`
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
@@ -17,17 +28,18 @@ export async function proceedWasmFile(options: { target: string, release: boolea
     fs.cpSync(`${buildFolder}/${options.target}.wasm`, `${destPath}/${lowercasedTarget}.wasm`)
     if (options.release) {
         // Optimization for old Safari
-        await webStream.wasm.lowerI64Imports({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.lowerI64Imports({ destPath: destPath, lowercasedTarget: lowercasedTarget, abortHandler: options.abortHandler })
         // Stripping debug info
-        await webStream.wasm.strip({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.strip({ destPath: destPath, lowercasedTarget: lowercasedTarget, abortHandler: options.abortHandler })
         // Optimize, reduces the size, and improves the performance through various optimization techniques
-        await webStream.wasm.opt({ destPath: destPath, lowercasedTarget: lowercasedTarget })
+        await webStream.wasm.opt({ destPath: destPath, lowercasedTarget: lowercasedTarget, abortHandler: options.abortHandler })
     }
+    if (options.abortHandler.isCancelled) return
     timeMeasure.finish()
     // TODO: hot reloads
     const originalWasm = `${lowercasedTarget}.wasm`
-    const gzipOptions = { path: destPath, filename: originalWasm, level: options.release ? 9 : undefined }
-    const brotliOptions = { path: destPath, filename: originalWasm, level: options.release ? 11 : 4 }
+    const gzipOptions = { path: destPath, filename: originalWasm, level: options.release ? 9 : undefined, abortHandler: options.abortHandler }
+    const brotliOptions = { path: destPath, filename: originalWasm, level: options.release ? 11 : 4, abortHandler: options.abortHandler }
     if (options.release) {
         try {
             await webStream?.gzip.compress(gzipOptions)
@@ -65,5 +77,6 @@ export async function proceedWasmFile(options: { target: string, release: boolea
             options.brotliDisabled()
         }
     }
+    if (options.abortHandler.isCancelled) return
     print(`🧮 Processed wasm file in ${timeMeasure.time}ms`, LogLevel.Detailed)
 }

@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { BashResult } from './bash'
+import { AbortHandler, BashResult } from './bash'
 import { WebStream } from './streams/web/webStream'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
@@ -16,13 +16,15 @@ export class Wasm {
     /// Optimizes for old Safari
     async lowerI64Imports(options: {
         destPath: string,
-        lowercasedTarget: string
+        lowercasedTarget: string,
+        abortHandler: AbortHandler
     }): Promise<void> {
         const measure = new TimeMeasure()
         print(`🎞️ Lowering I64imports in ${options.lowercasedTarget}.wasm`, LogLevel.Detailed)
         const fullPath = `${options.destPath}/${options.lowercasedTarget}.wasm`
         let bytes: Uint8Array = fs.readFileSync(fullPath)
         bytes = await lowerI64Imports(bytes)
+        if (options.abortHandler.isCancelled) return
         fs.writeFileSync(fullPath, bytes)
         measure.finish()
         print(`🎞️ Lowered I64imports in ${options.lowercasedTarget}.wasm in ${measure.time}ms`, LogLevel.Detailed)
@@ -31,8 +33,9 @@ export class Wasm {
     /// Removes all custom sections, reduces file size by 1/3
     async strip(options: {
         destPath: string,
-        lowercasedTarget: string
-    }): Promise<BashResult> {
+        lowercasedTarget: string,
+        abortHandler: AbortHandler
+    }): Promise<BashResult | undefined> {
         const measure = new TimeMeasure()
         if (!this.stripBinPath)
             this.stripBinPath = await this.webStream.bash.which('wasm-strip')
@@ -46,8 +49,9 @@ export class Wasm {
             path: this.stripBinPath!,
             description: `wasm-strip`,
             cwd: options.destPath,
-            isCancelled: () => false
+            abortHandler: options.abortHandler
         }, [`${options.lowercasedTarget}.wasm`])
+        if (options.abortHandler.isCancelled) return undefined
         const newSize = fs.statSync(fullPath).size
         measure.finish()
         print(`🔪 Stripped ${options.lowercasedTarget}.wasm ${humanFileSize(originalSize)} → ${humanFileSize(newSize)} in ${measure.time}ms`, LogLevel.Detailed)
@@ -57,8 +61,9 @@ export class Wasm {
     /// Loads WebAssembly and runs Binaryen IR passes on it, reduces file size by 1/2
     async opt(options: {
         destPath: string,
-        lowercasedTarget: string
-    }): Promise<BashResult> {
+        lowercasedTarget: string,
+        abortHandler: AbortHandler
+    }): Promise<BashResult | undefined> {
         const measure = new TimeMeasure()
         if (!this.optBinPath)
             this.optBinPath = await this.webStream.bash.which('wasm-opt')
@@ -73,8 +78,9 @@ export class Wasm {
             path: this.optBinPath!,
             description: `wasm-opt`,
             cwd: options.destPath,
-            isCancelled: () => false
+            abortHandler: options.abortHandler
         }, args)
+        if (options.abortHandler.isCancelled) return undefined
         const newSize = fs.statSync(fullPath).size
         measure.finish()
         print(`💾 Optimized ${options.lowercasedTarget}.wasm ${humanFileSize(originalSize)} → ${humanFileSize(newSize)} in ${measure.time}ms`, LogLevel.Detailed)

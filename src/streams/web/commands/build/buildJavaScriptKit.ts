@@ -7,8 +7,12 @@ import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, 
 import { SwiftBuildType } from '../../../../swift'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 import { doesPackageCheckedOut, KnownPackage } from '../../../../commands/build/helpers'
+import { AbortHandler } from '../../../../bash'
 
-export async function buildJavaScriptKit(options: { force: boolean }) {
+export async function buildJavaScriptKit(options: {
+    force: boolean,
+    abortHandler: AbortHandler
+}) {
     if (!webStream) throw `webStream is null`
     const jsKitPath = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/checkouts/JavaScriptKit`
     var packageWasModified = false
@@ -32,6 +36,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
     } else {
         print(`🫖 Building JavaScriptKit`, LogLevel.Detailed)
     }
+    if (options.abortHandler.isCancelled) return
     buildStatus(`Building JavaScriptKit`)
     if (!doesPackageModulesPresent()) {
         try {
@@ -42,15 +47,15 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
         }
 		print(`Building JavaScriptKit: npm install`, LogLevel.Verbose)
 		buildStatus('Building JavaScriptKit: npm install')
-		await webStream.npmJSKit.install()
+		await webStream.npmJSKit.install([], options.abortHandler)
 		if (!doesPackageModulesPresent())
 			throw `JavaScriptKit: npm install failed`
 		print(`Building JavaScriptKit: npm run build`, LogLevel.Verbose)
 		buildStatus('Building JavaScriptKit: npm run build')
-        await webStream.npmJSKit.run(['build'])
+        await webStream.npmJSKit.run(['build'], options.abortHandler)
 		if (!doesJavaScriptKitCompiled(jsKitPath)) {
 			print(`Building JavaScriptKit: npm run build (2nd attempt)`, LogLevel.Verbose)
-			await webStream.npmJSKit.run(['build'])
+			await webStream.npmJSKit.run(['build'], options.abortHandler)
 		}
 	} else {
 		print(`Building JavaScriptKit: checking versions`, LogLevel.Verbose)
@@ -61,7 +66,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
 			if (versions.locked != versions.current) {
 				print(`Updating JavaScriptKit v${versions.locked} to v${versions.current} via npm install in WebSources folder`, LogLevel.Verbose)
 				buildStatus('Updating JavaScriptKit in web sources')
-				await webStream.npmWeb.install()
+				await webStream.npmWeb.install([], options.abortHandler)
                 const versionsAfterInstall = readVersions({ projectLock: projectPackageLockPath, jsKitPackage: jsKitPackagePath })
                 if (versionsAfterInstall.locked != versionsAfterInstall.current) {
                     print(`JavaScriptKit installed version mismatch: v${versionsAfterInstall.locked} != ${versionsAfterInstall.current}`, LogLevel.Detailed)
@@ -74,6 +79,7 @@ export async function buildJavaScriptKit(options: { force: boolean }) {
             print(`Skipping JavaScriptKit versions check since WebSources never been built`, LogLevel.Verbose)
         }
 	}
+    if (options.abortHandler.isCancelled) return
     saveLastModifiedDateForKey(LastModifiedDateType.JavaScriptKitPackage)
     measure.finish()
     print(`🫖 Built JavaScriptKit in ${measure.time}ms`, LogLevel.Detailed)

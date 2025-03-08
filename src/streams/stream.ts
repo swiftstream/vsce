@@ -1,5 +1,5 @@
-import { window, debug, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, DebugSession } from 'vscode'
-import { Bash } from '../bash'
+import { window, debug, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, DebugSession, TreeItemCollapsibleState } from 'vscode'
+import { AbortHandler, Bash } from '../bash'
 import { Pgrep } from '../pgrep'
 import { Swift } from '../swift'
 import { Toolchain } from '../toolchain'
@@ -15,8 +15,6 @@ import { generateChecksum } from '../helpers/filesHelper'
 
 export var isBuildingDebug = false
 export var isBuildingRelease = false
-export var abortBuildingDebug: (() => void) | undefined
-export var abortBuildingRelease: (() => void) | undefined
 export var isHotBuildingSwift = false
 export var isHotRebuildEnabled = false
 export var isClearingBuildCache = false
@@ -275,17 +273,16 @@ export class Stream {
 	}
 
 	setBuildingDebug(active: boolean) {
-		if (!active) abortBuildingDebug = undefined
+		if (!active) this.abortBuildingDebugHandler = undefined
 		isBuildingDebug = active
 		commands.executeCommand('setContext', 'isBuilding', active)
 	}
 		
 	setAbortBuildingRelease(handler: () => void | undefined) {
-		abortBuildingRelease = handler
 	}
 	
 	setBuildingRelease(active: boolean) {
-		if (!active) abortBuildingRelease = undefined
+		if (!active) this.abortBuildingReleaseHandler = undefined
 		isBuildingRelease = active
 		commands.executeCommand('setContext', 'isBuildingRelease', active)
 	}

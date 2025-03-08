@@ -5,8 +5,13 @@ import { print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { projectDirectory, currentStream } from '../../../../extension'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { AbortHandler } from '../../../../bash'
 
-export async function proceedServiceWorkerManifest(options: { isPWA: boolean, release: boolean }): Promise<any> {
+export async function proceedServiceWorkerManifest(options: {
+    isPWA: boolean,
+    release: boolean,
+    abortHandler: AbortHandler
+}): Promise<any> {
     if (!currentStream) throw `webStream is null`
     if (!options.isPWA) {
         print(`💨 Skipping manifest retrieval since it is not PWA app`, LogLevel.Verbose)
@@ -14,7 +19,11 @@ export async function proceedServiceWorkerManifest(options: { isPWA: boolean, re
     }
     const timeMeasure = new TimeMeasure()
     print(`📜 Getting service worker manifest`, LogLevel.Detailed)
-    var generatedManifest = await currentStream.swift.grabPWAManifest({ serviceWorkerTarget: serviceWorkerTargetName })
+    let generatedManifest = await currentStream.swift.grabPWAManifest({
+        serviceWorkerTarget: serviceWorkerTargetName,
+        abortHandler: options.abortHandler
+    })
+    if (options.abortHandler.isCancelled) return
     const webManifestFileName = generatedManifest.file_name ?? 'site'
     const staticManifest = getStaticManifest(webManifestFileName)
     if (staticManifest) {

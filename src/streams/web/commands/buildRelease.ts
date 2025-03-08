@@ -21,9 +21,18 @@ import { proceedWasmFile } from './build/proceedWasmFile'
 import { awaitGzipping, shouldAwaitGzipping } from './build/awaitGzipping'
 import { proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
+import { AbortHandler } from '../../../bash'
 
 export async function buildReleaseCommand(webStream: WebStream, successCallback?: any) {
 	if (isBuildingRelease) return
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+        status('circle-slash', `Aborted Build after ${measure.time}ms`, StatusType.Default)
+        print(`🚫 Aborted Build after ${measure.time}ms`)
+        console.log(`Aborted Build after ${measure.time}ms`)
+        webStream.setBuildingRelease(false)
+        sidebarTreeView?.refresh()
+	})
 	webStream.setBuildingRelease(true)
 	sidebarTreeView?.refresh()
 	const measure = new TimeMeasure()
@@ -50,7 +59,8 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 				substatus: (t) => {
 					buildStatus(`Resolving dependencies (${type}): ${t}`)
 					print(`🔦 Resolving Swift dependencies ${t}`, LogLevel.Verbose)
-				}
+				},
+				abortHandler: abortHandler
 			})
 		}
 		// Phase 2: Check if required Swift dependencies present
@@ -69,7 +79,7 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 		}
 		// Phase 3: Retrieve executable Swift targets
 		print('🔳 Phase 3: Retrieve executable Swift targets', LogLevel.Verbose)
-		const targetsDump = await webStream.swift.getTargets()
+		const targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0
@@ -97,29 +107,33 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 					target: target,
 					release: type == SwiftBuildType.Wasi,
 					force: true,
-					isCancelled: () => {
-						return false
-					}
+					abortHandler: abortHandler
 				})
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
 					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
-					await proceedWasmFile({ target: target, release: true, gzipSuccess: () => {
-						gzippedExecutableTargets.push(target)
-					}, gzipFail: (reason) => {
-						gzipFail = reason
-					}, brotliSuccess: () => {
-						brotledExecutableTargets.push(target)
-					}, brotliFail: (reason) => {
-						brotliFail = reason
-					}, gzipDisabled: () => {}, brotliDisabled: () => {}})
+					await proceedWasmFile({
+						target: target,
+						release: true,
+						abortHandler: abortHandler,
+						gzipSuccess: () => {
+							gzippedExecutableTargets.push(target)
+						}, gzipFail: (reason) => {
+							gzipFail = reason
+						}, brotliSuccess: () => {
+							brotledExecutableTargets.push(target)
+						}, brotliFail: (reason) => {
+							brotliFail = reason
+						}, gzipDisabled: () => {}, brotliDisabled: () => {}
+					})
 				}
 			}
 		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
 		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
 		await buildJavaScriptKit({
-			force: true
+			force: true,
+			abortHandler: abortHandler
 		})
 		// Phase 7: Build all the web sources
 		print('🔳 Phase 7: Build all the web sources', LogLevel.Verbose)
@@ -127,26 +141,52 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 			targets: targetsDump.executables,
 			release: true,
 			force: true,
-			parallel: false
+			parallel: false,
+			abortHandler: abortHandler
 		})
 		// Phase 8: Retrieve manifest from the Service target
 		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
-		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: true })
+		const manifest = await proceedServiceWorkerManifest({
+			isPWA: isPWA,
+			release: true,
+			abortHandler: abortHandler
+		})
 		// Phase 9: Retrieve index from the App target
 		print('🔳 Phase 9: Retrieve index from the App target', LogLevel.Verbose)
-		const index = await proceedIndex({ target: appTargetName, release: true })
+		const index = await proceedIndex({
+			target: appTargetName,
+			release: true,
+			abortHandler: abortHandler
+		})
 		// Phase 10: Copy bundled resources from Swift build folder
 		print('🔳 Phase 10: Copy bundled resources from Swift build folder', LogLevel.Verbose)
-		proceedBundledResources({ release: true })
+		proceedBundledResources({
+			release: true,
+			abortHandler: abortHandler
+		})
 		// Phase 11: Compile SCSS
 		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
-		await proceedCSS({ force: true, release: true })
+		await proceedCSS({
+			force: true,
+			release: true,
+			abortHandler: abortHandler
+		})
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
-		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: true })
+		await proceedHTML({
+			appTargetName: appTargetName,
+			manifest: manifest,
+			index: index,
+			release: true,
+			abortHandler: abortHandler
+		})
 		// Phase 13: Process additional JS
 		print('🔳 Phase 13: Process additional JS', LogLevel.Verbose)
-		proceedAdditionalJS({ release: true, executableTargets: targetsDump.executables })
+		proceedAdditionalJS({
+			release: true,
+			executableTargets: targetsDump.executables,
+			abortHandler: abortHandler
+		})
 		// Phase 14: Await Gzipping
 		const awaitGzippingParams = { release: true, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
@@ -160,6 +200,7 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 			await awaitBrotling(awaitBrotlingParams)
 		}
 		measure.finish()
+		if (abortHandler.isCancelled) return
 		status('check', `Release Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Release Build Succeeded in ${measure.time}ms`)
 		print(`🌐 Test in browser at https://127.0.0.1:${currentProdPort}`)

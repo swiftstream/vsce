@@ -1,4 +1,4 @@
-import { BashResult } from './bash'
+import { AbortHandler, BashResult } from './bash'
 import { WebStream, webSourcesFolder } from './streams/web/webStream'
 import { projectDirectory } from './extension'
 
@@ -15,7 +15,7 @@ export class Webpack {
     // TODO: implement config generation
     async createConfig(dev: boolean): Promise<void> {}
 
-    private async execute(args: string[]): Promise<BashResult> {
+    private async execute(args: string[], abortHandler: AbortHandler): Promise<BashResult> {
         if (!this.binPath)
             this.binPath = await this.webStream.bash.which('webpack-cli')
         if (!this.binPath)
@@ -24,13 +24,13 @@ export class Webpack {
             path: this.binPath!,
             description: `executing webpack`,
             cwd: `${projectDirectory}/${webSourcesFolder}`,
-            isCancelled: () => false
+            abortHandler: abortHandler
         }, args)
         return result
     }
 
     // https://webpack.js.org/api/cli/#build
-    async build(mode: WebpackMode, target: string, isServiceWorker: boolean, absoluteOutputPath: string) {
+    async build(mode: WebpackMode, target: string, isServiceWorker: boolean, absoluteOutputPath: string, abortHandler: AbortHandler) {
         var args = [
             'build',
             '--define-process-env-node-env', mode,
@@ -40,7 +40,7 @@ export class Webpack {
         ]
         if (isServiceWorker)
             args = [...args, '--env', 'app.isServiceWorker=true']
-        const result = await this.execute(args)
+        const result = await this.execute(args, abortHandler)
         if (result.code != 0) {
             if (result.stderr.length > 0) {
                 console.error({packageResolve: result.stderr})

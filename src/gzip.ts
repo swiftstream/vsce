@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { BashResult } from './bash'
+import { AbortHandler, BashResult } from './bash'
 import { WebStream } from './streams/web/webStream'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
@@ -11,7 +11,7 @@ export class Gzip {
 
     constructor(private webStream: WebStream) {}
 
-    private async execute(args: string[], cwd: string): Promise<BashResult> {
+    private async execute(args: string[], cwd: string, abortHandler: AbortHandler): Promise<BashResult> {
         if (!this.binPath)
             this.binPath = await this.webStream.bash.which('gzip')
         if (!this.binPath)
@@ -21,7 +21,7 @@ export class Gzip {
             path: this.binPath!,
             description: `gzip`,
             cwd: cwd,
-            isCancelled: () => false
+            abortHandler: abortHandler
         }, args)
         return result
     }
@@ -29,16 +29,18 @@ export class Gzip {
     async compress(options: {
         level?: number,
         filename: string,
-        path: string
-    }): Promise<BashResult> {
+        path: string,
+        abortHandler: AbortHandler
+    }): Promise<BashResult | undefined> {
         const measure = new TimeMeasure()
         print(`🧳 Gzipping ${options.filename}`, LogLevel.Detailed)
         const filePath = `${options.path}/${options.filename}`
         const gzFilePath = `${options.path}/${options.filename}.gz`
         const originalSize = fs.statSync(filePath).size
-        const result = await this.execute([options.level ? `-${options.level}` : '-2', '-f', '--keep', options.filename], options.path)
+        const result = await this.execute([options.level ? `-${options.level}` : '-2', '-f', '--keep', options.filename], options.path, options.abortHandler)
         const newSize = fs.statSync(gzFilePath).size
         measure.finish()
+        if (options.abortHandler.isCancelled) return undefined
         print(`🧳 Gzipped ${options.filename} ${humanFileSize(originalSize)} → ${humanFileSize(newSize)} in ${measure.time}ms`, LogLevel.Detailed)
         return result
     }

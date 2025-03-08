@@ -5,16 +5,30 @@ import { LogLevel } from '../../streams/stream'
 import { SwiftBuildType } from '../../swift'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
+import { AbortHandler } from '../../bash'
 
-export async function resolveSwiftDependencies(options: { type: SwiftBuildType, force: boolean, substatus: (x: string) => void }) {
+export async function resolveSwiftDependencies(options: {
+    type?: SwiftBuildType,
+    force: boolean,
+    substatus: (x: string) => void,
+    abortHandler: AbortHandler
+}) {
+    const packageResolve = async () => {
+        if (!currentStream) { throw `stream is null` }
+        await currentStream.swift.packageResolve({
+            type: options.type ?? SwiftBuildType.Native,
+            abortHandler: options.abortHandler,
+            progressHandler: (t) => options.substatus(t)
+        })
+    }
     const measure = new TimeMeasure()
     if (!doesBuildFolderExists(options.type)) {
         print({
-            detailed: `🔦 Resolving Swift dependencies for ${options.type}`,
-            verbose: `🔦 Resolving Swift dependencies at \`.${options.type}\` for the first time`
+            detailed: `🔦 Resolving Swift dependencies ${options.type ? `for ${options.type}` : ''}`,
+            verbose: `🔦 Resolving Swift dependencies ${options.type ? `at \`.${options.type}\`` : ''} for the first time`
         })
 		buildStatus(`Resolving dependencies`)
-        await resolveSwiftPackages(options.type)
+        await packageResolve()
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftPackage, options.type)
         measure.finish()
         print(`🔦 Resolved in ${measure.time}ms`, LogLevel.Detailed)
@@ -25,10 +39,10 @@ export async function resolveSwiftDependencies(options: { type: SwiftBuildType, 
         lastModifedTimestampMs: getLastModifiedDate(LastModifiedDateType.SwiftPackage, options.type)
     })) {
         print({
-            normal: `🔦 Updating Swift dependencies for \`.${options.type}\``,
-            verbose: `🔦 Updating Swift dependencies for \`.${options.type}\` since \`Package.swift\` has been modified`
+            normal: `🔦 Updating Swift dependencies ${options.type ? `for \`.${options.type}\`` : ''}`,
+            verbose: `🔦 Updating Swift dependencies ${options.type ? `for \`.${options.type}\`` : ''} since \`Package.swift\` has been modified`
         })
-        await resolveSwiftPackages(options.type)
+        await packageResolve()
         saveLastModifiedDateForKey(LastModifiedDateType.SwiftPackage, options.type)
         print(`🔦 Updated in ${measure.time}ms`, LogLevel.Detailed)
     }
@@ -37,8 +51,4 @@ function doesBuildFolderExists(type: SwiftBuildType): boolean {
 	const value = fs.existsSync(`${projectDirectory}/.build/.${type}`)
 	print(`./.build/.${type} ${value ? 'exists' : 'not exists'}`, LogLevel.Unbearable)
 	return value
-}
-async function resolveSwiftPackages(type: SwiftBuildType) {
-	if (!currentStream) { throw `webStream is null` }
-	await currentStream.swift.packageResolve(type)
 }

@@ -6,8 +6,15 @@ import { buildStatus, print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { WebpackMode } from '../../../../webpack'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { AbortHandler } from '../../../../bash'
 
-export async function buildWebSourcesForAllTargets(options: { targets: string[], release: boolean, force: boolean, parallel: boolean }) {
+export async function buildWebSourcesForAllTargets(options: {
+    targets: string[],
+    release: boolean,
+    force: boolean,
+    parallel: boolean,
+    abortHandler: AbortHandler
+}) {
     if (!options.parallel) {
         print('Building web sources one by one', LogLevel.Verbose)
         for (let i = 0; i < options.targets.length; i++) {
@@ -16,7 +23,8 @@ export async function buildWebSourcesForAllTargets(options: { targets: string[],
                 target: target,
                 isServiceWorker: !(target === appTargetName),
                 release: options.release,
-                force: options.force
+                force: options.force,
+                abortHandler: options.abortHandler
             })
         }
     } else {
@@ -26,12 +34,19 @@ export async function buildWebSourcesForAllTargets(options: { targets: string[],
                 target: target,
                 isServiceWorker: !(target === appTargetName),
                 release: options.release,
-                force: options.force
+                force: options.force,
+                abortHandler: options.abortHandler
             })
         }))
     }
 }
-async function buildWebSources(options: { target: string, isServiceWorker: boolean, release: boolean, force: boolean }) {
+async function buildWebSources(options: {
+    target: string,
+    isServiceWorker: boolean,
+    release: boolean,
+    force: boolean,
+    abortHandler: AbortHandler
+}) {
     if (!webStream) throw `webStream is null`
     if (!options.force && doesDependenciesPresent() && !doesModifiedAnyJSTSFile(options.target)) {
         print(`buildWebSources skipping for ${options.target} target because force == false and nothing was modified`, LogLevel.Verbose)
@@ -44,18 +59,19 @@ async function buildWebSources(options: { target: string, isServiceWorker: boole
         options.force = true
         print(`Web sources: initial npm install`, LogLevel.Verbose)
         buildStatus(`Building ${options.target} web target dependencies`)
-        await webStream.npmWeb.install()
+        await webStream.npmWeb.install([], options.abortHandler)
     }
     buildStatus(`Building ${options.target} web target sources`)
     const bundlePath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
-    await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
+    await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath, options.abortHandler)
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath })) {
         print(`🌳 Second attempt for \`${options.target}\` web target`, LogLevel.Detailed)
         buildStatus(`Building ${options.target} web target sources (2nd attempt)`)
-        await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath)
+        await webStream.webpack.build(options.release ? WebpackMode.Production : WebpackMode.Development, options.target.toLowerCase(), options.isServiceWorker, bundlePath, options.abortHandler)
     }
     if (!doesBundlePresent({ target: options.target, bundlePath: bundlePath }))
         throw `${options.target} web target build failed`
+    if (options.abortHandler.isCancelled) return
     measure.finish()
     print(`🌳 Built \`${options.target}\` web target in ${measure.time}ms`, LogLevel.Detailed)
 }

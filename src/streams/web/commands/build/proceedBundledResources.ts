@@ -5,8 +5,12 @@ import { buildDevFolder, buildProdFolder } from '../../../../streams/web/webStre
 import { print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
+import { AbortHandler } from '../../../../bash'
 
-export function proceedBundledResources(options: { release: boolean }) {
+export function proceedBundledResources(options: {
+    release: boolean,
+    abortHandler: AbortHandler
+}) {
     const buildFolder = `${projectDirectory}/.build/.${SwiftBuildType.Wasi}/${options.release ? 'release' : 'debug'}`
     const destPath = `${projectDirectory}/${options.release ? buildProdFolder : buildDevFolder}`
     if (!fs.existsSync(buildFolder)) throw `Unable to copy bundled resources, seems swift project hasn't been built`
@@ -63,6 +67,7 @@ export function proceedBundledResources(options: { release: boolean }) {
         }
         proceedFolder(dirPath)
     }
+    if (options.abortHandler.isCancelled) return
     measure.finish()
     print(`📄 Processed bundle resources in ${measure.time}ms`, LogLevel.Detailed)
 }

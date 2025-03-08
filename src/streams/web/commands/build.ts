@@ -27,6 +27,14 @@ let cachedIsPWA: boolean | undefined
 
 export async function buildCommand(webStream: WebStream) {
 	if (isBuildingDebug || webStream.isAnyHotBuilding()) { return }
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+        status('circle-slash', `Aborted Build after ${measure.time}ms`, StatusType.Default)
+        print(`🚫 Aborted Build after ${measure.time}ms`)
+        console.log(`Aborted Build after ${measure.time}ms`)
+        webStream.setBuildingDebug(false)
+        sidebarTreeView?.refresh()
+	})
 	webStream.setBuildingDebug(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(false)
@@ -51,7 +59,8 @@ export async function buildCommand(webStream: WebStream) {
 				substatus: (t) => {
 					buildStatus(`Resolving dependencies (${type}): ${t}`)
 					print(`🔦 Resolving Swift dependencies ${t}`, LogLevel.Verbose)
-				}
+				},
+				abortHandler: abortHandler
 			})
 		}
 		wsSendBuildProgress(10)
@@ -77,7 +86,7 @@ export async function buildCommand(webStream: WebStream) {
 		wsSendBuildProgress(15)
 		// Phase 3: Retrieve Swift targets
 		print('🔳 Phase 3: Retrieve Swift targets', LogLevel.Verbose)
-		const targetsDump = await webStream.swift.getTargets()
+		const targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
 		cachedSwiftTargets = targetsDump
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
@@ -109,26 +118,29 @@ export async function buildCommand(webStream: WebStream) {
 					target: target,
 					release: false,
 					force: true,
-					isCancelled: () => {
-						return false
-					}
+					abortHandler: abortHandler
 				})
 				if (type == SwiftBuildType.Wasi) {
 					// Phase 5.1: Proceed WASM file
 					print('🔳 Phase 5.1: Proceed WASM file', LogLevel.Verbose)
-					await proceedWasmFile({ target: target, release: false, gzipSuccess: () => {
-						gzippedExecutableTargets.push(target)
-					}, gzipFail: (reason) => {
-						gzipFail = reason
-					}, gzipDisabled: () => {
-						print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
-					}, brotliSuccess: () => {
-						brotledExecutableTargets.push(target)
-					}, brotliFail: (reason) => {
-						brotliFail = reason
-					}, brotliDisabled: () => {
-						print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
-					}})
+					await proceedWasmFile({
+						target: target,
+						release: false,
+						abortHandler: abortHandler,
+						gzipSuccess: () => {
+							gzippedExecutableTargets.push(target)
+						}, gzipFail: (reason) => {
+							gzipFail = reason
+						}, gzipDisabled: () => {
+							print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
+						}, brotliSuccess: () => {
+							brotledExecutableTargets.push(target)
+						}, brotliFail: (reason) => {
+							brotliFail = reason
+						}, brotliDisabled: () => {
+							print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
+						}
+					})
 				}
 			}
 		}
@@ -136,7 +148,8 @@ export async function buildCommand(webStream: WebStream) {
 		// Phase 6: Build JavaScriptKit TypeScript sources
 		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
 		await buildJavaScriptKit({
-			force: true
+			force: true,
+			abortHandler: abortHandler
 		})
 		wsSendBuildProgress(60)
 		// Phase 7: Build all the web sources
@@ -145,32 +158,58 @@ export async function buildCommand(webStream: WebStream) {
 			targets: targetsDump.executables,
 			release: false,
 			force: true,
-			parallel: false
+			parallel: false,
+			abortHandler: abortHandler
 		})
 		wsSendBuildProgress(65)
 		// Phase 8: Retrieve manifest from the Service target
 		print('🔳 Phase 8: Retrieve manifest from the Service target', LogLevel.Verbose)
-		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
+		const manifest = await proceedServiceWorkerManifest({
+			isPWA: isPWA,
+			release: false,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(70)
 		// Phase 9: Retrieve index from the App target
 		print('🔳 Phase 9: Retrieve index from the App target', LogLevel.Verbose)
-		const index = await proceedIndex({ target: appTargetName, release: false })
+		const index = await proceedIndex({
+			target: appTargetName,
+			release: false,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(75)
 		// Phase 10: Copy bundled resources from Swift build folder
 		print('🔳 Phase 10: Copy bundled resources from Swift build folder', LogLevel.Verbose)
-		proceedBundledResources({ release: false })
+		proceedBundledResources({
+			release: false,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(80)
 		// Phase 11: Compile SCSS
 		print('🔳 Phase 11: Compile SCSS', LogLevel.Verbose)
-		await proceedCSS({ force: true, release: false })
+		await proceedCSS({
+			force: true,
+			release: false,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(85)
 		// Phase 12: Proceed HTML
 		print('🔳 Phase 12: Proceed HTML', LogLevel.Verbose)
-		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		await proceedHTML({
+			appTargetName: appTargetName,
+			manifest: manifest,
+			index: index,
+			release: false,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(90)
 		// Phase 13: Process additional JS
 		print('🔳 Phase 13: Process additional JS', LogLevel.Verbose)
-		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
+		proceedAdditionalJS({
+			release: false,
+			executableTargets: targetsDump.executables,
+			abortHandler: abortHandler
+		})
 		wsSendBuildProgress(95)
 		// Phase 14: Await Gzipping
 		const awaitGzippingParams = { release: false, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsDump.executables, gzipFail: () => gzipFail }
@@ -184,6 +223,7 @@ export async function buildCommand(webStream: WebStream) {
 			print('⏳ Phase 15: Await brotling', LogLevel.Detailed)
 			await awaitBrotling(awaitBrotlingParams)
 		}
+		if (abortHandler.isCancelled) return
 		measure.finish()
 		wsSendBuildProgress(100)
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
@@ -229,6 +269,18 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		}
 		return
 	}
+	const measure = new TimeMeasure()
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+		status('circle-slash', `Aborted Hot Rebuilt Swift after ${measure.time}ms`, StatusType.Success)
+		print(`🚫 Aborted Hot Rebuilt Swift after ${measure.time}ms`)
+		console.log(`Aborted Hot Rebuilt Swift after ${measure.time}ms`)
+		webStream.setBuildingDebug(false)
+		webStream.setHotBuildingSwift(false)
+		webStream.setRecompilingApp(false)
+		webStream.setRecompilingService(false)
+		sidebarTreeView?.refresh()
+	})
 	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingSwift(true)
 	webStream.setRecompilingApp(params.target == appTargetName)
@@ -237,7 +289,6 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
     sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
 	print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
-	const measure = new TimeMeasure()
 	var gzipFail: any | undefined
 	var brotliFail: any | undefined
 	try {
@@ -245,7 +296,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		print('🔳 Retrieve Swift targets', LogLevel.Verbose)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets()
+			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -302,24 +353,29 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 								target: target,
 								release: false,
 								force: true,
-								isCancelled: () => rejected
+								abortHandler: abortHandler
 							})
 							if (buildType == SwiftBuildType.Wasi) {
 								// Proceed WASM file
 								print('🔳 Proceed WASM file', LogLevel.Verbose)
-								await proceedWasmFile({ target: target, release: false, gzipSuccess: () => {
-									gzippedExecutableTargets.push(target)
-								}, gzipFail: (reason) => {
-									gzipFail = reason
-								}, gzipDisabled: () => {
-									print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
-								}, brotliSuccess: () => {
-									brotledExecutableTargets.push(target)
-								}, brotliFail: (reason) => {
-									brotliFail = reason
-								}, brotliDisabled: () => {
-									print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
-								}})
+								await proceedWasmFile({
+									target: target,
+									release: false,
+									abortHandler: abortHandler,
+									gzipSuccess: () => {
+										gzippedExecutableTargets.push(target)
+									}, gzipFail: (reason) => {
+										gzipFail = reason
+									}, gzipDisabled: () => {
+										print(`🧳 Skipping gzip (disabled)`, LogLevel.Detailed)
+									}, brotliSuccess: () => {
+										brotledExecutableTargets.push(target)
+									}, brotliFail: (reason) => {
+										brotliFail = reason
+									}, brotliDisabled: () => {
+										print(`🧳 Skipping brotli (disabled)`, LogLevel.Detailed)
+									}
+								})
 							}
 						}
 						resolve(buildType)
@@ -341,21 +397,42 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		})
 		// Retrieve manifest from the Service target
 		print('🔳 Retrieve manifest from the Service target', LogLevel.Verbose)
-		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
+		const manifest = await proceedServiceWorkerManifest({
+			isPWA: isPWA,
+			release: false,
+			abortHandler: abortHandler
+		})
 		// Retrieve index from the App target
 		print('🔳 Retrieve index from the App target', LogLevel.Verbose)
-		const index = await proceedIndex({ target: appTargetName, release: false })
+		const index = await proceedIndex({
+			target: appTargetName,
+			release: false,
+			abortHandler: abortHandler
+		})
 		// Copy bundled resources from Swift build folder
 		print('🔳 Copy bundled resources from Swift build folder', LogLevel.Verbose)
-		proceedBundledResources({ release: false })
+		proceedBundledResources({
+			release: false,
+			abortHandler: abortHandler
+		})
 		try {
-			await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+			await proceedHTML({
+				appTargetName: appTargetName,
+				manifest: manifest,
+				index: index,
+				release: false,
+				abortHandler: abortHandler
+			})
 		} catch (error) {
 			print(`😳 Failed building HTML`)
 		}
 		// Process additional JS
 		print('🔳 Process additional JS', LogLevel.Verbose)
-		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
+		proceedAdditionalJS({
+			release: false,
+			executableTargets: targetsDump.executables,
+			abortHandler: abortHandler
+		})
 		const awaitGzippingParams = { release: false, gzippedTargets: gzippedExecutableTargets, targetsToRebuild: targetsToRebuild, gzipFail: () => gzipFail }
 		if (shouldAwaitGzipping(awaitGzippingParams)) {
 			print('⏳ Await gzipping', LogLevel.Detailed)
@@ -367,6 +444,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 			await awaitBrotling(awaitBrotlingParams)
 		}
 		measure.finish()
+		if (abortHandler.isCancelled) return
 		status('flame', `Hot Rebuilt Swift in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt Swift in ${measure.time}ms`)
 		console.log(`Hot Rebuilt Swift in ${measure.time}ms`)
@@ -409,14 +487,27 @@ export async function hotRebuildCSS(webStream: WebStream) {
 		}
 		return
 	}
+	const measure = new TimeMeasure()
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+		status('circle-slash', `Aborted Hot Rebuilt CSS after ${measure.time}ms`, StatusType.Success)
+		print(`🚫 Aborted Hot Rebuilt CSS after ${measure.time}ms`)
+		console.log(`Aborted Hot Rebuilt CSS after ${measure.time}ms`)
+		webStream.setBuildingDebug(false)
+		webStream.setHotBuildingCSS(false)
+		sidebarTreeView?.refresh()
+	})
 	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingCSS(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
-	const measure = new TimeMeasure()
 	try {
 		print('🔥 Hot Rebuilding CSS', LogLevel.Detailed)
-		await proceedCSS({ force: true, release: false })
+		await proceedCSS({
+			force: true,
+			release: false,
+			abortHandler: abortHandler
+		})
 		measure.finish()
 		status('flame', `Hot Rebuilt CSS in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt CSS in ${measure.time}ms`)
@@ -466,12 +557,22 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		}
 		return
 	}
+	const measure = new TimeMeasure()
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+		status('circle-slash', `Aborted Hot Rebuilt JS after ${measure.time}ms`, StatusType.Success)
+		print(`🚫 Aborted Hot Rebuilt JS after ${measure.time}ms`)
+		console.log(`Aborted Hot Rebuilt JS after ${measure.time}ms`)
+		webStream.setBuildingDebug(false)
+		webStream.setHotBuildingJS(false)
+		sidebarTreeView?.refresh()
+	})
 	webStream.setBuildingDebug(true)
 	webStream.setHotBuildingJS(true)
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(true)
-	const measure = new TimeMeasure()
 	function finishHotRebuild() {
+		if (abortHandler.isCancelled) return
 		measure.finish()
 		status('flame', `Hot Rebuilt JS in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt JS in ${measure.time}ms`)
@@ -490,7 +591,7 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		print('🔥 Hot Rebuilding JS', LogLevel.Detailed)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets()
+			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -499,7 +600,12 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		print(`changed file: ${params.path}`)
 		print(`additionalFiles: \n${additionalFiles.join('\n')}`)
 		if (additionalFiles.includes(params.path)) {
-			proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables, exactFile: params.path })
+			proceedAdditionalJS({
+				release: false,
+				executableTargets: targetsDump.executables,
+				exactFile: params.path,
+				abortHandler: abortHandler
+			})
 			finishHotRebuild()
 			return
 		}
@@ -507,7 +613,8 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 			targets: targetsDump.executables,
 			release: false,
 			force: true,
-			parallel: false
+			parallel: false,
+			abortHandler: abortHandler
 		})
 		finishHotRebuild()
 	} catch (error) {
@@ -541,11 +648,20 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		return
 	}
 	const measure = new TimeMeasure()
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+		status('circle-slash', `Aborted Hot Rebuilt HTML after ${measure.time}ms`, StatusType.Success)
+		print(`🚫 Aborted Hot Rebuilt HTML after ${measure.time}ms`)
+		console.log(`Aborted Hot Rebuilt HTML after ${measure.time}ms`)
+		webStream.setBuildingDebug(false)
+		webStream.setHotBuildingHTML(false)
+		sidebarTreeView?.refresh()
+	})
 	try {
 		let isPWA = cachedIsPWA
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets()
+			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -559,13 +675,32 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		sidebarTreeView?.refresh()
 		wsSendBuildStarted(true)
 		print('🔥 Hot Rebuilding HTML', LogLevel.Detailed)
-		const manifest = await proceedServiceWorkerManifest({ isPWA: isPWA, release: false })
-		const index = await proceedIndex({ target: appTargetName, release: false })
-		await proceedHTML({ appTargetName: appTargetName, manifest: manifest, index: index, release: false })
+		const manifest = await proceedServiceWorkerManifest({
+			isPWA: isPWA,
+			release: false,
+			abortHandler: abortHandler
+		})
+		const index = await proceedIndex({
+			target: appTargetName,
+			release: false,
+			abortHandler: abortHandler
+		})
+		await proceedHTML({
+			appTargetName: appTargetName,
+			manifest: manifest,
+			index: index,
+			release: false,
+			abortHandler: abortHandler
+		})
 		// Process additional JS
 		print('🔳 Process additional JS', LogLevel.Verbose)
-		proceedAdditionalJS({ release: false, executableTargets: targetsDump.executables })
+		proceedAdditionalJS({
+			release: false,
+			executableTargets: targetsDump.executables,
+			abortHandler: abortHandler
+		})
 		measure.finish()
+		if (abortHandler.isCancelled) return
 		status('flame', `Hot Rebuilt HTML in ${measure.time}ms`, StatusType.Success)
 		print(`🔥 Hot Rebuilt HTML in ${measure.time}ms`)
 		console.log(`Hot Rebuilt HTML in ${measure.time}ms`)
