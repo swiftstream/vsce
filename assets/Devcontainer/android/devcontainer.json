@@ -18,6 +18,7 @@
 	"customizations": {
 		"vscode": {
     		"extensions": [
+				"swiftstream.swiftstream",
 				"swiftlang.swift-vscode",
 				"mateocerquetella.xcode-12-theme"
 			],
