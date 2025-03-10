@@ -35,13 +35,11 @@ let package = Package(
             ]{{/if}}{{#if target.swiftSettings}},
             swiftSettings: swiftSettings
             {{/if}}
-        
         ),
         {{/each}}
     ]{{/if}}{{#if swiftLanguageModes}},
     swiftLanguageModes: [{{{swiftLanguageModes}}}]
     {{/if}}
-
 )
 {{#if swiftSettings}}
 var swiftSettings: [SwiftSetting] { [
