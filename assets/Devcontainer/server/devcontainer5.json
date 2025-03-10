@@ -26,6 +26,7 @@
 			],
 			"settings": {
 				"extensions.ignoreRecommendations": true,
+				"remote.autoForwardPorts": false,
 				"swift.path": "/swift/toolchains/5.10.0-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
