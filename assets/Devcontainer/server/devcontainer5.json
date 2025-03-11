@@ -12,10 +12,7 @@
 		"S_VERSION_MINOR": "10",
 		"S_VERSION_PATCH": "0"
 	},
-	"appPort": [
-		"8080:8080",
-		"8000:80"
-	],
+	"appPort": [],
 	"postStartCommand": "cmd.sh",
 	"customizations": {
 		"vscode": {
@@ -56,11 +53,6 @@
 			"source": "swift-sdks",
 			"target": "/root/.swiftpm/swift-sdks",
 			"type": "volume"
-		},
-		{
-			"source": "${localWorkspaceFolder}/.devcontainer/nginx.conf",
-			"target": "/etc/nginx/nginx.conf",
-			"type": "bind"
 		}
 	]
 }

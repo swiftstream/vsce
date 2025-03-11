@@ -92,15 +92,6 @@ fi
 echo "export PATH=${PATH}:${toolchainPath}/usr/bin" > ~/.bashrc
 source ~/.bashrc
 
-# MARK: NGINX
-# prepare the config
-export DOLLAR="$"
-if grep -q "DOLLAR" "/etc/nginx/sites-available/default"; then
-    echo "$(envsubst < "/etc/nginx/sites-available/default")" > /etc/nginx/sites-available/default
-fi
-# apply the config
-/etc/init.d/nginx restart
-
 # Check if launchAfterFirstStart.sh exists in the project directory
 if [ -f "./launchAfterFirstStart.sh" ]; then
   # Retrieve the first line of the file
