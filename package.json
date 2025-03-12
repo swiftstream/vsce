@@ -263,6 +263,7 @@
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
+    "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^21.1.7",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
@@ -278,6 +279,7 @@
     "immutable": "^5.0.3",
     "jsdom": "^25.0.1",
     "json5": "^2.2.3",
+    "js-yaml": "^4.1.0",
     "sass": "^1.79.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
