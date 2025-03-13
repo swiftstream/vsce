@@ -4,6 +4,7 @@ import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultServerPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { readServerPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { createServerDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
+import { DevContainerConfig } from '../../devContainerConfig'
 
 export var currentPort: string = `${defaultServerPort}`
 export var pendingNewPort: string | undefined

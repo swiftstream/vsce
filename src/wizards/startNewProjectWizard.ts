@@ -11,6 +11,7 @@ import Handlebars from 'handlebars'
 import { copyFile, readFile } from '../helpers/filesHelper'
 import * as osPath from 'path'
 import { openProject } from '../helpers/openProject'
+import { DevContainerConfig } from '../devContainerConfig'
 
 let webViewPanel: WebviewPanel | undefined
 const isWin = process.platform == 'win32'
@@ -490,12 +491,10 @@ async function createNewProjectFiles(
 				nginxConf = nginxConf.replace('${PROJECT_NAME}', name)
 				fs.writeFileSync(nginxConfPath, nginxConf)
 				await (async function () {
-					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
-					if (devContainerContent) {
-						const availablePort = await checkPortAndGetNextIfBusy(defaultServerPort)
-						devContainerContent = devContainerContent.replace(`${defaultServerPort}:8888`, `${availablePort}:8888`)
-						fs.writeFileSync(devContainerPath, devContainerContent)
-					}
+					const availablePort = await checkPortAndGetNextIfBusy(defaultServerPort)
+					const config = new DevContainerConfig(osPath.join(path, '.devcontainer', 'devcontainer.json'))
+					config
+					.transaction((c) => c.addOrChangePort(`${availablePort}`, `${innerServerPort}`))
 				})()
 				// Copy .gitignore
 				await copySourceFile(osPath.join(serverType, '.gitignore'), '.gitignore')

@@ -1,8 +1,7 @@
-import * as fs from 'fs'
-import JSON5 from 'json5'
 import { window } from 'vscode'
 import { currentDevCrawlerPort, currentDevPort, currentProdPort, pendingNewDevCrawlerPort, pendingNewDevPort, pendingNewProdPort } from '../webStream'
-import { innerWebDevPort, projectDirectory, webStream } from '../../../extension'
+import { innerWebDevPort, webStream } from '../../../extension'
+import { DevContainerConfig } from '../../../devContainerConfig'
 
 export async function portDevCommand() {
 	const port = await window.showInputBox({
@@ -22,26 +21,8 @@ export async function portDevCommand() {
 		}
 	})
 	if (!port) return
-	const innerPort = innerWebDevPort
 	const portToReplace = pendingNewDevPort ? pendingNewDevPort : currentDevPort
 	if (port == portToReplace) return
-	const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
-	var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
-	if (devContainerContent) {
-		let devContainerJson = JSON5.parse(devContainerContent)
-		const valueToInsert = `${port}:${innerPort}`
-		if (!devContainerJson.appPort || devContainerJson.appPort.length == 0) {
-			devContainerJson.appPort = [valueToInsert]
-		} else {
-			const index = devContainerJson.appPort.findIndex((x) => x.includes(`:${innerPort}`))
-			if (index <= -1) {
-				devContainerJson.appPort.push(valueToInsert)
-			} else {
-				devContainerJson.appPort.splice(index, 1)
-				devContainerJson.appPort.splice(index, 0, valueToInsert)
-			}
-		}
-		fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))
-		webStream?.setPendingNewDevPort(`${port}`)
-	}
+	DevContainerConfig.transaction((c) => c.addOrChangePort(port, `${innerWebDevPort}`))
+	webStream?.setPendingNewDevPort(port)
 }
