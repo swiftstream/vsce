@@ -545,7 +545,6 @@ async function createNewProjectFiles(
 								osPath.join(path, 'Dockerfile'),
 								Handlebars.compile(readFile(osPath.join('assets', 'Sources', streamType, serverType, 'Dockerfile.hbs')))(payload)
 							)
-							copySourceFile(`docker-compose.yml`)
 							const sourcesFolder = osPath.join(path, 'Sources')
 							if (!fs.existsSync(sourcesFolder)) {
 								fs.mkdirSync(sourcesFolder, { recursive: true })
