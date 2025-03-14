@@ -485,11 +485,6 @@ async function createNewProjectFiles(
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
 				await copyDevContainerFile(`devcontainer6.json`, `devcontainer.json`)
-				await copyDevContainerFile(`nginx.conf`)
-				const nginxConfPath = osPath.join(path, '.devcontainer', `nginx.conf`)
-				var nginxConf = fs.readFileSync(nginxConfPath, 'utf8')
-				nginxConf = nginxConf.replace('${PROJECT_NAME}', name)
-				fs.writeFileSync(nginxConfPath, nginxConf)
 				await (async function () {
 					const availablePort = await checkPortAndGetNextIfBusy(defaultServerPort)
 					const config = new DevContainerConfig(osPath.join(path, '.devcontainer', 'devcontainer.json'))
