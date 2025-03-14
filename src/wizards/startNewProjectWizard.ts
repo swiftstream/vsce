@@ -502,11 +502,11 @@ async function createNewProjectFiles(
 								platforms: '.macOS(.v13)',
 								dependencies: [
 									{
-										comment: '// 💧 A server-side Swift web framework.',
+										comment: '💧 A server-side Swift web framework.',
 										package: '.package(url: "https://github.com/vapor/vapor.git", from: "4.99.3")'
 									},
 									{
-										comment: '// 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors',
+										comment: '🔵 Non-blocking, event-driven networking for Swift. Used for custom executors',
 										package: '.package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")'
 									}
 								],
