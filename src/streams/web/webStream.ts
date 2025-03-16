@@ -17,21 +17,22 @@ import { updateWebCommand, updateJSKitCommand } from './commands/suggestions'
 import { Gzip } from '../../gzip'
 import { Wasm } from '../../wasm'
 import { CrawlServer } from '../../crawlServer'
-import { Firebase } from '../../clouds/firebase'
-import { Alibaba } from '../../clouds/alibaba'
-import { Azure } from '../../clouds/azure'
-import { Cloudflare } from '../../clouds/cloudflare'
-import { DigitalOcean } from '../../clouds/digitalocean'
-import { FlyIO } from '../../clouds/flyio'
-import { Heroku } from '../../clouds/heroku'
-import { Vercel } from '../../clouds/vercel'
-import { Yandex } from '../../clouds/yandex'
+import { Firebase } from './features/firebase'
+import { Alibaba } from './features/alibaba'
+import { Azure } from './features/azure'
+import { Cloudflare } from './features/cloudflare'
+import { DigitalOcean } from './features/digitalocean'
+import { FlyIO } from './features/flyio'
+import { Heroku } from './features/heroku'
+import { Vercel } from './features/vercel'
+import { Yandex } from './features/yandex'
 import { Brotli } from '../../brotli'
 import { portDevCrawlerCommand } from './commands/portDevCrawler'
-import { isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
+import { isHotRebuildEnabled, Stream } from '../stream'
 import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
+import { AnyFeature } from '../anyFeature'
 
 export var indexFile = 'main.html'
 export var webSourcesFolder = 'WebSources'
@@ -295,54 +296,6 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevCrawlerPort, portDevCrawlerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateWeb, updateWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))
-		
-		// Cloud Providers
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddFirebase, this.firebase.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Firebase, () => {}))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseSetup, this.firebase.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeployMode, this.firebase.changeDeployMode))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeploy, this.firebase.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FirebaseDeintegrate, this.firebase.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddAzure, this.azure.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AzureSetup, this.azure.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AzureDeploy, this.azure.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AzureDeintegrate, this.azure.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddAlibaba, this.alibaba.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AlibabaSetup, this.alibaba.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AlibabaDeploy, this.alibaba.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AlibabaDeintegrate, this.alibaba.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddVercel, this.vercel.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.VercelSetup, this.vercel.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.VercelDeploy, this.vercel.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.VercelDeintegrate, this.vercel.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddFlyIO, this.flyio.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIOSetup, this.flyio.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIODeploy, this.flyio.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.FlyIODeintegrate, this.flyio.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddCloudflare, this.cloudflare.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CloudflareSetup, this.cloudflare.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CloudflareDeploy, this.cloudflare.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CloudflareDeintegrate, this.cloudflare.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddDigitalOcean, this.digitalocean.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DigitalOceanSetup, this.digitalocean.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DigitalOceanDeploy, this.digitalocean.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DigitalOceanDeintegrate, this.digitalocean.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddHeroku, this.heroku.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HerokuSetup, this.heroku.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HerokuDeploy, this.heroku.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HerokuDeintegrate, this.heroku.deintegrate))
-		
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.AddYandexCloud, this.yandex.add))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudSetup, this.yandex.setup))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeploy, this.yandex.deploy))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.YandexCloudDeintegrate, this.yandex.deintegrate))
 	}
 	
 	async onDidSaveTextDocument(document: TextDocument): Promise<boolean> {
@@ -418,6 +371,19 @@ export class WebStream extends Stream {
 		}
 	}
 
+	features(): AnyFeature[] {
+		return [
+			this.firebase,
+			// this.azure,
+			// this.alibaba,
+			// this.vercel,
+			this.flyio,
+			// this.cloudflare,
+			// this.digitalocean,
+			// this.heroku,
+			// this.yandex
+		]
+	}
 	async buildDebug() {
 		await buildCommand(this)
 	}
@@ -447,44 +413,7 @@ export class WebStream extends Stream {
 		]
 	}
 
-	async releaseItems(): Promise<Dependency[]> {
-		let items: Dependency[] = []
-		if (this.firebase.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Firebase, 'Firebase', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('firebase3')))
-		if (this.azure.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Azure, 'Azure', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('azure3')))
-		if (this.alibaba.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Alibaba, 'Alibaba Cloud', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('alibabacloud3')))
-		if (this.vercel.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Vercel, 'Vercel', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('vercel-dark3', 'vercel-light3')))
-		if (this.flyio.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.FlyIO, 'Fly.io', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('flyio3')))
-		if (this.cloudflare.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Cloudflare, 'Cloudflare', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('cloudflare3')))
-		if (this.digitalocean.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.DigitalOcean, 'DigitalOcean', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('digitalocean3')))
-		if (this.heroku.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.Heroku, 'Heroku', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('heroku3')))
-		if (this.yandex.isInstalled === true)
-			items.push(new Dependency(SideTreeItem.YandexCloud, 'Yandex Cloud', '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon('yandexcloud3')))
-		var inactiveProviders: boolean[] = [
-			this.alibaba.isInstalled === false,
-			this.azure.isInstalled === false,
-			this.cloudflare.isInstalled === false,
-			this.digitalocean.isInstalled === false,
-			this.heroku.isInstalled === false,
-			this.vercel.isInstalled === false,
-			this.yandex.isInstalled === false
-		]
-		var activeProviders: boolean[] = [
-			this.firebase.isInstalled === false,
-			this.flyio.isInstalled === false
-		]
-		if (activeProviders.includes(true)) {
-			items.push(new Dependency(SideTreeItem.AddCloudProvider, 'Add Cloud Provider', '', TreeItemCollapsibleState.Collapsed, 'cloud'))
-		}
-		return items
-	}
+	async releaseItems(): Promise<Dependency[]> { return [] }
 
 	async projectItems(): Promise<Dependency[]> {
 		// return [
@@ -516,124 +445,18 @@ export class WebStream extends Stream {
 		]
 	}
 
-	async isThereAnyRecommendation(): Promise<boolean> {
-		return false
-	}
-
 	async recommendationsItems(): Promise<Dependency[]> {
 		let items: Dependency[] = []
-		if (containsUpdateForWeb)
-			items.push(new Dependency(SideTreeItem.UpdateWeb, 'Update Web to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
-		if (containsUpdateForJSKit)
-			items.push(new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
-		if (items.length == 0)
-			items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
+		// if (containsUpdateForWeb)
+		// 	items.push(new Dependency(SideTreeItem.UpdateWeb, 'Update Web to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		// if (containsUpdateForJSKit)
+		// 	items.push(new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		// if (items.length == 0)
+		// 	items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
 		return items
 	}
 
-	async customItems(element: Dependency): Promise<Dependency[]> {
-		let items: Dependency[] = []
-		switch (element.id) {
-		case SideTreeItem.Azure:
-			if (await this.azure.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.AzureSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.AzureDeploy, this.azure.isLoggingIn ? 'Logging in' : this.azure.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.azure.isLoggingIn || this.azure.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.AzureDeintegrate, this.azure.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.azure.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.Alibaba:
-			if (await this.alibaba.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.AlibabaSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.AlibabaDeploy, this.alibaba.isLoggingIn ? 'Logging in' : this.alibaba.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.alibaba.isLoggingIn || this.alibaba.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.AlibabaDeintegrate, this.alibaba.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.alibaba.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.Vercel:
-			if (await this.vercel.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.VercelSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.VercelDeploy, this.vercel.isLoggingIn ? 'Logging in' : this.vercel.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.vercel.isLoggingIn || this.vercel.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.VercelDeintegrate, this.vercel.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.vercel.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.Firebase:
-			if (await this.firebase.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.FirebaseSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.FirebaseDeploy, this.firebase.isLoggingIn ? 'Logging in' : this.firebase.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.firebase.isLoggingIn || this.firebase.isDeploying ? 'sync~spin' : 'cloud-upload'))
-				const fullDeployMode = this.firebase.getFullDeployMode()
-				if (fullDeployMode != undefined) {
-					items.push(new Dependency(SideTreeItem.FirebaseDeployMode, 'Deploy Mode', fullDeployMode ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings'))
-				}
-			}
-			items.push(new Dependency(SideTreeItem.FirebaseDeintegrate, this.firebase.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.firebase.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.FlyIO:
-			if (await this.flyio.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.FlyIOSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.FlyIODeploy, this.flyio.isLoggingIn ? 'Logging in' : this.flyio.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.flyio.isLoggingIn || this.flyio.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.FlyIODeintegrate, this.flyio.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.flyio.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.Cloudflare:
-			if (await this.cloudflare.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.CloudflareSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.CloudflareDeploy, this.cloudflare.isLoggingIn ? 'Logging in' : this.cloudflare.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.cloudflare.isLoggingIn || this.cloudflare.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.CloudflareDeintegrate, this.cloudflare.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.cloudflare.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.DigitalOcean:
-			if (await this.digitalocean.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.DigitalOceanSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.DigitalOceanDeploy, this.digitalocean.isLoggingIn ? 'Logging in' : this.digitalocean.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.digitalocean.isLoggingIn || this.digitalocean.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.DigitalOceanDeintegrate, this.digitalocean.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.digitalocean.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.Heroku:
-			if (await this.heroku.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.HerokuSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.HerokuDeploy, this.heroku.isLoggingIn ? 'Logging in' : this.heroku.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.heroku.isLoggingIn || this.heroku.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.HerokuDeintegrate, this.heroku.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.heroku.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.YandexCloud:
-			if (await this.yandex.isPresentInProject() === false) {
-				items.push(new Dependency(SideTreeItem.YandexCloudSetup, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property'))
-			} else {
-				items.push(new Dependency(SideTreeItem.YandexCloudDeploy, this.yandex.isLoggingIn ? 'Logging in' : this.yandex.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.yandex.isLoggingIn || this.yandex.isDeploying ? 'sync~spin' : 'cloud-upload'))
-			}
-			items.push(new Dependency(SideTreeItem.YandexCloudDeintegrate, this.yandex.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.yandex.isDeintegrating ? 'sync~spin' : 'trash'))
-			break
-		case SideTreeItem.AddCloudProvider:
-			if (this.firebase.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFirebase, 'Firebase', this.firebase.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('firebase3')))
-			// if (this.azure.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAzure, 'Azure', this.azure.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('azure3')))
-			// if (this.alibaba.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddAlibaba, 'Alibaba Cloud', this.alibaba.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('alibabacloud3')))
-			// if (this.vercel.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddVercel, 'Vercel', this.vercel.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('vercel-dark3', 'vercel-light3')))
-			if (this.flyio.isInstalled === false)
-				items.push(new Dependency(SideTreeItem.AddFlyIO, 'Fly.io', this.flyio.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('flyio3')))
-			// if (this.cloudflare.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddCloudflare, 'Cloudflare', this.cloudflare.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('cloudflare3')))
-			// if (this.digitalocean.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddDigitalOcean, 'DigitalOcean', this.digitalocean.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('digitalocean3')))
-			// if (this.heroku.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddHeroku, 'Heroku', this.heroku.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('heroku3')))
-			// if (this.yandex.isInstalled === false)
-			// 	items.push(new Dependency(SideTreeItem.AddYandexCloud, 'Yandex Cloud', this.yandex.isPendingContainerRebuild ? 'pending container rebuild' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon('yandexcloud3')))
-			break
-		default: break
-		}
-		return items
-	}
+	async customItems(element: Dependency): Promise<Dependency[]> { return [] }
 
 	// MARK: Helpers
 

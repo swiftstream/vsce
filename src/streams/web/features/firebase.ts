@@ -1,26 +1,33 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { buildProdFolder, indexFile, WebStream } from '../streams/web/webStream'
-import { projectDirectory, sidebarTreeView } from '../extension'
-import { ProgressLocation, window } from 'vscode'
-
+import { buildProdFolder, indexFile, WebStream } from '../../web/webStream'
+import { extensionContext, projectDirectory, sidebarTreeView } from '../../../extension'
+import { commands, ProgressLocation, TreeItemCollapsibleState, window } from 'vscode'
 import { CloudFeature } from './cloudFeature'
+import { Dependency } from '../../../sidebarTreeView'
 
 export class Firebase extends CloudFeature {
-    constructor(webStream: WebStream) {
+    constructor(stream: WebStream) {
         super(
-            webStream,
-            'Firebase',
-            'devcontainers-contrib/features',
-            'firebase-cli', '2', { version: 'latest', install: '${FIREBASE_CLI:-false}' },
-            'firebase.json',
-            'firebase',
-            'login',
-            'logout'
+            stream,
+            {
+                name: 'Firebase',
+                iconFile: 'firebase3',
+                featureRepository: 'swiftstream/vsce',
+                featureName: 'firebase-cli', featureVersion: '2', featureParams: { version: 'latest', install: '${FIREBASE_CLI:-false}' },
+                configFile: 'firebase.json',
+                binName: 'firebase',
+                loginCommand: 'login',
+                logoutCommand: 'logout'
+            }
         )
     }
 
-    setup = async () => {
+    registerCommands() {
+        extensionContext.subscriptions.push(commands.registerCommand(`DeployMode||${this.name}`, () => this.changeDeployMode))
+    }
+
+    async setup() {
         this.copyFiles(this.extensionFeatureSourcesPath(), this.projectFeatureFolderPath(), ['firebase.json', '.gitignore'])
         this.copyFiles(path.join(this.extensionFeatureSourcesPath(), 'functions'), path.join(this.projectFeatureFolderPath(), 'functions'), ['package.json', 'index.js', 'predeploy.sh', '.gitignore'])
         this.makeExecutable(path.join(this.projectFeatureFolderPath(), 'functions', 'predeploy.sh'))
@@ -53,6 +60,16 @@ export class Firebase extends CloudFeature {
         })
     }
 
+    deployModeMenuItem = () => new Dependency(`DeployMode||${this.name}`, 'Deploy Mode', this.getFullDeployMode() ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings')
+
+    async featureMenuItems(): Promise<Dependency[]> {
+        let items = await super.featureMenuItems()
+        if (this.getFullDeployMode() != undefined) {
+            items.push(this.deployModeMenuItem())
+        }
+        return items
+    }
+
     getFullDeployMode = () => this.getConfig()?.fullDeployMode
     setFullDeployMode = (value: boolean) => this.changeConfigKey('fullDeployMode', value)
 
@@ -71,7 +88,7 @@ export class Firebase extends CloudFeature {
         return value
     }
     
-    createProject = async (id: string): Promise<string | undefined> => {
+    async createProject(id: string): Promise<string | undefined> {
         const createResponse = await this.execute(['projects:create', id, '--display-name', `"${id}"`, '--json'], this.projectFeatureFolderPath())
         if (!createResponse.stdout) {
             window.showErrorMessage('Unable to create project')
@@ -85,7 +102,7 @@ export class Firebase extends CloudFeature {
         return response.result.projectId
     }
 
-    getListOfProjects = async (): Promise<any[] | undefined> => {
+    async getListOfProjects(): Promise<any[] | undefined> {
         const listResponse = await this.execute(['projects:list', '--json'], this.projectFeatureFolderPath())
         if (!listResponse.stdout) throw 'Unable to get list of projects'
         const response = JSON.parse(listResponse.stdout)
@@ -93,9 +110,9 @@ export class Firebase extends CloudFeature {
         return response.result
     }
 
-    deploy = async (selectedProjectId?: string): Promise<boolean | undefined> => {
+    async deploy(selectedProjectId?: string): Promise<boolean | undefined> {
         if (this.isDeploying) return false
-        if (!this.isReleaseBuilt()) return false
+        if (!this.stream.isReleaseBuilt()) return false
         this.isDeploying = true
         sidebarTreeView?.refresh()
         window.withProgress({

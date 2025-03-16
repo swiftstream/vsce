@@ -1,29 +1,32 @@
-import { projectDirectory, sidebarTreeView } from '../extension'
+import { projectDirectory, sidebarTreeView } from '../../../extension'
 import { env, ProgressLocation, Uri, window } from 'vscode'
 import { CloudFeature } from './cloudFeature'
-import { WebStream } from '../streams/web/webStream'
+import { WebStream } from '../webStream'
 
 export class FlyIO extends CloudFeature {
-    constructor(webStream: WebStream) {
+    constructor(stream: WebStream) {
         super(
-            webStream,
-            'Fly.io',
-            'swiftstream/vsce',
-            'flyio-cli', 'latest', {},
-            'fly.toml',
-            'flyctl',
-            'auth login',
-            'auth logout'
+            stream,
+            {
+                name: 'Fly.io',
+                iconFile: 'flyio3',
+                featureRepository: 'swiftstream/vsce',
+                featureName: 'flyio-cli', featureVersion: 'latest', featureParams: {},
+                configFile: 'fly.toml',
+                binName: 'flyctl',
+                loginCommand: 'auth login',
+                logoutCommand: 'auth logout'
+            }
         )
     }
 
-    setup = async () => {
+    async setup() {
         this.copyFiles(this.extensionFeatureSourcesPath(), this.projectFeatureFolderPath(), ['Dockerfile', 'fly.toml', 'nginx.conf'])
         window.showInformationMessage(`${this.name} files has been added`)
         sidebarTreeView?.refresh()
     }
 
-    createProject = async (id: string): Promise<string | undefined> => {
+    async createProject(id: string): Promise<string | undefined> {
         const createResponse = await this.execute(['apps', 'create', id, '--name', id, '--json'], this.projectFeatureFolderPath())
         if (!createResponse.stdout) {
             window.showErrorMessage('Unable to create project')
@@ -37,15 +40,15 @@ export class FlyIO extends CloudFeature {
         return response.Name
     }
 
-    getListOfProjects = async (): Promise<any[] | undefined> => {
+    async getListOfProjects(): Promise<any[] | undefined> {
         const listResponse = await this.execute(['apps', 'list', '--json'], this.projectFeatureFolderPath())
         if (!listResponse.stdout) throw 'Unable to get list of projects'
         return JSON.parse(listResponse.stdout)
     }
 
-    deploy = async (selectedProjectId?: string): Promise<boolean | undefined> => {
+    async deploy(selectedProjectId?: string): Promise<boolean | undefined> {
         if (this.isDeploying) return false
-        if (!this.isReleaseBuilt()) return false
+        if (!this.stream.isReleaseBuilt()) return false
         this.isDeploying = true
         sidebarTreeView?.refresh()
         window.withProgress({

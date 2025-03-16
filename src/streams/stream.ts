@@ -12,6 +12,7 @@ import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumenta
 import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
+import { AnyFeature } from './anyFeature'
 
 export var isBuildingDebug = false
 export var isBuildingRelease = false
@@ -25,7 +26,7 @@ export class Stream {
     public toolchain: Toolchain
     public swift: Swift
     public pgrep: Pgrep
-
+	
     constructor() {
         this.bash = new Bash()
         this.toolchain = new Toolchain(this)
@@ -194,6 +195,7 @@ export class Stream {
 				openSwiftForums()
 			}
 		}))
+		this.features().forEach((x) => x.registerCommands())
     }
 
 	private hotReloadHashes: any = {}
@@ -243,6 +245,9 @@ export class Stream {
 	}
 
 	// MARK: Building
+	// MARK: Features
+
+	features(): AnyFeature[] { return [] }
 
 	async buildDebug() {
 		print('stream.build not implemented', LogLevel.Detailed)
@@ -258,15 +263,85 @@ export class Stream {
 
 	// MARK: Side Bar Tree View Items
 
-	async debugActionItems(): Promise<Dependency[]> { return [] }
-	async debugOptionItems(): Promise<Dependency[]> { return [] }
-	async releaseItems(): Promise<Dependency[]> { return [] }
-	async projectItems(): Promise<Dependency[]> { return [] }
-	async maintenanceItems(): Promise<Dependency[]> { return [] }
-	async settingsItems(): Promise<Dependency[]> { return [] }
-	async isThereAnyRecommendation(): Promise<boolean> { return false }
-	async recommendationsItems(): Promise<Dependency[]> { return [] }
-	async customItems(element: Dependency): Promise<Dependency[]> { return [] }
+	async defaultDebugActionItems(): Promise<Dependency[]> {
+		return []
+	}
+
+	async debugActionItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.debugActionItems()))
+        }))
+		return items
+	}
+	async debugOptionItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.debugOptionItems()))
+        }))
+		return items
+	}
+	async releaseItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.releaseItems()))
+        }))
+		return items
+	}
+	async projectItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.projectItems()))
+        }))
+		return items
+	}
+	async maintenanceItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.maintenanceItems()))
+        }))
+		return items
+	}
+	async settingsItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.settingsItems()))
+        }))
+		return items
+	}
+	async isThereAnyFeature(): Promise<boolean> {
+		return (await this.isThereInstalledFeatures()) || (await this.isThereFeaturesToAdd())
+	}
+	async isThereInstalledFeatures(): Promise<boolean> {
+		return (await this.installedFeatureItems()).length > 0
+	}
+	async installedFeatureItems(): Promise<Dependency[]> {
+		return this.features().filter((x) => x.isInstalled).map((x) => {
+			return new Dependency(x.name, x.name, '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon(x.iconFile, x.iconFileDark))
+		})
+	}
+	async isThereFeaturesToAdd(): Promise<boolean> {
+		return (await this.addFeatureItems()).length > 0
+	}
+	async addFeatureItems(): Promise<Dependency[]> {
+		return this.features().filter((x) => !x.isInstalled).map((x) => x.integrateMenuElement())
+	}
+	async isThereAnyRecommendation(): Promise<boolean> { return (await this.recommendationsItems()).length > 0 }
+	async recommendationsItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await feature.recommendationsItems()))
+        }))
+		return items
+	}
+	async customItems(element: Dependency): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		const feature = this.features().find((x) => x.name === element.id)
+		if (feature) {
+			items.push(...(await feature.customItems(element)))
+		}
+		return items
+	}
 
 	setAbortBuildingDebug(handler: () => void | undefined) {
 		abortBuildingDebug = handler
