@@ -1,0 +1,13 @@
+{
+  "id": "nginx",
+  "name": "Nginx",
+  "description": "Installs the Nginx.",
+  "version": "1.26.3",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "1.26.3-1~focal",
+      "description": "Version of the Nginx to install"
+    }
+  }
+}

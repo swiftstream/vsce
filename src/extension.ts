@@ -44,6 +44,7 @@ export const innerWebProdPort = 444
 export const innerWebDevCrawlerPort = 3080
 
 export const defaultServerPort = 8080
+export const defaultServerNginxPort = 8200
 export const innerServerPort = 8080
 
 export const dockerImage = new DockerImage()

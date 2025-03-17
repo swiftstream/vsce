@@ -247,6 +247,19 @@
             "description": "carwlserver"
           }
         }
+      },
+      {
+        "type": "nginx",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "nginx"
+          }
+        }
+      },
       }
     ]
   },
