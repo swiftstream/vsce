@@ -32,7 +32,8 @@ export class Bash {
         abortHandler?: AbortHandler | undefined,
         processInstanceHandler?: (instance: ChildProcessWithoutNullStreams) => void | undefined,
         cwd?: string | undefined,
-        env?: NodeJS.ProcessEnv | undefined
+        env?: NodeJS.ProcessEnv | undefined,
+        avoidPrintingError?: boolean | undefined
     }, args: string[] = []): Promise<BashResult> {
         return new Promise(async (resolve, reject) => {
             var path: string | undefined
@@ -43,7 +44,7 @@ export class Bash {
                 if (!path) {
                     const bashError = new BashError({ error: `${program.name} is not available` })
                     if (program.abortHandler?.isCancelled) return
-                    print(bashError.description)
+                    print(bashError.description, program.avoidPrintingError === true ? LogLevel.Unbearable : LogLevel.Normal)
                     return reject(bashError)
                 }
             }
@@ -87,7 +88,7 @@ export class Bash {
 				const result = new BashResult(path!, measure.time, code, stderr.replace(/^\s+|\s+$/g, ''), stdout.replace(/^\s+|\s+$/g, ''), program.description)
                 if (code === null || (code != null && code != 0)) {
                     const bashError = new BashError({ result: result })
-                    print(bashError.description) // Don't comment out
+                    print(bashError.description, program.avoidPrintingError === true ? LogLevel.Unbearable : LogLevel.Normal) // Don't comment out
                     return reject(bashError)
                 }
                 resolve(result)
