@@ -91,7 +91,7 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, clearBuildCacheCommand))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, async () => await clearBuildCacheCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
