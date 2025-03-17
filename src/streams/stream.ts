@@ -42,11 +42,16 @@ export class Stream {
         workspace.onDidChangeConfiguration((event) => {
             this.onDidChangeConfiguration(event)
         })
+		extensionContext.subscriptions.push(debug.onDidStartDebugSession(async (e: DebugSession) => {
+			await this.onDidStartDebugSession(e)
+		}))
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			await this.onDidTerminateDebugSession(e)
         }))
     }
 
+	isDebugerAttachedLater: boolean = false
+	async onDidStartDebugSession(session: DebugSession) {}
 	async onDidTerminateDebugSession(session: DebugSession) {}
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -244,10 +249,20 @@ export class Stream {
 		return false
 	}
 
-	// MARK: Building
 	// MARK: Features
 
 	features(): AnyFeature[] { return [] }
+
+	// MARK: Building Debug
+
+	async askToBuildDebug(beforeWhat?: string): Promise<boolean> {
+		switch (await window.showWarningMessage(`Make a debug build ${(beforeWhat ? `before ${beforeWhat}` : 'first')}`, 'Build Debug')) {
+			case 'Build Debug':
+				await this.buildRelease()
+				return true
+			default: return false
+		}
+	}
 
 	async buildDebug() {
 		print('stream.build not implemented', LogLevel.Detailed)
@@ -257,8 +272,41 @@ export class Stream {
 		print('stream.hotRebuildSwift not implemented or called super', LogLevel.Detailed)
 	}
 
+	private abortBuildingDebugHandler: AbortHandler | undefined
+
+	setAbortBuildingDebugHandler(onCancel: () => void): AbortHandler {
+		this.abortBuildingDebugHandler = new AbortHandler(() => onCancel())
+		return this.abortBuildingDebugHandler
+	}
+
+	async abortBuildingDebug() {
+		this.abortBuildingDebugHandler?.abort()
+	}
+
+	// MARK: Building Release
+
+	async askToBuildRelease(beforeWhat?: string): Promise<boolean> {
+		switch (await window.showWarningMessage(`Make a release build ${(beforeWhat ? `before ${beforeWhat}` : 'first')}`, 'Build Release')) {
+			case 'Build Release':
+				await this.buildRelease()
+				return true
+			default: return false
+		}
+	}
+
 	async buildRelease(successCallback?: any) {
 		print('stream.buildRelease not implemented', LogLevel.Detailed)
+	}
+
+	private abortBuildingReleaseHandler: AbortHandler | undefined
+
+	setAbortBuildingReleaseHandler(onCancel: () => void): AbortHandler {
+		this.abortBuildingReleaseHandler = new AbortHandler(() => onCancel())
+		return this.abortBuildingReleaseHandler
+	}
+	
+	async abortBuildingRelease() {
+		this.abortBuildingReleaseHandler?.abort()
 	}
 
 	// MARK: Side Bar Tree View Items
@@ -343,17 +391,12 @@ export class Stream {
 		return items
 	}
 
-	setAbortBuildingDebug(handler: () => void | undefined) {
-		abortBuildingDebug = handler
 	}
 
 	setBuildingDebug(active: boolean) {
 		if (!active) this.abortBuildingDebugHandler = undefined
 		isBuildingDebug = active
-		commands.executeCommand('setContext', 'isBuilding', active)
-	}
-		
-	setAbortBuildingRelease(handler: () => void | undefined) {
+		commands.executeCommand('setContext', 'isBuildingDebug', active)
 	}
 	
 	setBuildingRelease(active: boolean) {

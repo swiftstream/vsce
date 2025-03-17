@@ -1,12 +1,13 @@
 import * as fs from 'fs'
-import { commands, workspace, debug, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
+import * as path from 'path'
+import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream } from '../../extension'
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { createWebDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
-import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift as rebuildSwift } from './commands/build'
+import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
 import { buildReleaseCommand } from './commands/buildRelease'
 import { debugInChromeCommand } from './commands/debugInChrome'
 import { hotReloadCommand } from './commands/hotReload'
@@ -87,12 +88,6 @@ export class WebStream extends Stream {
 
     constructor() {
 		super()
-		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
-			if (e.configuration.type.includes('chrome')) {
-				this.setDebuggingInChrome(false)
-				sidebarTreeView?.refresh()
-			}
-		}))
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesFolder}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
@@ -384,12 +379,21 @@ export class WebStream extends Stream {
 			// this.yandex
 		]
 	}
+	
+	async isDebugBuilt(): Promise<boolean> {
+		return fs.existsSync(path.join(projectDirectory!, buildDevFolder))
+	}
+	
+	async isReleaseBuilt(): Promise<boolean> {
+		return fs.existsSync(path.join(projectDirectory!, buildProdFolder))
+	}
+
 	async buildDebug() {
 		await buildCommand(this)
 	}
 
 	async hotRebuildSwift(params?: { target?: string }) {
-		rebuildSwift(this, params)
+		hotRebuildSwift(this, params)
 	}
 
 	async buildRelease(successCallback?: any) {

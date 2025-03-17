@@ -50,33 +50,30 @@ export async function createWebDebugConfigIfNeeded(): Promise<any> {
     })
 }
 
-export async function createServerDebugConfigIfNeeded(): Promise<any> {
-    var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
-	if (configurations)
-		for (var config of configurations) {
-			if (config.type === 'lldb' && config.name === 'Debug Server') {
-    			// Return existing configuration
-                return config
-            }
-		}
-    // Add a new configuration
-    const newConfig: any = {
-        name: 'Debug Server',
+export function serverDebugConfig(options: {
+    target: string,
+    args: string[]
+}): any {
+    return {
+        name: `Debugging ${options.target}`,
         type: 'lldb',
         request: 'launch',
-        program: '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}/.build/debug/MySwiftApp',
-        args: [],
+        program: '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + `}/.build/debug/${options.target}`,
+        args: options.args,
         cwd: '${workspaceFolder:' + `${path.basename(projectDirectory ?? '')}` + '}'
     }
-    return await readAndUpdateConfig((config) => {
-        if (!config.configurations) {
-            config.configurations = [newConfig]
-        } else {
-            const existingConfigurations: any[] = config.configurations
-            config.configurations = [newConfig, ...existingConfigurations]
-        }
-        return newConfig
-    })
+}
+
+export function serverAttachDebuggerConfig(options: {
+    target: string,
+    pid: number
+}): any {
+    return {
+        name: `Debugging ${options.target}`,
+        type: 'lldb',
+        request: 'attach',
+        pid: options.pid
+    }
 }
 
 // MARK: Helpers

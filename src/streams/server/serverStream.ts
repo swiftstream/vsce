@@ -1,17 +1,25 @@
-import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
-import { LogLevel, print, Stream } from '../stream'
+import * as fs from 'fs'
+import * as path from 'path'
+import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
+import { isBuildingDebug, isBuildingRelease, print, Stream } from '../stream'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
-import { defaultServerPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
+import { defaultServerPort, extensionContext, innerServerPort, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { readServerPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
-import { createServerDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
+import { serverAttachDebuggerConfig, serverDebugConfig } from '../../helpers/createDebugConfigIfNeeded'
+import { Nginx } from './features/nginx'
+import { Ngrok } from './features/ngrok'
+import { AnyFeature } from '../anyFeature'
 import { DevContainerConfig } from '../../devContainerConfig'
+import { askToChooseSwiftTargetIfNeeded, buildCommand, chooseDebugTarget, rebuildSwift, selectedSwiftTarget } from './commands/build'
+import { buildRelease } from './commands/buildRelease'
 
 export var currentPort: string = `${defaultServerPort}`
 export var pendingNewPort: string | undefined
 
-export var isDebugRunning = false
-export var isReleaseRunning = false
-export var isRunningNgrok = false
+export var isDebugging = false
+export var runningDebugTargetPid: number | undefined
+export var isRunningDebugTarget = false
+export var isRunningReleaseTarget = false
 
 export class ServerStream extends Stream {
     constructor() {
@@ -23,21 +31,20 @@ export class ServerStream extends Stream {
     private _configureServer = async () => {
         const readPorts = await readServerPortsFromDevContainer()
         currentPort = `${readPorts.port ?? defaultServerPort}`
-        createServerDebugConfigIfNeeded()
-    }
-    
-    async onDidTerminateDebugSession(session: DebugSession) {
-        super.onDidTerminateDebugSession(session)
-        if (session.configuration.type.includes('lldb')) {
-            this.setDebugRunning(false)
-            this.setReleaseRunning(false)
-            sidebarTreeView?.refresh()
-        }
+        await Promise.all(this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup()))
     }
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         super.onDidChangeConfiguration(event)
 
+    }
+
+    async isDebugBuilt(): Promise<boolean> {
+        return fs.existsSync(path.join(projectDirectory!, '.build', 'debug', 'App'))
+    }
+    
+    async isReleaseBuilt(): Promise<boolean> {
+        return fs.existsSync(path.join(projectDirectory!, '.build', 'release', 'App'))
     }
         
     setPendingNewPort(value: string | undefined) {
@@ -49,16 +56,16 @@ export class ServerStream extends Stream {
         }
         sidebarTreeView?.refresh()
     }
-        
-    setRunningNgrok(active: boolean) {
-        isRunningNgrok = active
-    }
 
     registerCommands() {
 		super.registerCommands()
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunDebug, async () => { await this.runDebug() }))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunRelease, async () => { await this.runRelease() }))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunNgrok, async () => { await this.runNgrok() }))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunDebug, async () => { await this.run({ release: false }) }))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunRelease, async () => { await this.run({ release: true }) }))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Port, async () => { await this.changePort() }))
+        extensionContext.subscriptions.push(commands.registerCommand('chooseDebugTarget', chooseDebugTarget))
+        extensionContext.subscriptions.push(commands.registerCommand('runDebugAttached', async () => { await this.debug() }))
+        extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
+        extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
     }
 
     onDidRenameFiles(event: FileRenameEvent) {
@@ -92,69 +99,212 @@ export class ServerStream extends Stream {
         return false
     }
 
-    // MARK: Building
+    // MARK: Build
+
+    private isAwaitingBuild: boolean = false
 
     async buildDebug() {
-        // TODO: 
-        print('stream.buildDebug not implemented', LogLevel.Detailed)
+        await buildCommand(this)
+    }
+
+    async buildRelease() {
+        await buildRelease(this)
     }
     
     async hotRebuildSwift(params?: { target?: string }) {
-        // TODO: rebuildSwift(this, params)
+        await rebuildSwift()
     }
 
-    async runDebug() {
-        // TODO: 
-        print('stream.runDebug not implemented', LogLevel.Detailed)
+    async abortBuildingDebug() {
+        await super.abortBuildingDebug()
+        this.isAwaitingBuild = false
+        sidebarTreeView?.refresh()
     }
 
-    async buildRelease(successCallback?: any) {
-        // TODO: 
-        print('stream.buildRelease not implemented', LogLevel.Detailed)
+    async abortBuildingRelease() {
+        await super.abortBuildingRelease()
+        
     }
 
-    async runRelease() {
-        // TODO: 
-        print('stream.runRelease not implemented', LogLevel.Detailed)
+    // MARK: Debug
+
+    private debugSessionName: string | undefined
+
+    async onDidStartDebugSession(session: DebugSession) {
+        if (!projectDirectory) return
+        if (session.name === this.debugSessionName) {
+            
+        }
     }
 
-    async runNgrok() {
-        // TODO: 
-        print('stream.runNgrok not implemented', LogLevel.Detailed)
+    async onDidTerminateDebugSession(session: DebugSession) {
+        super.onDidTerminateDebugSession(session)
+        if (session.name === this.debugSessionName) {
+            this.setDebugging()
+            if (!this.isDebugerAttachedLater) {
+                this.isAwaitingBuild = false
+                this.setRunningDebugTarget(false)
+                this.setRunningReleaseTarget(false)
+            }
+            this.isDebugerAttachedLater = false
+            sidebarTreeView?.refresh()
+        }
+    }
+
+    checkBinaryExists(options: {
+        release: boolean,
+        target: string
+    }): boolean {
+        return fs.existsSync(path.join(projectDirectory!, '.build', options.release ? 'release' : 'debug', options.target))
+    }
+
+    async checkBinaryAndBuildIfNeeded(options: {
+        release: boolean,
+        target: string
+    }): Promise<boolean> {
+        if (!this.checkBinaryExists(options)) {
+            switch (await window.showQuickPick(['Yes', 'Not now'], {
+                placeHolder: `Would you like to build ${selectedSwiftTarget} target?`
+            })) {
+                case 'Yes':
+                    this.isAwaitingBuild = true
+                    sidebarTreeView?.refresh()
+                    await this.buildDebug()
+                    this.isAwaitingBuild = false
+                    sidebarTreeView?.refresh()
+                    return true
+                default:
+                    return false
+            }
+        }
+        return true
+    }
+
+    async debug() {
+        if (isDebugging) return
+        if (isRunningDebugTarget) {
+            if (!selectedSwiftTarget) return
+            if (!runningDebugTargetPid) return
+            if (!this.checkBinaryExists({ release: false, target: selectedSwiftTarget })) return
+            const attachConfig = serverAttachDebuggerConfig({
+                target: selectedSwiftTarget,
+                pid: runningDebugTargetPid
+            })
+            await commands.executeCommand('debug.startFromConfig', attachConfig)
+            this.setDebugging(attachConfig.name)
+            this.isDebugerAttachedLater = true
+            sidebarTreeView?.refresh()
+            return
+        }
+        await askToChooseSwiftTargetIfNeeded(this)
+        if (!selectedSwiftTarget) 
+            throw `Please select Swift target to run`
+        if (await this.checkBinaryAndBuildIfNeeded({ release: false, target: selectedSwiftTarget }) === false) return
+        const debugConfig = serverDebugConfig({
+            target: selectedSwiftTarget,
+            args: []
+        })
+        await commands.executeCommand('debug.startFromConfig', debugConfig)
+        this.setRunningDebugTarget(true)
+        this.setDebugging(debugConfig.name)
+        sidebarTreeView?.refresh()
+    }
+
+    // MARK: Run
+
+    async run(options: { release: boolean }) {
+        if (isDebugging) {
+            sidebarTreeView?.refresh()
+            await commands.executeCommand('workbench.action.debug.restart')
+            return
+        }
+        if (options.release) {
+            if (isRunningDebugTarget) {
+                window.showInformationMessage('Please stop the Debug build first')
+                return
+            } else if (this.isAwaitingBuild && isBuildingRelease && selectedSwiftTarget && !this.checkBinaryExists({ release: options.release, target: selectedSwiftTarget })) {
+                window.showInformationMessage('Please wait until the build completes')
+                return
+            }
+        } else {
+            if (isRunningReleaseTarget) {
+                window.showInformationMessage('Please stop the Release build first')
+                return
+            } else if (this.isAwaitingBuild && isBuildingDebug && selectedSwiftTarget && !this.checkBinaryExists({ release: options.release, target: selectedSwiftTarget })) {
+                window.showInformationMessage('Please wait until the build completes')
+                return
+            }
+        }
+        await askToChooseSwiftTargetIfNeeded(this)
+        if (!selectedSwiftTarget) 
+            throw `Please select Swift target to run`
+        if (await this.checkBinaryAndBuildIfNeeded({ release: options.release, target: selectedSwiftTarget }) === false) return
+        const runningTask = await this.swift.startRunTask({
+            release: options.release,
+            target: selectedSwiftTarget,
+            args: []
+        })
+        if (options.release) {
+            this.setRunningReleaseTarget(true)
+        } else {
+            this.setRunningDebugTarget(true, runningTask?.pid)
+        }
+    }
+
+    stop() {
+        this.swift.stopRunTask()
+        this.setRunningDebugTarget(false)
+        this.setRunningReleaseTarget(false)
     }
 
     // MARK: Side Bar Tree View Items
 
+    async defaultDebugActionItems(): Promise<Dependency[]> {
+        return [
+            new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', selectedSwiftTarget ? selectedSwiftTarget : '', TreeItemCollapsibleState.None, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer'))
+        ]
+    }
+
     async debugActionItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunDebug, isDebugRunning ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, isDebugRunning ? 'debug-rerun::charts.green' : 'debug-alt'),
-            new Dependency(SideTreeItem.RunNgrok, isRunningNgrok ? 'Ngrok is active' : 'Activate Ngrok', '', TreeItemCollapsibleState.None, isRunningNgrok ? 'globe::charts.green' : 'globe')
+            new Dependency(SideTreeItem.RunDebug, this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            ...(await super.debugActionItems())
         ]
     }
-    async debugOptionItems(): Promise<Dependency[]> { return [] }
     async releaseItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunRelease, isReleaseRunning ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, isReleaseRunning ? 'debug-stop::charts.green' : 'debug-start'),
+            new Dependency(SideTreeItem.RunRelease, isRunningReleaseTarget ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            ...(await super.releaseItems())
         ]
     }
-    async projectItems(): Promise<Dependency[]> { return [] }
-    async maintenanceItems(): Promise<Dependency[]> { return [] }
+    async maintenanceItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (await this.nginx.isInUse()) {
+
+        }
+        return [...items, ...(await super.maintenanceItems())]
+    }
     async settingsItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.Port, 'Port', `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower')
+            new Dependency(SideTreeItem.Port, 'Port', `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
+            ...(await super.settingsItems())
         ]
     }
-    async isThereAnyRecommendation(): Promise<boolean> { return false }
-    async recommendationsItems(): Promise<Dependency[]> { return [] }
-    async customItems(element: Dependency): Promise<Dependency[]> { return [] }
             
-    setDebugRunning(active: boolean) {
-        isDebugRunning = active
-        commands.executeCommand('setContext', 'isDebugRunning', active)
+    setDebugging(debugSessionName?: string | undefined) {
+        this.debugSessionName = debugSessionName
+        isDebugging = debugSessionName !== undefined
+        commands.executeCommand('setContext', 'isDebugging', isDebugging)
+    }
+            
+    setRunningDebugTarget(active: boolean, pid?: number | undefined) {
+        isRunningDebugTarget = active
+        runningDebugTargetPid = active ? pid : undefined
+        commands.executeCommand('setContext', 'isRunningDebugTarget', active)
     }
         
-    setReleaseRunning(active: boolean) {
-        isReleaseRunning = active
-        commands.executeCommand('setContext', 'isReleaseRunning', active)
+    setRunningReleaseTarget(active: boolean) {
+        isRunningReleaseTarget = active
+        commands.executeCommand('setContext', 'isRunningReleaseTarget', active)
     }
 }
