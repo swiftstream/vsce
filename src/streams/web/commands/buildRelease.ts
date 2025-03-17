@@ -73,7 +73,7 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 			if (result == 'Retry') {
 				print(`Going to retry release build command`, LogLevel.Verbose)
-				buildReleaseCommand(webStream)
+				buildReleaseCommand(webStream, successCallback)
 			}
 			return
 		}
