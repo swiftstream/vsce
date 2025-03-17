@@ -425,10 +425,12 @@ export class Stream {
 
 	setClearingBuildCache(active: boolean) {
 		isClearingBuildCache = active
+		sidebarTreeView?.refresh()
 	}
 
 	setClearedBuildCache(active: boolean) {
 		isClearedBuildCache = active
+		sidebarTreeView?.refresh()
 	}
 }
 
