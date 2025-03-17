@@ -22,9 +22,10 @@ export var isRunningDebugTarget = false
 export var isRunningReleaseTarget = false
 
 export class ServerStream extends Stream {
+    public nginx: Nginx
     constructor() {
 		super()
-        
+        this.nginx = new Nginx(this)
         this._configureServer()
     }
 
@@ -94,9 +95,26 @@ export class ServerStream extends Stream {
                     }
                     return true
                 }
+            } else {
+                for (let i = 0; i < this.features.length; i++) {
+                    const feature = this.features[i]
+                    if (await feature.onDidSaveTextDocument(document.uri.path)) {
+                        return true
+                    }
+                }
             }
         }
         return false
+    }
+
+
+    // MARK: Features
+
+	features(): AnyFeature[] {
+        return [
+            this.nginx,
+            this.ngrok
+        ]
     }
 
     // MARK: Build
