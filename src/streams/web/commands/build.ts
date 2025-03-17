@@ -6,7 +6,7 @@ import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftTargets } from '../../../swift'
+import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftWebTargets } from '../../../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -22,7 +22,7 @@ import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotRel
 import { listOfAdditionalJSFiles, proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
 
-export let cachedSwiftTargets: SwiftTargets | undefined
+export let cachedSwiftTargets: SwiftWebTargets | undefined
 let cachedIsPWA: boolean | undefined
 
 export async function buildCommand(webStream: WebStream) {
@@ -86,7 +86,7 @@ export async function buildCommand(webStream: WebStream) {
 		wsSendBuildProgress(15)
 		// Phase 3: Retrieve Swift targets
 		print('🔳 Phase 3: Retrieve Swift targets', LogLevel.Verbose)
-		const targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
+		const targetsDump = await webStream.swift.getWebTargets({ abortHandler: abortHandler })
 		cachedSwiftTargets = targetsDump
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
@@ -296,7 +296,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		print('🔳 Retrieve Swift targets', LogLevel.Verbose)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
+			targetsDump = await webStream.swift.getWebTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -591,7 +591,7 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		print('🔥 Hot Rebuilding JS', LogLevel.Detailed)
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
+			targetsDump = await webStream.swift.getWebTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)
@@ -661,7 +661,7 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		let isPWA = cachedIsPWA
 		let targetsDump = cachedSwiftTargets
 		if (!targetsDump) {
-			targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
+			targetsDump = await webStream.swift.getWebTargets({ abortHandler: abortHandler })
 			cachedSwiftTargets = targetsDump
 		}
 		if (targetsDump.executables.length == 0)

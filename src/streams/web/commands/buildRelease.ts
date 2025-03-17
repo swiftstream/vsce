@@ -79,7 +79,7 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 		}
 		// Phase 3: Retrieve executable Swift targets
 		print('🔳 Phase 3: Retrieve executable Swift targets', LogLevel.Verbose)
-		const targetsDump = await webStream.swift.getTargets({ abortHandler: abortHandler })
+		const targetsDump = await webStream.swift.getWebTargets({ abortHandler: abortHandler })
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const isPWA = targetsDump.serviceWorkers.length > 0

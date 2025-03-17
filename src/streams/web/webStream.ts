@@ -462,7 +462,7 @@ export class WebStream extends Stream {
 
 	async containsAppTarget() {
 		if (!currentStream) return false
-		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
+		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getWebTargets()
 		return targetsDump.executables.includes(appTargetName)
 	}
 	
@@ -472,7 +472,7 @@ export class WebStream extends Stream {
 
 	async containsServiceTarget() {
 		if (!currentStream) return false
-		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getTargets()
+		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getWebTargets()
 		return targetsDump.serviceWorkers.includes(serviceWorkerTargetName)
 	}
 
