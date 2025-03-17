@@ -1,15 +1,44 @@
 import * as fs from 'fs'
+import * as path from 'path'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { currentLoggingLevel } from './streams/stream'
-import { projectDirectory, sidebarTreeView } from './extension'
+import { extensionContext, projectDirectory, sidebarTreeView } from './extension'
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
+import { commands, ShellExecution, Task, TaskExecution, TaskProvider, tasks, TaskScope, Terminal, window } from 'vscode'
 import { AbortHandler } from './bash'
 
 export class Swift {
     constructor(private stream: Stream) {}
+
+    private runTaskProvider?: SwiftRunTaskProvider
+
+    async startRunTask(options: {
+        release: boolean,
+        target: string,
+        args: string[]
+    }): Promise<{ pid: number } | undefined> {
+        if (this.runTaskProvider) {
+            if (this.runTaskProvider.isRunning) {
+                this.runTaskProvider.terminate()
+                await new Promise((r) => setTimeout(r, 500))
+            }
+            this.runTaskProvider = undefined
+        }
+        if (!this.runTaskProvider) {
+            this.runTaskProvider = new SwiftRunTaskProvider(options)
+            extensionContext.subscriptions.push(tasks.registerTaskProvider(SwiftRunTaskProvider.SwiftRunType, this.runTaskProvider))
+        }
+        if (!this.runTaskProvider) return undefined
+        return await this.runTaskProvider.start()
+    }
+
+    stopRunTask() {
+        this.runTaskProvider?.terminate()
+        this.runTaskProvider = undefined
+    }
 
     private async execute(args: string[], options?: {
         abortHandler?: AbortHandler | undefined
@@ -28,13 +57,59 @@ export class Swift {
         return result.stdout
     }
 
-    async getTargets(options?: { abortHandler?: AbortHandler | undefined }): Promise<SwiftTargets> {
+    async getTargets(options?: { abortHandler: AbortHandler }): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
-            var result: SwiftTargets = {
+            let result = new SwiftTargets()
+            const dump = await this.execute(['package', 'dump-package'], {
+                abortHandler: options?.abortHandler
+            })
+            const json = JSON.parse(dump)
+            for (let target of json.targets) {
+                switch (target.type) {
+                    case 'regular':
+                        result.regular.push(target.name)
+                        break
+                    case 'executable':
+                        result.executables.push(target.name)
+                        break
+                    case 'test':
+                        result.tests.push(target.name)
+                        break
+                    case 'system':
+                        result.system.push(target.name)
+                        break
+                    case 'binary':
+                        result.binaries.push(target.name)
+                        break
+                    case 'plugin':
+                        result.plugins.push(target.name)
+                        break
+                    case 'macro':
+                        result.macroses.push(target.name)
+                        break
+                    default:
+                        result.regular.push(target.name)
+                }
+            }
+            print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Unbearable)
+            return result
+        } catch (error: any) {
+            console.dir({getTargetsError: error})
+            throw `Unable to get executable targets from the package dump`
+        }
+    }
+
+    async getWebTargets(options?: { abortHandler?: AbortHandler | undefined }): Promise<SwiftWebTargets> {
+        print(`Going to retrieve swift targets`, LogLevel.Unbearable)
+        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
+            throw `No Package.swift file in the project directory`
+        }
+        try {
+            var result: SwiftWebTargets = {
                 executables: [],
                 serviceWorkers: []
             }
@@ -585,7 +660,133 @@ export interface Index {
     splash?: SplashData
 }
 
-export interface SwiftTargets {
+export interface SwiftWebTargets {
     executables: string[],
     serviceWorkers: string[]
+}
+
+export class SwiftTargets {
+    /// Targets that contains code for the Swift package's functionality.
+    regular: string[] = []
+
+    /// Targets that contains code for an executable's main module.
+    executables: string[] = []
+
+    /// Targets that contains tests for the Swift package's other targets.
+    tests: string[] = []
+
+    /// Targets that adapts a library on the system to work with Swift packages.
+    system: string[] = []
+
+    /// Targets that references a binary artifact.
+    binaries: string[] = []
+
+    /// Targets that provides a package plug-in.
+    plugins: string[] = []
+
+    /// Targets that provides a Swift macro.
+    macroses: string[] = []
+
+    all(options?: {
+        excludeExecutables?: boolean,
+        excludeBinaries?: boolean,
+        excludeRegular?: boolean,
+        excludePlugins?: boolean,
+        excludeMacroses?: boolean,
+        excludeTests?: boolean,
+        excludeSystem?: boolean
+    }): string[] {
+        let result: string[] = []
+        if (!options?.excludeExecutables)
+            result.push(...this.executables)
+        if (!options?.excludeBinaries)
+            result.push(...this.binaries)
+        if (!options?.excludeRegular)
+            result.push(...this.regular)
+        if (!options?.excludePlugins)
+            result.push(...this.plugins)
+        if (!options?.excludeMacroses)
+            result.push(...this.macroses)
+        if (!options?.excludeTests)
+            result.push(...this.tests)
+        if (!options?.excludeSystem)
+            result.push(...this.system)
+        return result
+    }
+}
+
+// MARK: Tasks
+
+class SwiftRunTaskProvider implements TaskProvider {
+    static SwiftRunType = 'swift'
+    private taskExecution: TaskExecution | undefined
+    private terminal: Terminal | undefined
+    private command: string
+    isRunning: boolean = false
+    release: boolean
+    task: Task
+    
+    constructor(options: {
+        release: boolean,
+        target: string,
+        args: string[]
+    }) {
+        this.command = `${path.join(projectDirectory!, '.build', options.release ? 'release' : 'debug', options.target)} ${options.args.join(' ')}`
+        this.release = options.release
+        this.task = new Task(
+            { type: SwiftRunTaskProvider.SwiftRunType },
+            TaskScope.Workspace,
+            `Run ${SwiftRunTaskProvider.SwiftRunType}`,
+            SwiftRunTaskProvider.SwiftRunType,
+            new ShellExecution(this.command),
+            []
+        )
+        tasks.onDidEndTaskProcess((e) => {
+            if (e.execution.task.name === this.task.name) {
+                commands.executeCommand('setContext', options.release ? 'isReleaseRunning' : 'isDebugRunning', false)
+                this.isRunning = false
+                sidebarTreeView?.refresh()
+            }
+        })
+    }
+
+    public provideTasks(): Task[] | undefined {
+        return [this.task]
+    }
+
+    public resolveTask(_task: Task): Task | undefined {
+        return undefined
+    }
+
+    public async start(): Promise<{ pid: number }> {
+        return new Promise((resolve) => {
+            tasks.executeTask(this.task).then(() => {}, (reason) => {
+                print(`🕵️‍♂️ Unable to run Swift: ${reason}`, LogLevel.Verbose)
+            })
+            tasks.onDidStartTaskProcess((e) => {
+                if (e.execution.task.name === this.task.name) {
+                    commands.executeCommand('setContext', this.release ? 'isReleaseRunning' : 'isDebugRunning', true)
+                    this.isRunning = true
+                    sidebarTreeView?.refresh()
+                    this.taskExecution = e.execution
+                    this.terminal = window.terminals.find((x) => x.name.includes(this.task.name))
+                    resolve({ pid: e.processId })
+                }
+            })
+        })
+    }
+
+    public reveal() {
+        this.terminal?.show(true)
+    }
+
+    public terminate() {
+        if (this.taskExecution) {
+            this.taskExecution.terminate()
+            this.taskExecution = undefined
+        } else if (this.terminal) {
+            this.terminal.dispose()
+            this.terminal = undefined
+        }
+    }
 }
