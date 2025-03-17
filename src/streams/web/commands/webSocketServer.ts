@@ -23,6 +23,7 @@ enum WSEvent {
     BuildStarted = 'buildStarted',
     BuildProgress = 'buildProgress',
     BuildError = 'buildError',
+    BuildAborted = 'BuildAborted',
     HotReload = 'hotReload'
 }
 
@@ -39,6 +40,11 @@ export function wsSendBuildProgress(progress: number) {
 export function wsSendBuildError(error: any) {
     if (!isHotReloadEnabled) return
     broadcast({ type: WSEvent.BuildError, error: error })
+}
+
+export function wsSendBuildAborted() {
+    if (!isHotReloadEnabled) return
+    broadcast({ type: WSEvent.BuildAborted })
 }
 
 export function wsSendHotReload() {
