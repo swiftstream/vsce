@@ -22,7 +22,7 @@ export async function resolveSwiftDependencies(options: {
         })
     }
     const measure = new TimeMeasure()
-    if (!doesBuildFolderExists(options.type)) {
+    if (!doesBuildFolderExists(options.type ?? SwiftBuildType.Native)) {
         print({
             detailed: `🔦 Resolving Swift dependencies ${options.type ? `for ${options.type}` : ''}`,
             verbose: `🔦 Resolving Swift dependencies ${options.type ? `at \`.${options.type}\`` : ''} for the first time`
