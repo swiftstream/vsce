@@ -110,6 +110,28 @@ export class ServerStream extends Stream {
         return false
     }
 
+    // MARK: Port
+
+    async changePort() {
+        const port = await window.showInputBox({
+            value: `${pendingNewPort ? pendingNewPort : currentPort}`,
+            placeHolder: 'Please select another port for the app',
+            validateInput: text => {
+                const value = parseInt(text)
+                if (value < 80)
+                    return 'Should be >= 80'
+                if (value > 65534)
+                    return 'Should be < 65535'
+                return isNaN(parseInt(text)) ? 'Port should be a number' : null
+            }
+        })
+        if (!port) return
+        const portToReplace = pendingNewPort ? pendingNewPort : currentPort
+        if (port == portToReplace) return
+        DevContainerConfig.transaction((c) => c.addOrChangePort(port, `${innerServerPort}`))
+        pendingNewPort = port
+        sidebarTreeView?.refresh()
+    }
 
     // MARK: Features
 
