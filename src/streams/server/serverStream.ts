@@ -33,7 +33,7 @@ export class ServerStream extends Stream {
     }
 
     private _configureServer = async () => {
-        const readPorts = await readServerPortsFromDevContainer()
+        const readPorts = readServerPortsFromDevContainer()
         currentPort = `${readPorts.port ?? defaultServerPort}`
         await Promise.all(this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup()))
     }
@@ -90,7 +90,7 @@ export class ServerStream extends Stream {
             if (document.languageId === 'jsonc' && document.uri.scheme === 'file') {
                 // devcontainer.json
                 if (document.uri.path == devContainerPath) {
-                    const readPorts = await readServerPortsFromDevContainer()
+                    const readPorts = readServerPortsFromDevContainer()
                     if (readPorts.portPresent && `${readPorts.port}` != currentPort) {
                         this.setPendingNewPort(`${readPorts.port}`)
                     } else {
