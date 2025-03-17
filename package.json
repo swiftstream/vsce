@@ -110,6 +110,30 @@
         }
       },
       {
+        "command": "stopRunningDebug",
+        "title": "Stop",
+        "icon": {
+          "dark": "assets/icons/stop.svg",
+          "light": "assets/icons/stop.svg"
+        }
+      },
+      {
+        "command": "stopRunningRelease",
+        "title": "Stop",
+        "icon": {
+          "dark": "assets/icons/stop.svg",
+          "light": "assets/icons/stop.svg"
+        }
+      },
+      {
+        "command": "chooseDebugTarget",
+        "title": "Choose target",
+        "icon": {
+          "dark": "assets/icons/target-white.svg",
+          "light": "assets/icons/target.svg"
+        }
+      },
+      {
         "command": "stopBuildingDebug",
         "title": "Stop Building",
         "icon": "$(debug-stop)"
@@ -120,6 +144,14 @@
         "icon": {
           "dark": "assets/icons/hammer.svg",
           "light": "assets/icons/hammer.svg"
+        }
+      },
+      {
+        "command": "runDebugAttached",
+        "title": "Run and attach Debugger",
+        "icon": {
+          "dark": "assets/icons/bug-white.svg",
+          "light": "assets/icons/bug.svg"
         }
       },
       {
@@ -154,6 +186,26 @@
       "view/item/context": [
         {
           "group": "inline",
+          "command": "chooseDebugTarget",
+          "when": "view == swiftstreamSidebar && viewItem == BuildDebug && hasCachedTargets && !isBuildingDebug"
+        },
+        {
+          "group": "inline",
+          "command": "runDebugAttached",
+          "when": "view == swiftstreamSidebar && viewItem == RunDebug && !isDebugging"
+        },
+        {
+          "group": "inline",
+          "command": "stopDebugging",
+          "when": "view == swiftstreamSidebar && viewItem == RunDebug && isRunningDebugTarget && isDebugging"
+        },
+        {
+          "group": "inline",
+          "command": "stopRunningDebug",
+          "when": "view == swiftstreamSidebar && viewItem == RunDebug && isRunningDebugTarget && !isDebugging"
+        },
+        {
+          "group": "inline",
           "command": "stopBuildingDebug",
           "when": "view == swiftstreamSidebar && viewItem == BuildDebug && isBuildingDebug"
         },
@@ -161,6 +213,11 @@
           "group": "inline",
           "command": "stopBuildingRelease",
           "when": "view == swiftstreamSidebar && viewItem == BuildRelease && isBuildingRelease"
+        },
+        {
+          "group": "inline",
+          "command": "stopRunningRelease",
+          "when": "view == swiftstreamSidebar && viewItem == RunRelease && isRunningReleaseTarget"
         }
       ]
     },
@@ -271,6 +328,17 @@
             "description": "ngrok"
           }
         }
+      },
+      {
+        "type": "swift",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "swift"
+          }
         }
       }
     ]
