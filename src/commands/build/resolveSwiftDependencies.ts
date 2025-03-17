@@ -13,6 +13,7 @@ export async function resolveSwiftDependencies(options: {
     substatus: (x: string) => void,
     abortHandler: AbortHandler
 }) {
+    await currentStream?.awaitForCompletionOfOtherSwiftProcessesIfNeeded('Resolving dependencies')
     const packageResolve = async () => {
         if (!currentStream) { throw `stream is null` }
         await currentStream.swift.packageResolve({
