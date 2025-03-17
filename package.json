@@ -260,6 +260,18 @@
           }
         }
       },
+      {
+        "type": "ngrok",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "ngrok"
+          }
+        }
+        }
       }
     ]
   },

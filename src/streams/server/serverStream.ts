@@ -23,9 +23,12 @@ export var isRunningReleaseTarget = false
 
 export class ServerStream extends Stream {
     public nginx: Nginx
+    public ngrok: Ngrok
+    
     constructor() {
 		super()
         this.nginx = new Nginx(this)
+        this.ngrok = new Ngrok(this)
         this._configureServer()
     }
 
