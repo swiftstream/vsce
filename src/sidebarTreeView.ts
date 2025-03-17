@@ -103,7 +103,10 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				}
 				items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
 				items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
-				if (await currentStream?.isThereAnyRecommendation() == true) {
+				if (await currentStream.isThereAnyFeature()) {
+					items.push(new Dependency(SideTreeItem.Features, 'Features', '', TreeItemCollapsibleState.Collapsed, 'extensions', false))
+				}
+				if (await currentStream.isThereAnyRecommendation()) {
 					items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
 				}
 				items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
@@ -141,54 +144,70 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					items.push(new Dependency(commandId, `${place.line}: ${place.description}`, '', TreeItemCollapsibleState.None, place.type == 'note' ? 'edit::charts.white' : place.type == 'warning' ? 'alert::charts.orange' : 'error::charts.red', true))
 				}
 			}
-		} else if (element?.id) {
-			if (currentStream) {
-				switch (element.id) {
-				case SideTreeItem.Debug:
-					// Actions
+		} else if (currentStream && element?.id) {
+			switch (element.id) {
+			case SideTreeItem.Debug:
+				// Actions
+				const defaultItems = await currentStream.defaultDebugActionItems()
+				if (defaultItems.length > 0) {
+					items.push(...defaultItems)
+				} else {
 					items.push(new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
-					if (currentStream) items.push(...(await currentStream.debugActionItems()))
-					// Options
-					items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
-					if (currentStream) items.push(...(await currentStream.debugOptionItems()))
-					break
-				case SideTreeItem.Release:
-					items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
-					if (currentStream) items.push(...(await currentStream.releaseItems()))
-					break
-				case SideTreeItem.Project:
-					if (currentStream) items.push(...(await currentStream.projectItems()))
-					break
-				case SideTreeItem.Maintenance:
-					items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
-					if (currentStream) items.push(...(await currentStream.maintenanceItems()))
-					break
-				case SideTreeItem.Settings:
-					items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
-					if (currentStream) items.push(...(await currentStream.settingsItems()))
-					items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
-					break
-				case SideTreeItem.Recommendations:
-					if (currentStream) items.push(...(await currentStream.recommendationsItems()))
-					break
-				case SideTreeItem.Support:
-					items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
-					if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
-						items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
-						items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
-						items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
-					}
-					items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
-					if (isCIS()) {
-						items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
-					}
-					items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
-					break
-				default: break
 				}
+				items.push(...(await currentStream.debugActionItems()))
+				// Options
+				items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
+				items.push(...(await currentStream.debugOptionItems()))
+				break
+			case SideTreeItem.Release:
+				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
+				items.push(...(await currentStream.releaseItems()))
+				break
+			case SideTreeItem.Project:
+				items.push(...(await currentStream.projectItems()))
+				break
+			case SideTreeItem.Features:
+				if (await currentStream.isThereInstalledFeatures()) {
+					items.push(...(await currentStream.installedFeatureItems()))
+					if (await currentStream.isThereFeaturesToAdd()) {
+						items.push(new Dependency(SideTreeItem.FeaturesCollection, 'Collection', '', TreeItemCollapsibleState.Collapsed, 'library'))
+					}
+				} else {
+					items.push(...(await currentStream.addFeatureItems()))
+				}
+				break
+			case SideTreeItem.FeaturesCollection:
+				items.push(...(await currentStream.addFeatureItems()))
+				break
+			case SideTreeItem.Maintenance:
+				items.push(new Dependency(SideTreeItem.ClearBuildCache, isClearingBuildCache ? 'Clearing Build Cache' : isClearedBuildCache ? 'Cleared Build Cache' : 'Clear Build Cache', '', TreeItemCollapsibleState.None, isClearingBuildCache ? 'sync~spin::charts.red' : isClearedBuildCache ? 'check::charts.green' : 'trash::charts.red'))
+				items.push(...(await currentStream.maintenanceItems()))
+				break
+			case SideTreeItem.Settings:
+				items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
+				items.push(...(await currentStream.settingsItems()))
+				items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
+				break
+			case SideTreeItem.Recommendations:
+				items.push(...(await currentStream.recommendationsItems()))
+				break
+			case SideTreeItem.Support:
+				items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
+					items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
+					items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
+					items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
+				}
+				items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
+				if (isCIS()) {
+					items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
+				}
+				items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
+				break
+			default:
+				items.push(...(await currentStream.customItems(element)))
+				break
 			}
-		} else if (currentStream && element) {
-			items.push(...(await currentStream.customItems(element)))
 		}
 		return items
 	}
@@ -258,60 +277,6 @@ export enum SideTreeItem {
 	Release = 'Release',
 		BuildRelease = 'BuildRelease',
 		RunRelease = 'RunRelease',
-		Firebase = 'Firebase',
-			FirebaseSetup = 'FirebaseSetup',
-			FirebaseDeployMode = 'FirebaseDeployMode',
-			FirebaseDeploy = 'FirebaseDeployHosting',
-			FirebaseDeintegrate = 'FirebaseDeintegrate',
-		Azure = 'Azure',
-			AzureSetup = 'AzureSetup',
-			AzureDeployMode = 'AzureDeployMode',
-			AzureDeploy = 'AzureDeploy',
-			AzureDeintegrate = 'AzureDeintegrate',
-		Alibaba = 'Alibaba',
-			AlibabaSetup = 'AlibabaSetup',
-			AlibabaDeployMode = 'AlibabaDeployMode',
-			AlibabaDeploy = 'AlibabaDeploy',
-			AlibabaDeintegrate = 'AlibabaDeintegrate',
-		Vercel = 'Vercel',
-			VercelSetup = 'VercelSetup',
-			VercelDeployMode = 'VercelDeployMode',
-			VercelDeploy = 'VercelDeploy',
-			VercelDeintegrate = 'VercelDeintegrate',
-		FlyIO = 'FlyIO',
-			FlyIOSetup = 'FlyIOSetup',
-			FlyIODeploy = 'FlyIODeploy',
-			FlyIODeintegrate = 'FlyIODeintegrate',
-		Cloudflare = 'Cloudflare',
-			CloudflareSetup = 'CloudflareSetup',
-			CloudflareDeployMode = 'CloudflareDeployMode',
-			CloudflareDeploy = 'CloudflareDeploy',
-			CloudflareDeintegrate = 'CloudflareDeintegrate',
-		DigitalOcean = 'DigitalOcean',
-			DigitalOceanSetup = 'DigitalOceanSetup',
-			DigitalOceanDeployMode = 'DigitalOceanDeployMode',
-			DigitalOceanDeploy = 'DigitalOceanDeploy',
-			DigitalOceanDeintegrate = 'DigitalOceanDeintegrate',
-		Heroku = 'Heroku',
-			HerokuSetup = 'HerokuSetup',
-			HerokuDeployMode = 'HerokuDeployMode',
-			HerokuDeploy = 'HerokuDeploy',
-			HerokuDeintegrate = 'HerokuDeintegrate',
-		YandexCloud = 'YandexCloud',
-			YandexCloudSetup = 'YandexCloudSetup',
-			YandexCloudDeployMode = 'YandexCloudDeployMode',
-			YandexCloudDeploy = 'YandexCloudDeploy',
-			YandexCloudDeintegrate = 'YandexCloudDeintegrate',
-		AddCloudProvider = 'AddCloudProvider',
-			AddFirebase = 'AddFirebase',
-			AddAzure = 'AddAzure',
-			AddAlibaba = 'AddAlibaba',
-			AddVercel = 'AddVercel',
-			AddFlyIO = 'AddFlyIO',
-			AddCloudflare = 'AddCloudflare',
-			AddDigitalOcean = 'AddDigitalOcean',
-			AddHeroku = 'AddHeroku',
-			AddYandexCloud = 'AddYandexCloud',
 	Project = 'Project',
 		NewFilePage = 'NewFilePage',
 		NewFileClass = 'NewFileClass',
@@ -331,6 +296,26 @@ export enum SideTreeItem {
 		DevCrawlerPort = 'DevCrawlerPort',
 		ProdPort = 'ProdPort',
 		LoggingLevel = 'LoggingLevel',
+	Features = 'Features',
+		FeaturesCollection = 'FeaturesCollection',
+		AddNginx = 'AddNginx',
+		Nginx = 'Nginx',
+			NginxRestart = 'NginxRestart',
+			NginxEditConfig = 'NginxEditConfig',
+			NginxResetConfig = 'NginxResetConfig',
+			NginxDeintegrate = 'NginxDeintegrate',
+		AddNgrok = 'AddNgrok',
+		Ngrok = 'Ngrok',
+			NgrokRun = 'NgrokRun',
+			NgrokStop = 'NgrokStop',
+			NgrokEditConfig = 'NgrokEditConfig',
+			NgrokDeintegrate = 'NgrokDeintegrate',
+		AddFirebase = 'AddFirebase',
+		Firebase = 'Firebase',
+			FirebaseSetup = 'FirebaseSetup',
+			FirebaseDeployMode = 'FirebaseDeployMode',
+			FirebaseDeploy = 'FirebaseDeployHosting',
+			FirebaseDeintegrate = 'FirebaseDeintegrate',
 	Recommendations = 'Recommendations',
 		UpdateWeb = 'UpdateWeb',
 		UpdateJSKit = 'UpdateJSKit',
