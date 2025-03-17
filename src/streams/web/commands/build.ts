@@ -450,6 +450,8 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		console.log(`Hot Rebuilt Swift in ${measure.time}ms`)
 		webStream.setBuildingDebug(false)
 		webStream.setHotBuildingSwift(false)
+		webStream.setRecompilingApp(false)
+		webStream.setRecompilingService(false)
 		sidebarTreeView?.refresh()
 		wsSendHotReload()
 		const awaitingParams = awaitingHotRebuildSwift.pop()
