@@ -1,6 +1,6 @@
-import { Uri, workspace } from 'vscode'
-import { innerServerPort, innerWebDevCrawlerPort, innerWebDevPort, innerWebProdPort, projectDirectory } from '../extension'
+import * as fs from 'fs'
 import JSON5 from 'json5'
+import { innerServerNginxPort, innerServerPort, innerWebDevCrawlerPort, innerWebDevPort, innerWebProdPort, projectDirectory } from '../extension'
 
 function extractPort(appPorts: string[], port: string): number | undefined {
     var appPortsString = ''
@@ -12,16 +12,16 @@ function extractPort(appPorts: string[], port: string): number | undefined {
     return appPort
 }
 
-export async function readWebPortsFromDevContainer(): Promise<{
+export function readWebPortsFromDevContainer(): {
     devPort: number | undefined,
     devCrawlerPort: number | undefined,
     prodPort: number | undefined,
     devPortPresent: boolean,
     devCrawlerPortPresent: boolean,
     prodPortPresent: boolean
-}> {
+} {
     const devcontainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
-	const devcontainerContent = await workspace.fs.readFile(Uri.file(devcontainerPath))
+	const devcontainerContent = fs.readFileSync(devcontainerPath)
 	const devcontainerConfig = JSON5.parse(devcontainerContent.toString())
     const appPorts: string[] = devcontainerConfig.appPort
     if (appPorts.length == 0)
@@ -39,21 +39,27 @@ export async function readWebPortsFromDevContainer(): Promise<{
     }
 }
 
-export async function readServerPortsFromDevContainer(): Promise<{
+export function readServerPortsFromDevContainer(): {
     port: number | undefined,
-    portPresent: boolean
-}> {
+    nginxPort: number | undefined,
+    portPresent: boolean,
+    nginxPortPresent: boolean
+} {
     const devcontainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
-	const devcontainerContent = await workspace.fs.readFile(Uri.file(devcontainerPath))
+	const devcontainerContent = fs.readFileSync(devcontainerPath)
 	const devcontainerConfig = JSON5.parse(devcontainerContent.toString())
     const appPorts: string[] = devcontainerConfig.appPort
     if (appPorts.length == 0)
         return {
             port: undefined,
-            portPresent: false
+            nginxPort: undefined,
+            portPresent: false,
+            nginxPortPresent: false
         }
     return {
         port: extractPort(appPorts, `${innerServerPort}`),
+        nginxPort: extractPort(appPorts, `${innerServerNginxPort}`),
         portPresent: appPorts.findIndex((x) => x.endsWith(`:${innerServerPort}`)) >= 0,
+        nginxPortPresent: appPorts.findIndex((x) => x.endsWith(`:${innerServerNginxPort}`)) >= 0,
     }
 }
