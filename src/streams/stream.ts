@@ -5,7 +5,7 @@ import { Swift } from '../swift'
 import { Toolchain } from '../toolchain'
 import { currentStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
 import { Dependency, SideTreeItem } from '../sidebarTreeView'
-import { clearBuildCacheCommand } from '../commands/clearBuildCache'
+import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
 import { loggingLevelCommand } from '../commands/loggingLevel'
 import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openSwiftStreamDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums } from '../commands/support'
@@ -18,8 +18,8 @@ export var isBuildingDebug = false
 export var isBuildingRelease = false
 export var isHotBuildingSwift = false
 export var isHotRebuildEnabled = false
-export var isClearingBuildCache = false
-export var isClearedBuildCache = false
+export var isClearingCache = false
+export var isClearedCache = false
 
 export class Stream {
     public bash: Bash
@@ -91,7 +91,7 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearBuildCache, async () => await clearBuildCacheCommand() ))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
@@ -423,13 +423,13 @@ export class Stream {
 		sidebarTreeView?.refresh()
 	}
 
-	setClearingBuildCache(active: boolean) {
-		isClearingBuildCache = active
+	setClearingCache(active: boolean = true) {
+		isClearingCache = active
 		sidebarTreeView?.refresh()
 	}
 
-	setClearedBuildCache(active: boolean) {
-		isClearedBuildCache = active
+	setClearedCache(active: boolean = true) {
+		isClearedCache = active
 		sidebarTreeView?.refresh()
 	}
 }
