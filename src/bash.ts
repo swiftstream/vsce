@@ -1,5 +1,4 @@
 import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process'
-import { isNull } from 'util'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
