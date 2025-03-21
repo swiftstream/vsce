@@ -5,17 +5,8 @@ import { Uri, workspace } from 'vscode'
 import { currentDevPort } from '../streams/web/webStream'
 import { projectDirectory } from '../extension'
 
-export async function createWebDebugConfigIfNeeded(): Promise<any> {
-    var configurations = workspace.getConfiguration('launch').get<any[]>('configurations')
-	if (configurations)
-		for (var config of configurations) {
-			if (config.type === 'chrome' && config.url.includes(`:${currentDevPort}`)) {
-    			// Return existing configuration
-                return config
-            }
-		}
-    // Add a new configuration
-    const newConfig: any = {
+export async function webDebugConfig(): Promise<any> {
+    return {
         type: 'chrome',
         request: 'launch',
         name: 'Debug in Chrome',
@@ -39,15 +30,6 @@ export async function createWebDebugConfigIfNeeded(): Promise<any> {
             '**/WebSources/**'
         ]
     }
-    return await readAndUpdateConfig((config) => {
-        if (!config.configurations) {
-            config.configurations = [newConfig]
-        } else {
-            const existingConfigurations: any[] = config.configurations
-            config.configurations = [newConfig, ...existingConfigurations]
-        }
-        return newConfig
-    })
 }
 
 export function serverDebugConfig(options: {
