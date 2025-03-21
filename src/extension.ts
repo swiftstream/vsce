@@ -198,11 +198,9 @@ function registerCommands() {
 	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewProject, startNewProjectWizard))
 	extensionContext.subscriptions.push(commands.registerCommand('openProject', openProjectCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('startNewProjectWizard', startNewProjectWizard))
-	extensionContext.subscriptions.push(commands.registerCommand('runDebugging', debugInChromeCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('stopDebugging', async () => {
 		await commands.executeCommand('workbench.action.debug.stop')
 	}))
-	extensionContext.subscriptions.push(commands.registerCommand('buildDebug', buildCommand))
 	extensionContext.subscriptions.push(commands.registerCommand('stopBuildingDebug', async () => {
 		await currentStream?.abortBuildingDebug()
 	}))
