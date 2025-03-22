@@ -123,7 +123,7 @@ export async function activate(context: ExtensionContext) {
 	// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
 }
 
-const updateExtensionState = (state: ExtensionState) => commands.executeCommand('setContext', 'swiftstream.state', state)
+const updateExtensionState = (state: ExtensionState) => commands.executeCommand('setContext', ContextKey.state, state)
 
 const proceedProjectDirectory = async (projectDirectory: string): Promise<boolean> => {
 	if (!isInContainer()) {
