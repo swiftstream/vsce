@@ -1,6 +1,6 @@
 import { commands, window } from 'vscode'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { sidebarTreeView } from '../../../extension'
+import { ContextKey, sidebarTreeView } from '../../../extension'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { SwiftTargets } from '../../../swift'
@@ -40,7 +40,7 @@ export async function buildCommand(serverStream: ServerStream) {
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', 'hasCachedTargets', selectedSwiftTarget !== undefined)
+        commands.executeCommand('setContext', ContextKey.hasCachedTargets, selectedSwiftTarget !== undefined)
         await askToChooseSwiftTargetIfNeeded(serverStream, { abortHandler: abortHandler, force: true })
         if (!selectedSwiftTarget) 
             throw `Please select Swift target to build`
@@ -83,7 +83,7 @@ export async function askToChooseSwiftTargetIfNeeded(serverStream: ServerStream,
                 cachedSwiftTargets = targetsDump
             }
             const allTargets = cachedSwiftTargets.all({ excludeTests: true })
-            commands.executeCommand('setContext', 'hasCachedTargets', allTargets.length > 0)
+            commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
             if (allTargets.length == 1) {
                 selectedSwiftTarget = allTargets[0]
             } else if (allTargets.length > 0) {

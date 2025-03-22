@@ -3,7 +3,7 @@ import * as path from 'path'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { currentLoggingLevel } from './streams/stream'
-import { extensionContext, projectDirectory, sidebarTreeView } from './extension'
+import { ContextKey, extensionContext, projectDirectory, sidebarTreeView } from './extension'
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
@@ -743,7 +743,7 @@ class SwiftRunTaskProvider implements TaskProvider {
         )
         tasks.onDidEndTaskProcess((e) => {
             if (e.execution.task.name === this.task.name) {
-                commands.executeCommand('setContext', options.release ? 'isReleaseRunning' : 'isDebugRunning', false)
+                commands.executeCommand('setContext', options.release ? ContextKey.isRunningReleaseTarget : ContextKey.isRunningDebugTarget, false)
                 this.isRunning = false
                 sidebarTreeView?.refresh()
             }
@@ -765,7 +765,7 @@ class SwiftRunTaskProvider implements TaskProvider {
             })
             tasks.onDidStartTaskProcess((e) => {
                 if (e.execution.task.name === this.task.name) {
-                    commands.executeCommand('setContext', this.release ? 'isReleaseRunning' : 'isDebugRunning', true)
+                    commands.executeCommand('setContext', this.release ? ContextKey.isRunningReleaseTarget : ContextKey.isRunningDebugTarget, true)
                     this.isRunning = true
                     sidebarTreeView?.refresh()
                     this.taskExecution = e.execution

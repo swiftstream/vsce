@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
-import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream } from '../../extension'
+import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream, ContextKey } from '../../extension'
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { createWebDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
 import { NPM } from '../../npm'
@@ -225,7 +225,7 @@ export class WebStream extends Stream {
 	
 	setDebuggingInChrome(active: boolean) {
 		isDebuggingInChrome = active
-		commands.executeCommand('setContext', 'isDebuggingInChrome', active)
+		this.setContext(ContextKey.isDebugging, active)
 	}
 	
 	setRunningCrawlServer(active: boolean) {

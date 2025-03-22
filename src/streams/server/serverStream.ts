@@ -3,7 +3,7 @@ import * as path from 'path'
 import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, print, Stream } from '../stream'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
-import { defaultServerPort, extensionContext, innerServerPort, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
+import { ContextKey, defaultServerPort, extensionContext, innerServerPort, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { readServerPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { serverAttachDebuggerConfig, serverDebugConfig } from '../../helpers/createDebugConfigIfNeeded'
 import { Nginx } from './features/nginx'
@@ -36,6 +36,8 @@ export class ServerStream extends Stream {
         const readPorts = readServerPortsFromDevContainer()
         currentPort = `${readPorts.port ?? defaultServerPort}`
         await Promise.all(this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup()))
+        this.setContext(ContextKey.isNavigationBuildButtonEnabled, true)
+		this.setContext(ContextKey.isNavigationRunButtonEnabled, true)
     }
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -337,17 +339,17 @@ export class ServerStream extends Stream {
     setDebugging(debugSessionName?: string | undefined) {
         this.debugSessionName = debugSessionName
         isDebugging = debugSessionName !== undefined
-        commands.executeCommand('setContext', 'isDebugging', isDebugging)
+        this.setContext(ContextKey.isDebugging, isDebugging)
     }
             
     setRunningDebugTarget(active: boolean, pid?: number | undefined) {
         isRunningDebugTarget = active
         runningDebugTargetPid = active ? pid : undefined
-        commands.executeCommand('setContext', 'isRunningDebugTarget', active)
+        this.setContext(ContextKey.isRunningDebugTarget, active)
     }
         
     setRunningReleaseTarget(active: boolean) {
         isRunningReleaseTarget = active
-        commands.executeCommand('setContext', 'isRunningReleaseTarget', active)
+        this.setContext(ContextKey.isRunningReleaseTarget, active)
     }
 }

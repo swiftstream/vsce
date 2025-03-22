@@ -29,6 +29,18 @@ export enum ExtensionStream {
 	Pure = "PURE",
 	Unknown = "UNKNOWN"
 }
+export enum ContextKey {
+	state = 'swiftstream.state',
+	isNavigationRunButtonEnabled = 'isNavigationRunButtonEnabled',
+	isNavigationBuildButtonEnabled = 'isNavigationBuildButtonEnabled',
+	hasCachedTargets = 'hasCachedTargets',
+	isDebugging = 'isDebugging',
+	isBuildingDebug = 'isBuildingDebug',
+	isBuildingRelease = 'isBuildingRelease',
+	isRunningDebugTarget = 'isRunningDebugTarget',
+	isRunningReleaseTarget = 'isRunningReleaseTarget',
+	isSwiftlangInstalled = 'isSwiftlangInstalled'
+}
 const _stream: string = process.env.S_MODE ?? ExtensionStream.Unknown
 export const extensionStream: ExtensionStream = Object.values(ExtensionStream).includes(_stream as ExtensionStream)
 	? _stream as ExtensionStream
@@ -310,7 +322,7 @@ const isConfigValid = (config: any): boolean => {
 }
 
 async function switchToTreeViewMode() {
-	commands.executeCommand('setContext', 'swiftstream.state', ExtensionState.ProjectMode)
+	commands.executeCommand('setContext', ContextKey.state, ExtensionState.ProjectMode)
 	sidebarTreeView = new SidebarTreeView()
 	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView

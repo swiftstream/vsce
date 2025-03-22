@@ -3,7 +3,7 @@ import { AbortHandler, Bash } from '../bash'
 import { Pgrep } from '../pgrep'
 import { Swift } from '../swift'
 import { Toolchain } from '../toolchain'
-import { currentStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
+import { ContextKey, currentStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
 import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
@@ -249,6 +249,12 @@ export class Stream {
 		return false
 	}
 
+	// MARK: Context
+
+	setContext(key: ContextKey, value: any) {
+		commands.executeCommand('setContext', key, value)
+	}
+
 	// MARK: Features
 
 	features(): AnyFeature[] { return [] }
@@ -408,13 +414,13 @@ export class Stream {
 	setBuildingDebug(active: boolean) {
 		if (!active) this.abortBuildingDebugHandler = undefined
 		isBuildingDebug = active
-		commands.executeCommand('setContext', 'isBuildingDebug', active)
+		this.setContext(ContextKey.isBuildingDebug, active)
 	}
 	
 	setBuildingRelease(active: boolean) {
 		if (!active) this.abortBuildingReleaseHandler = undefined
 		isBuildingRelease = active
-		commands.executeCommand('setContext', 'isBuildingRelease', active)
+		this.setContext(ContextKey.isBuildingRelease, active)
 	}
 	
 	setHotRebuild(value?: boolean) {
