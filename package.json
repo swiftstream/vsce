@@ -264,8 +264,13 @@
     "viewsWelcome": [
       {
         "view": "explorer",
-        "contents": "[Create Swift Project](command:startNewProjectWizard)",
-        "when": "swiftstream.state == NoProjectFolder"
+        "contents": "You can also create a new Swift project in container.\n[Create Swift Project in Container](command:startNewProjectWizard)",
+        "when": "swiftstream.state == NoProjectFolder && !isSwiftlangInstalled"
+      },
+      {
+        "view": "explorer",
+        "contents": "Swift Stream helps you to start Swift project in container.\n[Create Swift Project in Container](command:startNewProjectWizard)",
+        "when": "swiftstream.state == NoProjectFolder && isSwiftlangInstalled"
       },
       {
         "view": "swiftstreamSidebar",

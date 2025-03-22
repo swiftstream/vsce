@@ -107,6 +107,8 @@ export async function activate(context: ExtensionContext) {
 	workspace.onDidDeleteFiles(event => {
 		currentStream?.onDidDeleteFiles(event)
 	})
+	// Checking if swift extension installed
+	commands.executeCommand('setContext', ContextKey.isSwiftlangInstalled, extensions.getExtension('swiftlang.swift-vscode') !== undefined)
 
 	registerCommands()
 
