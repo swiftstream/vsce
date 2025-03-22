@@ -354,6 +354,12 @@ async function switchToTreeViewMode() {
 	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
+	sidebarTreeViewContainer.onDidCollapseElement((e) => {
+		sidebarTreeView?.onDidCollapseElement(e)
+	})
+	sidebarTreeViewContainer.onDidExpandElement((e) => {
+		sidebarTreeView?.onDidExpandElement(e)
+	})
 }
 
 export function deactivate() {}

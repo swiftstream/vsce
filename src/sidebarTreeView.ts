@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { env } from 'process'
-import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
+import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
@@ -47,7 +47,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		}
 	}
 
-	constructor() {}
+	constructor() {
+		this.updateExpandedItems()
+	}
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire()
@@ -95,21 +97,21 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		}
 		if (element == null) {
 			if (currentStream) {
-				items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, TreeItemCollapsibleState.Expanded, 'coffee', false))
-				items.push(new Dependency(SideTreeItem.Release, 'Release', '', TreeItemCollapsibleState.Collapsed, 'cloud-upload', false))
+				items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, this.expandState(SideTreeItem.Debug), 'coffee', false))
+				items.push(new Dependency(SideTreeItem.Release, 'Release', '', this.expandState(SideTreeItem.Release), 'cloud-upload', false))
 				const projectItems = await currentStream!.projectItems()
 				if (projectItems.length > 0) {
-					items.push(new Dependency(SideTreeItem.Project, 'Project', '', TreeItemCollapsibleState.Collapsed, 'package', false))
+					items.push(new Dependency(SideTreeItem.Project, 'Project', '', this.expandState(SideTreeItem.Project), 'package', false))
 				}
-				items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', TreeItemCollapsibleState.Collapsed, 'tools', false))
-				items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', TreeItemCollapsibleState.Expanded, 'debug-configure', false))
+				items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', this.expandState(SideTreeItem.Maintenance), 'tools', false))
+				items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', this.expandState(SideTreeItem.Settings), 'debug-configure', false))
 				if (await currentStream.isThereAnyFeature()) {
-					items.push(new Dependency(SideTreeItem.Features, 'Features', '', TreeItemCollapsibleState.Collapsed, 'extensions', false))
+					items.push(new Dependency(SideTreeItem.Features, 'Features', '', this.expandState(SideTreeItem.Features), 'extensions', false))
 				}
 				if (await currentStream.isThereAnyRecommendation()) {
-					items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', TreeItemCollapsibleState.Collapsed, 'lightbulb', false))
+					items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', this.expandState(SideTreeItem.Recommendations), 'lightbulb', false))
 				}
-				items.push(new Dependency(SideTreeItem.Support, 'Support', '', TreeItemCollapsibleState.Collapsed, 'heart', false))
+				items.push(new Dependency(SideTreeItem.Support, 'Support', '', this.expandState(SideTreeItem.Support), 'heart', false))
 				const errorsItem = this.fillNewErrors()
 				if (errorsItem) {
 					items.push(errorsItem)
@@ -214,6 +216,67 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			}
 		}
 		return items
+	}
+
+	// MARK: Collapsible State
+
+	private expandableItems: SideTreeItem[] = [
+		SideTreeItem.Debug,
+		SideTreeItem.Release,
+		SideTreeItem.Project,
+		SideTreeItem.Maintenance,
+		SideTreeItem.Settings,
+		SideTreeItem.Features,
+		SideTreeItem.Recommendations,
+		SideTreeItem.Support
+	]
+	private collapsedByDefault: SideTreeItem[] = [
+		SideTreeItem.Features,
+		SideTreeItem.Recommendations,
+	]
+	private expandedItems: any = {}
+	
+	private expandState(item: SideTreeItem): TreeItemCollapsibleState {
+		if (!this.expandableItems.includes(item))
+			return TreeItemCollapsibleState.Collapsed
+		const settings = workspace.getConfiguration().get('menu.state') as object
+		if (settings[item] === undefined) {
+			if (this.collapsedByDefault.includes(item)) {
+				return TreeItemCollapsibleState.Collapsed
+			}
+			return TreeItemCollapsibleState.Expanded
+		}
+		if (settings[item] === true)
+			return TreeItemCollapsibleState.Expanded
+		return TreeItemCollapsibleState.Collapsed
+	}
+
+	private updateExpandedItems() {
+		const settings = workspace.getConfiguration().get('menu.state') as object
+		this.expandedItems = {}
+		for (let i = 0; i < this.expandableItems.length; i++) {
+			const item = this.expandableItems[i]
+			this.expandedItems[item] = (settings[item] as boolean) === true
+		}
+	}
+
+	private setItemExpanded(item: SideTreeItem, value: boolean) {
+		this.expandedItems[item] = value
+		let settings = workspace.getConfiguration().get('menu.state') as object
+		settings[item] = value
+		workspace.getConfiguration().update('menu.state', settings)
+	}
+
+	onDidCollapseElement(e: TreeViewExpansionEvent<Dependency>) {
+		const item = this.expandableItems.find((x) => `${x}` === e.element.id)
+		if (!item) return
+		this.setItemExpanded(item, false)
+	}
+
+	onDidExpandElement(e: TreeViewExpansionEvent<Dependency>) {
+		const item = this.expandableItems.find((x) => `${x}` === e.element.id)
+		if (!item) return
+		this.setItemExpanded(item, true)
 	}
 }
 
