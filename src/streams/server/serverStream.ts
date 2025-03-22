@@ -35,7 +35,6 @@ export class ServerStream extends Stream {
     private _configureServer = async () => {
         const readPorts = readServerPortsFromDevContainer()
         currentPort = `${readPorts.port ?? defaultServerPort}`
-        await Promise.all(this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup()))
         this.setContext(ContextKey.isNavigationBuildButtonEnabled, true)
 		this.setContext(ContextKey.isNavigationRunButtonEnabled, true)
     }

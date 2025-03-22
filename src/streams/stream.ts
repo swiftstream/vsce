@@ -48,6 +48,10 @@ export class Stream {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			await this.onDidTerminateDebugSession(e)
         }))
+		const promises = this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup())
+		if (promises.length > 0) {
+			await Promise.all(promises)
+		}
     }
 
 	isDebugerAttachedLater: boolean = false
