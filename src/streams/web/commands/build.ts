@@ -21,9 +21,11 @@ import { awaitGzipping, shouldAwaitGzipping } from './build/awaitGzipping'
 import { wsSendBuildError, wsSendBuildProgress, wsSendBuildStarted, wsSendHotReload } from './webSocketServer'
 import { listOfAdditionalJSFiles, proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
+import { restartLSPCommand } from '../../../commands/restartLSP'
 
 export let cachedSwiftTargets: SwiftWebTargets | undefined
 let cachedIsPWA: boolean | undefined
+let hasRestartedLSP = false
 
 export async function buildCommand(webStream: WebStream) {
 	if (isBuildingDebug || webStream.isAnyHotBuilding()) { return }
@@ -39,6 +41,7 @@ export async function buildCommand(webStream: WebStream) {
 	sidebarTreeView?.refresh()
 	wsSendBuildStarted(false)
 	const measure = new TimeMeasure()
+	const shouldRestartLSP = !hasRestartedLSP || !webStream.isDebugBuilt()
 	var gzipFail: any | undefined
 	var brotliFail: any | undefined
 	sidebarTreeView?.cleanupErrors()
@@ -145,6 +148,10 @@ export async function buildCommand(webStream: WebStream) {
 			}
 		}
 		wsSendBuildProgress(50)
+		if (shouldRestartLSP) {
+			hasRestartedLSP = true
+			restartLSPCommand(true)
+		}
 		// Phase 6: Build JavaScriptKit TypeScript sources
 		print('🔳 Phase 6: Build JavaScriptKit TypeScript sources', LogLevel.Verbose)
 		await buildJavaScriptKit({

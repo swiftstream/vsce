@@ -8,9 +8,11 @@ import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } fro
 import { ServerStream } from '../serverStream'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
 import { AbortHandler } from '../../../bash'
+import { restartLSPCommand } from '../../../commands/restartLSP'
 
 export let cachedSwiftTargets: SwiftTargets | undefined
 export let selectedSwiftTarget: string | undefined
+let hasRestartedLSP = false
 
 export async function buildCommand(serverStream: ServerStream) {
     if (isBuildingDebug || serverStream.isAnyHotBuilding()) { return }
@@ -44,6 +46,7 @@ export async function buildCommand(serverStream: ServerStream) {
         await askToChooseSwiftTargetIfNeeded(serverStream, { abortHandler: abortHandler, force: true })
         if (!selectedSwiftTarget) 
             throw `Please select Swift target to build`
+        const shouldRestartLSP = !hasRestartedLSP || !serverStream.isDebugBuilt(selectedSwiftTarget)
         // Phase 3: Build executable targets
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
@@ -59,6 +62,10 @@ export async function buildCommand(serverStream: ServerStream) {
         console.log(`Build Succeeded in ${measure.time}ms`)
         serverStream.setBuildingDebug(false)
         sidebarTreeView?.refresh()
+        if (shouldRestartLSP) {
+            hasRestartedLSP = true
+            restartLSPCommand(true)
+        }
     } catch (error: any) {
         serverStream.setBuildingDebug(false)
         sidebarTreeView?.refresh()

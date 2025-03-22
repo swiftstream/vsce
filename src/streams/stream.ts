@@ -13,6 +13,7 @@ import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
 import { AnyFeature } from './anyFeature'
+import { restartLSPCommand } from '../commands/restartLSP'
 
 export var isTestable = false
 export var isBuildingDebug = false
@@ -22,6 +23,8 @@ export var isHotRebuildEnabled = false
 export var isTesting = false
 export var isClearingCache = false
 export var isClearedCache = false
+export var isRestartingLSP = false
+export var isRestartedLSP = false
 
 export class Stream {
     public bash: Bash
@@ -123,6 +126,7 @@ export class Stream {
 			while (await checkIfSwiftTestRunning(this)) {}
 		}))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RestartLSP, async () => await restartLSPCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
@@ -467,6 +471,16 @@ export class Stream {
 
 	setClearedCache(active: boolean = true) {
 		isClearedCache = active
+		sidebarTreeView?.refresh()
+	}
+
+	setRestartingLSP(active: boolean = true) {
+		isRestartingLSP = active
+		sidebarTreeView?.refresh()
+	}
+
+	setRestartedLSP(active: boolean = true) {
+		isRestartedLSP = active
 		sidebarTreeView?.refresh()
 	}
 }

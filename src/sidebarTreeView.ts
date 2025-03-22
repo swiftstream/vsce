@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
-import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable } from './streams/stream'
+import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
@@ -184,6 +184,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				break
 			case SideTreeItem.Maintenance:
 				items.push(new Dependency(SideTreeItem.ClearCaches, isClearingCache ? 'Clearing Caches' : isClearedCache ? 'Cleared Caches' : 'Clear Caches', '', TreeItemCollapsibleState.None, isClearingCache ? 'sync~spin::charts.red' : isClearedCache ? 'check::charts.green' : 'trash::charts.red'))
+				items.push(new Dependency(SideTreeItem.RestartLSP, isRestartingLSP ? 'Restarting LSP' : isRestartedLSP ? 'Restarted LSP' : 'Restart LSP', '', TreeItemCollapsibleState.None, isRestartingLSP ? 'sync~spin::charts.yellow' : isRestartedLSP ? 'check::charts.green' : 'debug-restart::charts.yellow'))
 				items.push(...(await currentStream.maintenanceItems()))
 				break
 			case SideTreeItem.Settings:
@@ -288,6 +289,7 @@ export enum SideTreeItem {
 		NewFileSCSS = 'NewFileCSS',
 	Maintenance = 'Maintenance',
 		ClearCaches = 'ClearCaches',
+		RestartLSP = 'RestartLSP',
 		RecompileApp = 'RecompileApp',
 		RecompileService = 'RecompileService',
 		RecompileJS = 'RecompileJS',

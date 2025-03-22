@@ -33,6 +33,7 @@ import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
 import { AnyFeature } from '../anyFeature'
+import { restartLSPCommand } from '../../commands/restartLSP'
 
 export var indexFile = 'main.html'
 export var webSourcesFolder = 'WebSources'
@@ -121,6 +122,7 @@ export class WebStream extends Stream {
 			debug: true
 		})
 		startWebSocketServer()
+		restartLSPCommand()
 	}
 
 	async onDidTerminateDebugSession(session: DebugSession) {
