@@ -4,7 +4,6 @@ import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, Co
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream, ContextKey } from '../../extension'
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
-import { createWebDebugConfigIfNeeded } from '../../helpers/createDebugConfigIfNeeded'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
 import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
@@ -113,7 +112,6 @@ export class WebStream extends Stream {
 		currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
 		currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
 		currentDevCrawlerPort = `${readPorts.devCrawlerPort ?? defaultWebCrawlerPort}`
-		createWebDebugConfigIfNeeded()
 		this.setHotReload()
 		this.setDebugGzip()
 		this.setDebugBrotli()
