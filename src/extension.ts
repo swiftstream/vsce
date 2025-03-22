@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSON5 from 'json5'
-import { ExtensionContext, TreeView, commands, window, workspace, env as vsEnv } from 'vscode'
+import { ExtensionContext, TreeView, commands, window, workspace, env as vsEnv, extensions, TextEditor, Range } from 'vscode'
 import { ExtensionState } from './enums/ExtensionState'
 import { selectFolder } from './helpers/selectFolderHelper'
 import { reopenInContainerCommand, whyReopenInContainerCommand } from './commands/reopenInContainer'
@@ -106,6 +106,31 @@ export async function activate(context: ExtensionContext) {
 	})
 	workspace.onDidDeleteFiles(event => {
 		currentStream?.onDidDeleteFiles(event)
+	})
+	workspace.onDidChangeTextDocument(event => {
+		if (event.reason) return
+		const editor = window.activeTextEditor
+		if (!editor || event.document !== editor.document) return
+		if (!editor.document.uri.fsPath.endsWith('.swift')) return
+		if (workspace.getConfiguration().get('xcode.trimEndOfLine') !== true) return
+		function trimTrailingWhitespace(editor: TextEditor, lineNumber: number) {
+			const line = editor.document.lineAt(lineNumber)
+			const trimmed = line.text.trimEnd()
+			if (trimmed.length > 0 && trimmed.length < line.text.length) {
+				const range = new Range(
+					line.range.end.translate(0, trimmed.length - line.text.length),
+					line.range.end
+				)
+				editor.edit(editBuilder => editBuilder.delete(range))
+			}
+		}
+		for (let i = 0; i < event.contentChanges.length; i++) {
+			const change = event.contentChanges[i]
+			if (change.text.startsWith('\n')) {
+				const lineNumber = change.range.start.line
+				trimTrailingWhitespace(editor, lineNumber)
+			}
+		}
 	})
 	// Checking if swift extension installed
 	commands.executeCommand('setContext', ContextKey.isSwiftlangInstalled, extensions.getExtension('swiftlang.swift-vscode') !== undefined)
