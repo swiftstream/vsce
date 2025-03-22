@@ -14,10 +14,12 @@ import { isPackagePresentInResolved, KnownPackage } from '../commands/build/help
 import { generateChecksum } from '../helpers/filesHelper'
 import { AnyFeature } from './anyFeature'
 
+export var isTestable = false
 export var isBuildingDebug = false
 export var isBuildingRelease = false
 export var isHotBuildingSwift = false
 export var isHotRebuildEnabled = false
+export var isTesting = false
 export var isClearingCache = false
 export var isClearedCache = false
 
@@ -48,6 +50,10 @@ export class Stream {
 		extensionContext.subscriptions.push(debug.onDidTerminateDebugSession(async (e: DebugSession) => {
 			await this.onDidTerminateDebugSession(e)
         }))
+		if (this.swift.doesPackageContainsTestTarget()) {
+			isTestable = true
+			sidebarTreeView?.refresh()
+		}
 		const promises = this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup())
 		if (promises.length > 0) {
 			await Promise.all(promises)
@@ -95,6 +101,27 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Test, async () => {
+			if (isTesting) return
+			commands.executeCommand('testing.runAll')
+			async function checkIfSwiftTestRunning(ctx: Stream, attempt: number = 0): Promise<boolean> {
+				if (await ctx.pgrep.isSwiftTestRunning()) {
+					if (!isTesting) {
+						isTesting = true
+						sidebarTreeView?.refresh()
+					}
+					return true
+				}
+				if (attempt < 4) {
+					await new Promise((x) => setTimeout(x, 500))
+					return await checkIfSwiftTestRunning(ctx, attempt + 1)
+				}
+				isTesting = false
+				sidebarTreeView?.refresh()
+				return false
+			}
+			while (await checkIfSwiftTestRunning(this)) {}
+		}))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))

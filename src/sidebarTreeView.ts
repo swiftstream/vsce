@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands } from 'vscode'
-import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel } from './streams/stream'
+import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
@@ -155,6 +155,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					items.push(new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
 				}
 				items.push(...(await currentStream.debugActionItems()))
+				if (isTestable) {
+					items.push(new Dependency(SideTreeItem.Test, isTesting ? 'Testing' : 'Test', '', TreeItemCollapsibleState.None, isTesting ? 'sync~spin::charts.green' : 'beaker::charts.green'))
+				}
 				// Options
 				items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
 				items.push(...(await currentStream.debugOptionItems()))
@@ -267,6 +270,7 @@ export enum SideTreeItem {
 		NewProject = 'NewProject',
 		BuildDebug = 'BuildDebug',
 		RunDebug = 'RunDebug',
+		Test = 'Test',
 		DebugInChrome = 'DebugInChrome',
 		RunCrawlServer = 'RunCrawlServer',
 		RunNgrok = 'RunNgrok',

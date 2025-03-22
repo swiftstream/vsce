@@ -134,6 +134,13 @@ export class Swift {
         }
     }
 
+    doesPackageContainsTestTarget(): boolean {
+        const p = path.join(projectDirectory!, 'Package.swift')
+        if (!fs.existsSync(p)) return false
+        const content = fs.readFileSync(p, 'utf8')
+        return content.includes('.testTarget')
+    }
+
     async packageDump(options: { abortHandler: AbortHandler }): Promise<PackageContent | undefined> {
         const args: string[] = ['package', 'dump-package']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {

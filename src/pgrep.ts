@@ -33,4 +33,15 @@ export class Pgrep {
             return false
         }
     }
+
+    async isSwiftTestRunning(): Promise<boolean> {
+        if (!projectDirectory) return false
+        try {
+            const result = await this.execute(['-fl', `swift-test`], projectDirectory)
+            if (result.code != 0) return false
+            return result.stdout.includes('swift')
+        } catch {
+            return false
+        }
+    }
 }
