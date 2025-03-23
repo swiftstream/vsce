@@ -432,10 +432,10 @@ export class Stream {
 		return items
 	}
 
-	async awaitForCompletionOfOtherSwiftProcessesIfNeeded(title: string, attempt: number = 0) {
+	async awaitForCompletionOfOtherSwiftProcessesIfNeeded(title: string = '', attempt: number = 0) {
 		if (await this.pgrep.isAnyBlockingSwiftProcessRunning()) {
 			if (attempt <= 5) {
-				if (attempt == 0) {
+				if (attempt == 0 && title.length > 0) {
 					status('clock', `${title} paused, awaiting another Swift process...`, StatusType.Default)
 				}
 				await new Promise((x) => setTimeout(x, 3000))
