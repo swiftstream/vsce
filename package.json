@@ -98,7 +98,7 @@
           "order": 9,
           "type": "boolean",
           "default": true,
-          "description": "Automatically trim whitespace at the end of the line when pressing Enter, just like in Xcode"
+          "description": "Automatically trim whitespaces at the end of the line when pressing Enter, just like in Xcode"
         },
         "menu.state": {
           "order": 10,
