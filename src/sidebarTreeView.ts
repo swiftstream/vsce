@@ -165,7 +165,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(...(await currentStream.debugOptionItems()))
 				break
 			case SideTreeItem.Release:
-				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building Release' : 'Build Release', '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
+				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building' : 'Build', currentStream?.swift.selectedReleaseTarget ? currentStream.swift.selectedReleaseTarget : '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
 				items.push(...(await currentStream.releaseItems()))
 				break
 			case SideTreeItem.Project:

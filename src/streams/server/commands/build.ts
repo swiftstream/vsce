@@ -1,17 +1,13 @@
-import { commands, window } from 'vscode'
+import { commands } from 'vscode'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
 import { ContextKey, sidebarTreeView } from '../../../extension'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
-import { SwiftTargets } from '../../../swift'
 import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } from '../../stream'
 import { ServerStream } from '../serverStream'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
-import { AbortHandler } from '../../../bash'
 import { restartLSPCommand } from '../../../commands/restartLSP'
 
-export let cachedSwiftTargets: SwiftTargets | undefined
-export let selectedSwiftTarget: string | undefined
 let hasRestartedLSP = false
 
 export async function buildCommand(serverStream: ServerStream) {
@@ -42,15 +38,15 @@ export async function buildCommand(serverStream: ServerStream) {
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', ContextKey.hasCachedTargets, selectedSwiftTarget !== undefined)
-        await askToChooseSwiftTargetIfNeeded(serverStream, { abortHandler: abortHandler, force: true })
-        if (!selectedSwiftTarget) 
+        commands.executeCommand('setContext', ContextKey.hasCachedTargets, serverStream.swift.selectedDebugTarget !== undefined)
+        await serverStream.swift.askToChooseTargetIfNeeded({ release: false, abortHandler: abortHandler, force: true })
+        if (!serverStream.swift.selectedDebugTarget) 
             throw `Please select Swift target to build`
-        const shouldRestartLSP = !hasRestartedLSP || !serverStream.isDebugBuilt(selectedSwiftTarget)
+        const shouldRestartLSP = !hasRestartedLSP || !serverStream.isDebugBuilt(serverStream.swift.selectedDebugTarget)
         // Phase 3: Build executable targets
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
-            target: selectedSwiftTarget,
+            target: serverStream.swift.selectedDebugTarget,
             release: false,
             force: true,
             abortHandler: abortHandler
@@ -82,37 +78,6 @@ export async function buildCommand(serverStream: ServerStream) {
     }
 }
 
-export async function askToChooseSwiftTargetIfNeeded(serverStream: ServerStream, options?: { abortHandler: AbortHandler, force?: boolean }) {
-    if (options?.force === true || !selectedSwiftTarget) {
-        try {
-            if (options?.force === true || !cachedSwiftTargets) {
-                const targetsDump = await serverStream.swift.getTargets(options?.abortHandler ? { abortHandler: options.abortHandler } : undefined)
-                cachedSwiftTargets = targetsDump
-            }
-            const allTargets = cachedSwiftTargets.all({ excludeTests: true })
-            commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
-            if (allTargets.length == 1) {
-                selectedSwiftTarget = allTargets[0]
-            } else if (allTargets.length > 0) {
-                await chooseDebugTarget()
-            }
-            if (selectedSwiftTarget) sidebarTreeView?.refresh()
-        } catch (error) {
-            if (!cachedSwiftTargets) throw error
-        }
-    }
-}
-
 export async function rebuildSwift(params?: { target?: string }) {
     // TODO: rebuildSwift(this, params)
-}
-
-export async function chooseDebugTarget() {
-    const allTargets = cachedSwiftTargets?.all({ excludeTests: true }) ?? []
-    if (allTargets.length > 0) {
-        selectedSwiftTarget = await window.showQuickPick(allTargets, {
-            placeHolder: `Select Swift target to build`
-        })
-    }
-    if (selectedSwiftTarget) sidebarTreeView?.refresh()
 }

@@ -548,6 +548,68 @@ export class Swift {
         errors.sort((a, b) => (a.file.split('/').pop()! < b.file.split('/').pop()!) ? 1 : -1)
         return errors
     }
+
+    // MARK: Targets
+
+    cachedSwiftTargets: SwiftTargets | undefined
+    selectedDebugTarget: string | undefined
+    selectedReleaseTarget: string | undefined
+
+    async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean }) {
+        let selectedTarget = options.release ? this.selectedReleaseTarget : this.selectedDebugTarget
+        if (options?.force === true || !selectedTarget) {
+            try {
+                if (options?.force === true || !this.cachedSwiftTargets) {
+                    const targetsDump = await this.getTargets(options.abortHandler ? { abortHandler: options.abortHandler } : undefined)
+                    this.cachedSwiftTargets = targetsDump
+                }
+                const allTargets = this.cachedSwiftTargets.all({ excludeTests: true })
+                commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
+                if (allTargets.length == 1) {
+                    this.selectedReleaseTarget = allTargets[0]
+                    this.selectedDebugTarget = allTargets[0]
+                } else if (allTargets.length > 0) {
+                    if (options.release) {
+                        await this.chooseReleaseTarget()
+                    } else {
+                        await this.chooseDebugTarget()
+                    }
+                }
+                if (options.release && this.selectedReleaseTarget) sidebarTreeView?.refresh()
+                else if (!options.release && this.selectedDebugTarget) sidebarTreeView?.refresh()
+            } catch (error) {
+                if (!this.cachedSwiftTargets) throw error
+            }
+        }
+    }
+
+    async chooseDebugTarget() {
+        const allTargets = this.cachedSwiftTargets?.all({ excludeTests: true }) ?? []
+        if (allTargets.length > 0) {
+            this.selectedDebugTarget = await window.showQuickPick(allTargets, {
+                placeHolder: `Select Swift target to build`
+            })
+        }
+        if (this.selectedDebugTarget) {
+            if (!this.selectedReleaseTarget)
+                this.selectedReleaseTarget = this.selectedDebugTarget
+            sidebarTreeView?.refresh()
+        }
+    }
+
+    async chooseReleaseTarget() {
+        const allTargets = this.cachedSwiftTargets?.all({ excludeTests: true }) ?? []
+        if (allTargets.length > 0) {
+            this.selectedReleaseTarget = await window.showQuickPick(allTargets, {
+                placeHolder: `Select Swift target to build`
+            })
+        }
+        if (this.selectedReleaseTarget) {
+            if (!this.selectedDebugTarget)
+                this.selectedDebugTarget = this.selectedReleaseTarget
+            sidebarTreeView?.refresh()
+        }
+    }
 }
 
 class Place {

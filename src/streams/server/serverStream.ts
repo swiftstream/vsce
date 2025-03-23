@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
-import { isBuildingDebug, isBuildingRelease, print, Stream } from '../stream'
+import { isBuildingDebug, isBuildingRelease, Stream } from '../stream'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { ContextKey, defaultServerPort, extensionContext, innerServerPort, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { readServerPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
@@ -10,7 +10,7 @@ import { Nginx } from './features/nginx'
 import { Ngrok } from './features/ngrok'
 import { AnyFeature } from '../anyFeature'
 import { DevContainerConfig } from '../../devContainerConfig'
-import { askToChooseSwiftTargetIfNeeded, buildCommand, chooseDebugTarget, rebuildSwift, selectedSwiftTarget } from './commands/build'
+import { buildCommand, rebuildSwift } from './commands/build'
 import { buildRelease } from './commands/buildRelease'
 
 export var currentPort: string = `${defaultServerPort}`
@@ -67,7 +67,6 @@ export class ServerStream extends Stream {
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunDebug, async () => { await this.run({ release: false }) }))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunRelease, async () => { await this.run({ release: true }) }))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Port, async () => { await this.changePort() }))
-        extensionContext.subscriptions.push(commands.registerCommand('chooseDebugTarget', chooseDebugTarget))
         extensionContext.subscriptions.push(commands.registerCommand('runDebugAttached', async () => { await this.debug() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
@@ -208,7 +207,7 @@ export class ServerStream extends Stream {
     }): Promise<boolean> {
         if (!this.checkBinaryExists(options)) {
             switch (await window.showQuickPick(['Yes', 'Not now'], {
-                placeHolder: `Would you like to build ${selectedSwiftTarget} target?`
+                placeHolder: `Would you like to build ${this.swift.selectedDebugTarget} target?`
             })) {
                 case 'Yes':
                     this.isAwaitingBuild = true
@@ -227,11 +226,11 @@ export class ServerStream extends Stream {
     async debug() {
         if (isDebugging) return
         if (isRunningDebugTarget) {
-            if (!selectedSwiftTarget) return
+            if (!this.swift.selectedDebugTarget) return
             if (!runningDebugTargetPid) return
-            if (!this.checkBinaryExists({ release: false, target: selectedSwiftTarget })) return
+            if (!this.checkBinaryExists({ release: false, target: this.swift.selectedDebugTarget })) return
             const attachConfig = serverAttachDebuggerConfig({
-                target: selectedSwiftTarget,
+                target: this.swift.selectedDebugTarget,
                 pid: runningDebugTargetPid
             })
             await commands.executeCommand('debug.startFromConfig', attachConfig)
@@ -240,12 +239,12 @@ export class ServerStream extends Stream {
             sidebarTreeView?.refresh()
             return
         }
-        await askToChooseSwiftTargetIfNeeded(this)
-        if (!selectedSwiftTarget) 
+        await this.swift.askToChooseTargetIfNeeded({ release: false })
+        if (!this.swift.selectedDebugTarget) 
             throw `Please select Swift target to run`
-        if (await this.checkBinaryAndBuildIfNeeded({ release: false, target: selectedSwiftTarget }) === false) return
+        if (await this.checkBinaryAndBuildIfNeeded({ release: false, target: this.swift.selectedDebugTarget }) === false) return
         const debugConfig = serverDebugConfig({
-            target: selectedSwiftTarget,
+            target: this.swift.selectedDebugTarget,
             args: []
         })
         await commands.executeCommand('debug.startFromConfig', debugConfig)
@@ -266,7 +265,7 @@ export class ServerStream extends Stream {
             if (isRunningDebugTarget) {
                 window.showInformationMessage('Please stop the Debug build first')
                 return
-            } else if (this.isAwaitingBuild && isBuildingRelease && selectedSwiftTarget && !this.checkBinaryExists({ release: options.release, target: selectedSwiftTarget })) {
+            } else if (this.isAwaitingBuild && isBuildingRelease && this.swift.selectedDebugTarget && !this.checkBinaryExists({ release: options.release, target: this.swift.selectedDebugTarget })) {
                 window.showInformationMessage('Please wait until the build completes')
                 return
             }
@@ -274,18 +273,18 @@ export class ServerStream extends Stream {
             if (isRunningReleaseTarget) {
                 window.showInformationMessage('Please stop the Release build first')
                 return
-            } else if (this.isAwaitingBuild && isBuildingDebug && selectedSwiftTarget && !this.checkBinaryExists({ release: options.release, target: selectedSwiftTarget })) {
+            } else if (this.isAwaitingBuild && isBuildingDebug && this.swift.selectedDebugTarget && !this.checkBinaryExists({ release: options.release, target: this.swift.selectedDebugTarget })) {
                 window.showInformationMessage('Please wait until the build completes')
                 return
             }
         }
-        await askToChooseSwiftTargetIfNeeded(this)
-        if (!selectedSwiftTarget) 
+        await this.swift.askToChooseTargetIfNeeded({ release: options.release })
+        if (!this.swift.selectedDebugTarget) 
             throw `Please select Swift target to run`
-        if (await this.checkBinaryAndBuildIfNeeded({ release: options.release, target: selectedSwiftTarget }) === false) return
+        if (await this.checkBinaryAndBuildIfNeeded({ release: options.release, target: this.swift.selectedDebugTarget }) === false) return
         const runningTask = await this.swift.startRunTask({
             release: options.release,
-            target: selectedSwiftTarget,
+            target: this.swift.selectedDebugTarget,
             args: []
         })
         if (options.release) {
@@ -305,19 +304,19 @@ export class ServerStream extends Stream {
 
     async defaultDebugActionItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', selectedSwiftTarget ? selectedSwiftTarget : '', TreeItemCollapsibleState.None, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer'))
+            new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '', TreeItemCollapsibleState.None, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer'))
         ]
     }
 
     async debugActionItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunDebug, this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            new Dependency(SideTreeItem.RunDebug, this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run', this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '', TreeItemCollapsibleState.None, this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'),
             ...(await super.debugActionItems())
         ]
     }
     async releaseItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunRelease, isRunningReleaseTarget ? 'Running' : 'Run', '', TreeItemCollapsibleState.None, isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            new Dependency(SideTreeItem.RunRelease, isRunningReleaseTarget ? 'Running' : 'Run', this.swift.selectedReleaseTarget ? this.swift.selectedReleaseTarget : '', TreeItemCollapsibleState.None, isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'),
             ...(await super.releaseItems())
         ]
     }

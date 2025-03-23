@@ -4,7 +4,6 @@ import { ContextKey, sidebarTreeView } from '../../../extension'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { buildStatus, isBuildingRelease, LogLevel, print, status, StatusType } from '../../stream'
 import { ServerStream } from '../serverStream'
-import { askToChooseSwiftTargetIfNeeded, selectedSwiftTarget } from './build'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
 import { isString } from '../../../helpers/isString'
 
@@ -36,14 +35,14 @@ export async function buildRelease(serverStream: ServerStream, successCallback?:
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', ContextKey.hasCachedTargets, selectedSwiftTarget !== undefined)
-        await askToChooseSwiftTargetIfNeeded(serverStream, { abortHandler: abortHandler, force: true })
-        if (!selectedSwiftTarget) 
+        commands.executeCommand('setContext', ContextKey.hasCachedTargets, serverStream.swift.selectedReleaseTarget !== undefined)
+        await serverStream.swift.askToChooseTargetIfNeeded({ release: true, abortHandler: abortHandler, force: true })
+        if (!serverStream.swift.selectedReleaseTarget) 
             throw `Please select Swift target to build`
         // Phase 3: Build executable targets
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
-            target: selectedSwiftTarget,
+            target: serverStream.swift.selectedReleaseTarget,
             release: true,
             force: true,
             abortHandler: abortHandler
