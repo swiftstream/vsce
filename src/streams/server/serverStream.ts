@@ -44,12 +44,12 @@ export class ServerStream extends Stream {
 
     }
 
-    async isDebugBuilt(): Promise<boolean> {
-        return fs.existsSync(path.join(projectDirectory!, '.build', 'debug', 'App'))
+    async isDebugBuilt(target: string): Promise<boolean> {
+        return fs.existsSync(path.join(projectDirectory!, '.build', 'debug', target))
     }
     
-    async isReleaseBuilt(): Promise<boolean> {
-        return fs.existsSync(path.join(projectDirectory!, '.build', 'release', 'App'))
+    async isReleaseBuilt(target: string): Promise<boolean> {
+        return fs.existsSync(path.join(projectDirectory!, '.build', 'release', target))
     }
         
     setPendingNewPort(value: string | undefined) {
