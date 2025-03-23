@@ -8,7 +8,7 @@ import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
 import { loggingLevelCommand } from '../commands/loggingLevel'
-import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openSwiftStreamDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums } from '../commands/support'
+import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openSwiftStreamDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums, submitSwiftStreamVSCEIssue, submitCrawlServerIssue } from '../commands/support'
 import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
@@ -165,14 +165,63 @@ export class Stream {
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, async () => {
+			const swiftStream = "Swift Stream extension"
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
-				submitWebIssue()
+				const web = "Web framework"
+				const crawlServer = "Crawl Server"
+				switch (await window.showQuickPick([web, crawlServer, swiftStream], {
+					placeHolder: `Select in which repository`
+				})) {
+					case web:
+						submitWebIssue()
+						break
+					case crawlServer:
+						submitCrawlServerIssue()
+						break
+					case swiftStream:
+						submitSwiftStreamVSCEIssue()
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
-				submitAndroidIssue()
+				const android = "Android framework"
+				switch (await window.showQuickPick([android, swiftStream], {
+					placeHolder: `Select in which repository`
+				})) {
+					case android:
+						submitAndroidIssue()
+						break
+					case swiftStream:
+						submitSwiftStreamVSCEIssue()
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
-				submitVaporIssue()
+				const vapor = "Vapor framework"
+				switch (await window.showQuickPick([vapor, swiftStream], {
+					placeHolder: `Select in which repository`
+				})) {
+					case vapor:
+						submitVaporIssue()
+						break
+					case swiftStream:
+						submitSwiftStreamVSCEIssue()
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
-				submitHummingbirdIssue()
+				const hummingbird = "Hummingbird framework"
+				switch (await window.showQuickPick([hummingbird, swiftStream], {
+					placeHolder: `Select in which repository`
+				})) {
+					case hummingbird:
+						submitHummingbirdIssue()
+						break
+					case swiftStream:
+						submitSwiftStreamVSCEIssue()
+						break
+					default: return
+				}
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenDiscord, async () => {

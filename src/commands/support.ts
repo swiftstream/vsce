@@ -52,8 +52,16 @@ export function openHummingbirdDiscussions() {
 	env.openExternal(Uri.parse('https://github.com/hummingbird-project/hummingbird/discussions'))
 }
 
+export function submitSwiftStreamVSCEIssue() {
+	env.openExternal(Uri.parse('https://github.com/swiftstream/vsce/issues/new/choose'))
+}
+
 export function submitWebIssue() {
 	env.openExternal(Uri.parse('https://github.com/swifweb/web/issues/new/choose'))
+}
+
+export function submitCrawlServerIssue() {
+	env.openExternal(Uri.parse('https://github.com/swiftstream/crawl-server/issues/new/choose'))
 }
 
 export function submitAndroidIssue() {
