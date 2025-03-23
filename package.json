@@ -110,11 +110,6 @@
     },
     "commands": [
       {
-        "command": "runDebugging",
-        "title": "Debug in Chrome",
-        "icon": "$(debug-alt)"
-      },
-      {
         "command": "stopDebugging",
         "title": "Stop Debugging",
         "icon": {
@@ -152,7 +147,7 @@
         "icon": "$(debug-stop)"
       },
       {
-        "command": "buildDebug",
+        "command": "BuildDebug",
         "title": "Build in Debug",
         "icon": {
           "dark": "assets/icons/hammer.svg",
@@ -177,23 +172,23 @@
       "editor/title": [
         {
           "group": "navigation@0",
-          "command": "runDebugging",
-          "when": "!isDebuggingInChrome"
+          "command": "runDebugAttached",
+          "when": "isNavigationRunButtonEnabled && !isDebugging"
         },
         {
           "group": "navigation@0",
           "command": "stopDebugging",
-          "when": "isDebuggingInChrome"
+          "when": "isNavigationRunButtonEnabled && isDebugging"
         },
         {
           "group": "navigation@1",
-          "command": "buildDebug",
-          "when": "!isBuildingDebug"
+          "command": "BuildDebug",
+          "when": "isNavigationBuildButtonEnabled && !isBuildingDebug"
         },
         {
           "group": "navigation@1",
           "command": "stopBuildingDebug",
-          "when": "isBuildingDebug"
+          "when": "isNavigationBuildButtonEnabled && isBuildingDebug"
         }
       ],
       "view/item/context": [
@@ -236,7 +231,7 @@
     },
     "keybindings": [
       {
-        "command": "-runDebugging",
+        "command": "-runDebugAttached",
         "key": "ctrl+r",
         "mac": "cmd+r",
         "when": "true"
@@ -248,9 +243,10 @@
         "when": "true"
       },
       {
-        "command": "-buildDebug",
+        "command": "-BuildDebug",
         "key": "ctrl+b",
-        "mac": "cmd+b"
+        "mac": "cmd+b",
+        "when": "true"
       }
     ],
     "views": {
