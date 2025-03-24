@@ -1,28 +1,31 @@
 import { commands } from 'vscode'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
 import { ContextKey, sidebarTreeView } from '../../../extension'
-import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
-import { buildStatus, isBuildingRelease, LogLevel, print, status, StatusType } from '../../stream'
-import { ServerStream } from '../serverStream'
-import { buildExecutableTarget } from './build/buildExecutableTarget'
 import { isString } from '../../../helpers/isString'
+import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
+import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } from '../../stream'
+import { PureStream } from '../pureStream'
+import { buildExecutableTarget } from './build/buildExecutableTarget'
+import { restartLSPCommand } from '../../../commands/restartLSP'
 
-export async function buildRelease(serverStream: ServerStream, successCallback?: any) {
-    if (isBuildingRelease) { return }
+let hasRestartedLSP = false
+
+export async function buildCommand(stream: PureStream) {
+    if (isBuildingDebug || stream.isAnyHotBuilding()) { return }
     const measure = new TimeMeasure()
-    const abortHandler = serverStream.setAbortBuildingReleaseHandler(() => {
+    const abortHandler = stream.setAbortBuildingDebugHandler(() => {
         measure.finish()
-        status('circle-slash', `Aborted Release Build after ${measure.time}ms`, StatusType.Default)
-        print(`🚫 Aborted Release Build after ${measure.time}ms`)
-        console.log(`Aborted Release Build after ${measure.time}ms`)
-        serverStream.setBuildingRelease(false)
+        status('circle-slash', `Aborted Build after ${measure.time}ms`, StatusType.Default)
+        print(`🚫 Aborted Build after ${measure.time}ms`)
+        console.log(`Aborted Build after ${measure.time}ms`)
+        stream.setBuildingDebug(false)
         sidebarTreeView?.refresh()
     })
-    serverStream.setBuildingRelease(true)
+    stream.setBuildingDebug(true)
     sidebarTreeView?.cleanupErrors()
     sidebarTreeView?.refresh()
     try {
-        print(`🏗️ Started building release`, LogLevel.Normal, true)
+        print(`🏗️ Started building debug`, LogLevel.Normal, true)
         // Phase 1: Resolve Swift dependencies for each build type
         print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
         await resolveSwiftDependencies({
@@ -35,30 +38,34 @@ export async function buildRelease(serverStream: ServerStream, successCallback?:
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', ContextKey.hasCachedTargets, serverStream.swift.selectedReleaseTarget !== undefined)
-        await serverStream.swift.askToChooseTargetIfNeeded({ release: true, abortHandler: abortHandler, force: true })
-        if (!serverStream.swift.selectedReleaseTarget) 
+        commands.executeCommand('setContext', ContextKey.hasCachedTargets, stream.swift.selectedDebugTarget !== undefined)
+        await stream.swift.askToChooseTargetIfNeeded({ release: false, abortHandler: abortHandler, force: true })
+        if (!stream.swift.selectedDebugTarget) 
             throw `Please select Swift target to build`
+        const shouldRestartLSP = !hasRestartedLSP || !stream.isDebugBuilt(stream.swift.selectedDebugTarget)
         // Phase 3: Build executable targets
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
-            target: serverStream.swift.selectedReleaseTarget,
-            release: true,
+            target: stream.swift.selectedDebugTarget,
+            release: false,
             force: true,
             abortHandler: abortHandler
         })
         measure.finish()
         if (abortHandler.isCancelled) return
-        status('check', `Release Build Succeeded in ${measure.time}ms`, StatusType.Success)
-        print(`✅ Release Build Succeeded in ${measure.time}ms`)
-        console.log(`Release Build Succeeded in ${measure.time}ms`)
-        serverStream.setBuildingRelease(false)
+        status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
+        print(`✅ Build Succeeded in ${measure.time}ms`)
+        console.log(`Build Succeeded in ${measure.time}ms`)
+        stream.setBuildingDebug(false)
         sidebarTreeView?.refresh()
-        if (successCallback) successCallback()
+        if (shouldRestartLSP) {
+            hasRestartedLSP = true
+            restartLSPCommand(true)
+        }
     } catch (error: any) {
-        serverStream.setBuildingRelease(false)
+        stream.setBuildingDebug(false)
         sidebarTreeView?.refresh()
-        const text = `Release Build Failed`
+        const text = `Debug Build Failed`
         if (isString(error)) {
             print(`🧯 ${error}`)
         } else {
@@ -69,4 +76,8 @@ export async function buildRelease(serverStream: ServerStream, successCallback?:
         }
         status('error', `${text} (${measure.time}ms)`, StatusType.Error)
     }
+}
+
+export async function rebuildSwift(params?: { target?: string }) {
+    // TODO: rebuildSwift(this, params)
 }

@@ -32,7 +32,7 @@ export async function webDebugConfig(): Promise<any> {
     }
 }
 
-export function serverDebugConfig(options: {
+export function pureDebugConfig(options: {
     target: string,
     args: string[]
 }): any {
@@ -46,7 +46,7 @@ export function serverDebugConfig(options: {
     }
 }
 
-export function serverAttachDebuggerConfig(options: {
+export function pureAttachDebuggerConfig(options: {
     target: string,
     pid: number
 }): any {
