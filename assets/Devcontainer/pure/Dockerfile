@@ -1,1 +1,1 @@
-FROM swiftstream/base:latest
+FROM swiftstream/server-dev:latest
