@@ -5,6 +5,8 @@ node_modules/**
 src/**
 .gitignore
 .yarnrc
+docker-images/web-dev/wasm-opt
+docker-images/web-dev/wasm-strip
 webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
