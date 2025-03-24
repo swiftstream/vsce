@@ -20,6 +20,10 @@ export function openSwiftStreamDocumentation() {
 	env.openExternal(Uri.parse('https://swift.stream'))
 }
 
+export function openSwiftGettingStarted() {
+	env.openExternal(Uri.parse('https://www.swift.org/getting-started/'))
+}
+
 export function openWebRepository() {
 	env.openExternal(Uri.parse('https://github.com/swifweb'))
 }
