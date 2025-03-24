@@ -52,56 +52,68 @@
           "default": "Normal",
           "uniqueItems": true
         },
-        "swift.hotRebuild": {
+        "swift.showTopRunButton": {
           "order": 2,
+          "type": "boolean",
+          "default": true,
+          "description": "Show Run button at the top right corner"
+        },
+        "swift.showTopBuildButton": {
+          "order": 3,
+          "type": "boolean",
+          "default": true,
+          "description": "Show Build button at the top right corner"
+        },
+        "swift.hotRebuild": {
+          "order": 4,
           "type": "boolean",
           "default": true,
           "description": "Hot rebuild whenever any file saved"
         },
         "web.hotReload": {
-          "order": 3,
+          "order": 5,
           "type": "boolean",
           "default": true,
           "description": "Hot reload in the browser whenever any file saved"
         },
         "web.debugGzip": {
-          "order": 4,
+          "order": 6,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Gzip during a debug build."
         },
         "web.debugBrotli": {
-          "order": 5,
+          "order": 7,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Brotli during a debug build."
         },
         "web.appTargetName": {
-          "order": 6,
+          "order": 8,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "web.serviceWorkerTargetName": {
-          "order": 7,
+          "order": 9,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
         },
         "web.webSourcesPath": {
-          "order": 8,
+          "order": 10,
           "type": "string",
           "description": "Relative path to folder with web source files and package.json",
           "default": "WebSources"
         },
         "xcode.trimEndOfLine": {
-          "order": 9,
+          "order": 11,
           "type": "boolean",
           "default": true,
           "description": "Automatically trim whitespaces at the end of the line when pressing Enter, just like in Xcode"
         },
         "menu.state": {
-          "order": 10,
+          "order": 12,
           "type": "object",
           "default": {},
           "description": "Expanded/Collapsed flags for menu items"
@@ -171,6 +183,14 @@
         }
       },
       {
+        "command": "runDebugAttachedTopBar",
+        "title": "Run and attach Debugger",
+        "icon": {
+          "dark": "assets/icons/run.svg",
+          "light": "assets/icons/run.svg"
+        }
+      },
+      {
         "command": "stopBuildingRelease",
         "title": "Stop Building",
         "icon": "$(debug-stop)"
@@ -180,7 +200,7 @@
       "editor/title": [
         {
           "group": "navigation@0",
-          "command": "runDebugAttached",
+          "command": "runDebugAttachedTopBar",
           "when": "isNavigationRunButtonEnabled && !isDebugging"
         },
         {

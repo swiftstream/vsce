@@ -117,8 +117,10 @@ export class WebStream extends Stream {
 		this.setDebugGzip()
 		this.setDebugBrotli()
 		this.setWebSourcesPath()
-		this.setContext(ContextKey.isNavigationBuildButtonEnabled, true)
-		this.setContext(ContextKey.isNavigationRunButtonEnabled, true)
+		const isBuildButtonEnabled = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
+        this.setContext(ContextKey.isNavigationBuildButtonEnabled, isBuildButtonEnabled ?? true)
+        const isRunButtonEnabled = workspace.getConfiguration().get('swift.showTopRunButton') as boolean
+        this.setContext(ContextKey.isNavigationRunButtonEnabled, isRunButtonEnabled ?? true)
 		this.crawlServer.registerTaskProvider({
 			pathToWasm: `${projectDirectory}/${buildDevFolder}/${appTargetName.toLowerCase()}.wasm`,
 			debug: true
@@ -272,6 +274,7 @@ export class WebStream extends Stream {
 		super.registerCommands()
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugInChrome, debugInChromeCommand))
         extensionContext.subscriptions.push(commands.registerCommand('runDebugAttached', async () => { await debugInChromeCommand() }))
+        extensionContext.subscriptions.push(commands.registerCommand('runDebugAttachedTopBar', async () => { await debugInChromeCommand() }))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunCrawlServer, async () => { await this.crawlServer.startStop() }))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotReload, hotReloadCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DebugGzip, debugGzipCommand))

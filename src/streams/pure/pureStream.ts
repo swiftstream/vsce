@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
+import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window, workspace } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, Stream } from '../stream'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { ContextKey, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
@@ -22,8 +22,10 @@ export class PureStream extends Stream {
     }
 
     private _configurePure = async () => {
-        this.setContext(ContextKey.isNavigationBuildButtonEnabled, true)
-        this.setContext(ContextKey.isNavigationRunButtonEnabled, true)
+        const isBuildButtonEnabled = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
+        this.setContext(ContextKey.isNavigationBuildButtonEnabled, isBuildButtonEnabled ?? true)
+        const isRunButtonEnabled = workspace.getConfiguration().get('swift.showTopRunButton') as boolean
+        this.setContext(ContextKey.isNavigationRunButtonEnabled, isRunButtonEnabled ?? true)
     }
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -44,6 +46,7 @@ export class PureStream extends Stream {
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunDebug, async () => { await this.run({ release: false }) }))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RunRelease, async () => { await this.run({ release: true }) }))
         extensionContext.subscriptions.push(commands.registerCommand('runDebugAttached', async () => { await this.debug() }))
+        extensionContext.subscriptions.push(commands.registerCommand('runDebugAttachedTopBar', async () => { await this.debug() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
     }

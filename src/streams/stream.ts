@@ -72,6 +72,10 @@ export class Stream {
 			this.setLoggingLevel()
 		if (event.affectsConfiguration('swift.hotRebuild'))
 			this.setHotRebuild()
+		if (event.affectsConfiguration('swift.showTopRunButton'))
+			this.setShowTopRunButton()
+		if (event.affectsConfiguration('swift.showTopBuildButton'))
+			this.setShowTopBuildButton()
     }
 
 	isAnyHotBuilding(): boolean {
@@ -514,6 +518,16 @@ export class Stream {
 		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swift.hotRebuild') as boolean
 		if (value === true || value === false) workspace.getConfiguration().update('swift.hotRebuild', value)
 		sidebarTreeView?.refresh()
+	}
+
+	setShowTopRunButton() {
+		const value = workspace.getConfiguration().get('swift.showTopRunButton') as boolean
+		if (value !== undefined) this.setContext(ContextKey.isNavigationRunButtonEnabled, value)
+	}
+
+	setShowTopBuildButton() {
+		const value = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
+		if (value !== undefined) this.setContext(ContextKey.isNavigationBuildButtonEnabled, value)
 	}
 
 	setClearingCache(active: boolean = true) {
