@@ -103,6 +103,7 @@ export class Stream {
         extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
 		extensionContext.subscriptions.push(commands.registerCommand('chooseDebugTarget', async () => await this.swift.chooseDebugTarget() ))
         extensionContext.subscriptions.push(commands.registerCommand('chooseReleaseTarget', async () => this.swift.chooseReleaseTarget() ))
+		extensionContext.subscriptions.push(commands.registerCommand('chooseTestTarget', async () => this.swift.chooseReleaseTarget() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))

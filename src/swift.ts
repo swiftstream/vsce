@@ -551,19 +551,21 @@ export class Swift {
 
     // MARK: Targets
 
-    cachedSwiftTargets: SwiftTargets | undefined
+    cachedBuildTargets: SwiftTargets | undefined
+    cachedTestTargets: SwiftTargets | undefined
     selectedDebugTarget: string | undefined
     selectedReleaseTarget: string | undefined
+    selectedTestTarget: string | undefined
 
     async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean }) {
         let selectedTarget = options.release ? this.selectedReleaseTarget : this.selectedDebugTarget
         if (options?.force === true || !selectedTarget) {
             try {
-                if (options?.force === true || !this.cachedSwiftTargets) {
+                if (options?.force === true || !this.cachedBuildTargets) {
                     const targetsDump = await this.getTargets(options.abortHandler ? { abortHandler: options.abortHandler } : undefined)
-                    this.cachedSwiftTargets = targetsDump
+                    this.cachedBuildTargets = targetsDump
                 }
-                const allTargets = this.cachedSwiftTargets.all({ excludeTests: true })
+                const allTargets = this.cachedBuildTargets.all({ excludeTests: true })
                 commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
                 if (allTargets.length == 1) {
                     this.selectedReleaseTarget = allTargets[0]
@@ -578,16 +580,16 @@ export class Swift {
                 if (options.release && this.selectedReleaseTarget) sidebarTreeView?.refresh()
                 else if (!options.release && this.selectedDebugTarget) sidebarTreeView?.refresh()
             } catch (error) {
-                if (!this.cachedSwiftTargets) throw error
+                if (!this.cachedBuildTargets) throw error
             }
         }
     }
 
     async chooseDebugTarget() {
-        const allTargets = this.cachedSwiftTargets?.all({ excludeTests: true }) ?? []
+        const allTargets = this.cachedBuildTargets?.all({ excludeTests: true }) ?? []
         if (allTargets.length > 0) {
             this.selectedDebugTarget = await window.showQuickPick(allTargets, {
-                placeHolder: `Select Swift target to build`
+                placeHolder: `Select target to build`
             })
         }
         if (this.selectedDebugTarget) {
@@ -598,10 +600,24 @@ export class Swift {
     }
 
     async chooseReleaseTarget() {
-        const allTargets = this.cachedSwiftTargets?.all({ excludeTests: true }) ?? []
+        const allTargets = this.cachedBuildTargets?.all({ excludeTests: true }) ?? []
         if (allTargets.length > 0) {
             this.selectedReleaseTarget = await window.showQuickPick(allTargets, {
-                placeHolder: `Select Swift target to build`
+                placeHolder: `Select target to build`
+            })
+        }
+        if (this.selectedReleaseTarget) {
+            if (!this.selectedDebugTarget)
+                this.selectedDebugTarget = this.selectedReleaseTarget
+            sidebarTreeView?.refresh()
+        }
+    }
+
+    async chooseTestTarget() {
+        const allTargets = this.cachedBuildTargets?.all({ onlyTests: true }) ?? []
+        if (allTargets.length > 0) {
+            this.selectedReleaseTarget = await window.showQuickPick(allTargets, {
+                placeHolder: `Select target to test`
             })
         }
         if (this.selectedReleaseTarget) {
@@ -757,6 +773,13 @@ export class SwiftTargets {
     macroses: string[] = []
 
     all(options?: {
+        onlyExecutables?: boolean,
+        onlyBinaries?: boolean,
+        onlyRegular?: boolean,
+        onlyPlugins?: boolean,
+        onlyMacroses?: boolean,
+        onlyTests?: boolean,
+        onlySystem?: boolean,
         excludeExecutables?: boolean,
         excludeBinaries?: boolean,
         excludeRegular?: boolean,
@@ -765,6 +788,20 @@ export class SwiftTargets {
         excludeTests?: boolean,
         excludeSystem?: boolean
     }): string[] {
+        if (options?.onlyExecutables === true)
+            return this.executables
+        if (options?.onlyBinaries === true)
+            return this.binaries
+        if (options?.onlyRegular === true)
+            return this.regular
+        if (options?.onlyPlugins === true)
+            return this.plugins
+        if (options?.onlyMacroses === true)
+            return this.macroses
+        if (options?.onlyTests === true)
+            return this.tests
+        if (options?.onlySystem === true)
+            return this.system
         let result: string[] = []
         if (!options?.excludeExecutables)
             result.push(...this.executables)
