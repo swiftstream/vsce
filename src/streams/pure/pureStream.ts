@@ -195,9 +195,9 @@ export class PureStream extends Stream {
     // MARK: Run
 
     async run(options: { release: boolean }) {
-        if (isDebugging) {
-            sidebarTreeView?.refresh()
+        if (isDebugging && !options.release) {
             await commands.executeCommand('workbench.action.debug.restart')
+            sidebarTreeView?.refresh()
             return
         }
         if (options.release) {
