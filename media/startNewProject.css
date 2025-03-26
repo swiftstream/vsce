@@ -92,6 +92,7 @@ body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios .hint span {
 }
 .radios label.radio {
     position: relative;
+    margin-top: 8px;
 }
 body.vscode-high-contrast:not(.vscode-high-contrast-light) .radio img {
     filter: invert(100%);
