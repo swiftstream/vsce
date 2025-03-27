@@ -86,8 +86,8 @@ export class WebStream extends Stream {
 	public vercel: Vercel
 	public yandex: Yandex
 
-    constructor() {
-		super()
+    constructor(overrideConfigure: boolean = false) {
+		super(true)
 		this.npmWeb = new NPM(this, `${projectDirectory}/${webSourcesFolder}`)
 		this.npmJSKit = new NPM(this, `${projectDirectory}/.build/.wasi/checkouts/JavaScriptKit`)
 		this.webpack = new Webpack(this)
@@ -104,10 +104,11 @@ export class WebStream extends Stream {
 		this.heroku = new Heroku(this)
 		this.vercel = new Vercel(this)
 		this.yandex = new Yandex(this)
-		this._configureWeb()
+		if (!overrideConfigure) this.configure()
 	}
 
-	private _configureWeb = async () => {
+	configure() {
+		super.configure()
 		if (!projectDirectory) return
 		const readPorts = await readWebPortsFromDevContainer()
 		currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`

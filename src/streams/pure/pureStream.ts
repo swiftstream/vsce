@@ -15,13 +15,13 @@ export var isRunningDebugTarget = false
 export var isRunningReleaseTarget = false
 
 export class PureStream extends Stream {
-    constructor() {
-        super()
-
-        this._configurePure()
+    constructor(overrideConfigure: boolean = false) {
+        super(true)
+        if (!overrideConfigure) this.configure()
     }
-
-    private _configurePure = async () => {
+    
+    configure() {
+        super.configure()
         const isBuildButtonEnabled = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
         this.setContext(ContextKey.isNavigationBuildButtonEnabled, isBuildButtonEnabled ?? true)
         const isRunButtonEnabled = workspace.getConfiguration().get('swift.showTopRunButton') as boolean

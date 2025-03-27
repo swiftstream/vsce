@@ -4,14 +4,14 @@ import { Dependency } from '../../sidebarTreeView'
 import { isInContainer } from '../../extension'
 
 export class EmbeddedStream extends Stream {
-    constructor() {
-        super()
+    constructor(overrideConfigure: boolean = false) {
+        super(true)
 
-        this._configureServer()
+        if (!overrideConfigure) this.configure()
     }
 
-    private _configureServer = async () => {
-
+    configure() {
+        super.configure()
     }
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {

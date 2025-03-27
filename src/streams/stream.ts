@@ -32,16 +32,16 @@ export class Stream {
     public swift: Swift
     public pgrep: Pgrep
 	
-    constructor() {
+    constructor(overrideConfigure: boolean = false) {
         this.bash = new Bash()
         this.toolchain = new Toolchain(this)
         this.swift = new Swift(this)
         this.pgrep = new Pgrep(this)
-        this._configure()
+		if (!overrideConfigure) this.configure()
     }
 
-    private _configure = async () => {
-        if (!projectDirectory) return
+	configure() {
+		if (!projectDirectory) return
 		this.setLoggingLevel()
 		this.setHotRebuild()
         workspace.onDidChangeConfiguration((event) => {

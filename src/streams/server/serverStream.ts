@@ -14,15 +14,16 @@ export var pendingNewPort: string | undefined
 export class ServerStream extends PureStream {
     public nginx: Nginx
     public ngrok: Ngrok
-    
-    constructor() {
-		super()
+
+    constructor(overrideConfigure: boolean = false) {
+        super(true)
         this.nginx = new Nginx(this)
         this.ngrok = new Ngrok(this)
-        this._configureServer()
+        if (!overrideConfigure) this.configure()
     }
 
-    private _configureServer = async () => {
+    configure() {
+        super.configure()
         const readPorts = readServerPortsFromDevContainer()
         currentPort = `${readPorts.port ?? defaultServerPort}`
     }
