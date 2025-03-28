@@ -17,7 +17,7 @@ export class AnyFeature {
     isDeintegrating: boolean = false
     isDeintegrated: boolean = false
 
-    binPath?: string
+    binPath: string
 
     constructor (
         private bash: Bash,
@@ -29,10 +29,12 @@ export class AnyFeature {
         public featureVersion: string,
         public featureParams: any,
         public configFile: string | undefined,
+        binFolder: string,
         public binName: string,
         private loginCommand?: string,
         private logoutCommand?: string
     ) {
+        this.binPath = path.join(binFolder, binName)
         this.updateIsInstalled()
     }
 
@@ -320,10 +322,6 @@ export class AnyFeature {
     }
 
     execute = async (args: string[], cwd: string): Promise<BashResult> => {
-        if (!this.binPath)
-            this.binPath = await this.bash.which(this.binName)
-        if (!this.binPath)
-            throw `Path to ${this.binName} is undefined`
         print(`executing ${this.binName} ${args.join(' ')}`, LogLevel.Verbose)
         var env = process.env
         env.VSCODE_CWD = ''

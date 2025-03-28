@@ -11,6 +11,7 @@ export class Azure extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'azure-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'azure.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'azure'
             }
         )

@@ -15,6 +15,7 @@ export class WebFeature extends AnyFeature {
             featureVersion: string,
             featureParams: any,
             configFile: string,
+            binFolder: string,
             binName: string,
             loginCommand?: string,
             logoutCommand?: string
@@ -30,6 +31,7 @@ export class WebFeature extends AnyFeature {
             params.featureVersion,
             params.featureParams,
             params.configFile,
+            params.binFolder,
             params.binName,
             params.loginCommand,
             params.logoutCommand

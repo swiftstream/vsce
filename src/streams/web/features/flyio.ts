@@ -13,6 +13,7 @@ export class FlyIO extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'flyio-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'fly.toml',
+                binFolder: '/root/.fly/bin',
                 binName: 'flyctl',
                 loginCommand: 'auth login',
                 logoutCommand: 'auth logout'

@@ -11,6 +11,7 @@ export class Cloudflare extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'cloudflare-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'cloudflare.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'cloudflare'
             }
         )

@@ -16,6 +16,7 @@ export class Firebase extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'firebase-cli', featureVersion: '2', featureParams: { version: 'latest', install: '${FIREBASE_CLI:-false}' },
                 configFile: 'firebase.json',
+                binFolder: `/root/.nvm/versions/node/v${process.env.NODE_VERSION}/bin`,
                 binName: 'firebase',
                 loginCommand: 'login',
                 logoutCommand: 'logout'

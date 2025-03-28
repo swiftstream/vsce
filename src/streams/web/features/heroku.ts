@@ -11,6 +11,7 @@ export class Heroku extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'heroku-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'heroku.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'heroku'
             }
         )

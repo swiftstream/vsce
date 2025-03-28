@@ -12,6 +12,7 @@ export class Vercel extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'vercel-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'vercel.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'vercel'
             }
         )

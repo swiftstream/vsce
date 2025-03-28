@@ -11,6 +11,7 @@ export class DigitalOcean extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'digitalocean-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'digitalocean.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'digitalocean'
             }
         )

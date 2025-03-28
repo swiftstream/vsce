@@ -11,6 +11,7 @@ export class Alibaba extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'alibaba-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'alibaba.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'alibaba'
             }
         )

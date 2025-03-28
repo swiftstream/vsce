@@ -11,6 +11,7 @@ export class Yandex extends CloudFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'yandex-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'yandex.conf',
+                binFolder: '/usr/local/bin', // TODO
                 binName: 'yandex'
             }
         )
