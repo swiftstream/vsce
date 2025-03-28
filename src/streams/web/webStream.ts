@@ -110,7 +110,7 @@ export class WebStream extends Stream {
 	configure() {
 		super.configure()
 		if (!projectDirectory) return
-		const readPorts = await readWebPortsFromDevContainer()
+		const readPorts = readWebPortsFromDevContainer()
 		currentDevPort = `${readPorts.devPort ?? defaultWebDevPort}`
 		currentProdPort = `${readPorts.prodPort ?? defaultWebProdPort}`
 		currentDevCrawlerPort = `${readPorts.devCrawlerPort ?? defaultWebCrawlerPort}`
