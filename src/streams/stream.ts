@@ -387,11 +387,24 @@ export class Stream {
 
 	// MARK: Building Release
 
-	async askToBuildRelease(beforeWhat?: string): Promise<boolean> {
-		switch (await window.showWarningMessage(`Make a release build ${(beforeWhat ? `before ${beforeWhat}` : 'first')}`, 'Build Release')) {
+	async askToBuildRelease(options: {
+		beforeWhat?: string,
+		askToContinueTo?: {
+			toText: string,
+			continueTitle: string
+		}
+	}): Promise<boolean> {
+		switch (await window.showWarningMessage(`Make a release build ${(options.beforeWhat ? `before ${options.beforeWhat}` : 'first')}`, 'Build Release')) {
 			case 'Build Release':
 				await this.buildRelease()
-				return true
+				if (options.askToContinueTo) {
+					switch (await window.showWarningMessage(`Release build succeeded! Would you like to proceed to ${options.askToContinueTo.toText}?`, options.askToContinueTo.continueTitle)) {
+						case options.askToContinueTo.continueTitle: return true
+						default: return false
+					}
+				} else {
+					return true
+				}
 			default: return false
 		}
 	}

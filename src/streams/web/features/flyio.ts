@@ -49,7 +49,15 @@ export class FlyIO extends CloudFeature {
 
     async deploy(selectedProjectId?: string): Promise<boolean | undefined> {
         if (this.isDeploying) return false
-        if (!this.stream.isReleaseBuilt()) return false
+        if (!this.stream.isReleaseBuilt()) {
+            if (await this.stream.askToBuildRelease({
+                beforeWhat: 'deploy',
+                askToContinueTo: {
+                    toText: 'Fly.io Deploy',
+			        continueTitle: 'Deploy'
+                }
+            }) === false) return false
+        }
         this.isDeploying = true
         sidebarTreeView?.refresh()
         window.withProgress({
