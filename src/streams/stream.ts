@@ -292,7 +292,11 @@ export class Stream {
 				openSwiftForums()
 			}
 		}))
-		this.features().forEach((x) => x.registerCommands())
+		const features = this.features()
+		for (let i = 0; i < features.length; i++) {
+			const feature = features[i]
+			feature.registerCommands()
+		}
     }
 
 	private hotReloadHashes: any = {}

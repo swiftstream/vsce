@@ -25,6 +25,7 @@ export class Firebase extends CloudFeature {
     }
 
     registerCommands() {
+        super.registerCommands()
         extensionContext.subscriptions.push(commands.registerCommand(`DeployMode||${this.name}`, () => this.changeDeployMode))
     }
 

@@ -14,6 +14,7 @@ export class CloudFeature extends WebFeature {
 
     registerCommands() {
         extensionContext.subscriptions.push(commands.registerCommand(`Deploy||${this.name}`, () => this.deploy))
+        super.registerCommands()
     }
 
     requiresSetup(): boolean { return !this.isConfigPresent() }
