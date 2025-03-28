@@ -21,6 +21,12 @@ export class CloudFeature extends WebFeature {
 
     deployMenuItem = () => new Dependency(`Deploy||${this.name}`, this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload')
 
+    async featureMenuItems(): Promise<Dependency[]> {
+        let items = await super.featureMenuItems()
+        items.push(this.deployMenuItem())
+        return items
+    }
+
     async deploy(selectedProjectId?: string): Promise<boolean | undefined> {
         throw `Deploy is not implemented for ${this.name}`
     }
