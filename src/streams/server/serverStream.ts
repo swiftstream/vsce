@@ -1,4 +1,4 @@
-import { commands, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
+import { commands, TextDocument, TreeItemCollapsibleState, window } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultServerPort, extensionContext, innerServerPort, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { readServerPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
