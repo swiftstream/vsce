@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
-import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, currentStream, ContextKey } from '../../extension'
+import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, ContextKey } from '../../extension'
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
@@ -472,8 +472,7 @@ export class WebStream extends Stream {
 	// MARK: Helpers
 
 	async containsAppTarget() {
-		if (!currentStream) return false
-		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getWebTargets()
+		const targetsDump = cachedSwiftTargets ?? await this.swift.getWebTargets()
 		return targetsDump.executables.includes(appTargetName)
 	}
 	
@@ -482,8 +481,7 @@ export class WebStream extends Stream {
 	}
 
 	async containsServiceTarget() {
-		if (!currentStream) return false
-		const targetsDump = cachedSwiftTargets ?? await currentStream.swift.getWebTargets()
+		const targetsDump = cachedSwiftTargets ?? await this.swift.getWebTargets()
 		return targetsDump.serviceWorkers.includes(serviceWorkerTargetName)
 	}
 
