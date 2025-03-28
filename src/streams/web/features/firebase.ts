@@ -13,7 +13,7 @@ export class Firebase extends CloudFeature {
             {
                 name: 'Firebase',
                 iconFile: 'firebase3',
-                featureRepository: 'swiftstream/vsce',
+                featureRepository: 'devcontainers-extra/features',
                 featureName: 'firebase-cli', featureVersion: '2', featureParams: { version: 'latest', install: '${FIREBASE_CLI:-false}' },
                 configFile: 'firebase.json',
                 binFolder: `/root/.nvm/versions/node/v${process.env.NODE_VERSION}/bin`,
