@@ -16,7 +16,7 @@ export class CloudFeature extends WebFeature {
         extensionContext.subscriptions.push(commands.registerCommand(`Deploy||${this.name}`, () => this.deploy))
     }
 
-    requiresSetup(): boolean { return true }
+    requiresSetup(): boolean { return !this.isConfigPresent() }
 
     deployMenuItem = () => new Dependency(`Deploy||${this.name}`, this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload')
 

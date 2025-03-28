@@ -89,12 +89,12 @@ export class AnyFeature {
 
     private async menuItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
-        if (this.requiresSetup() && await this.isConfigPresent() === false) {
+        if (this.requiresSetup()) {
             items.push(this.setupMenuElement())
         } else {
             items.push(...(await this.featureMenuItems()))
         }
-        if (this.configurable()) {
+        if (!this.requiresSetup() && this.configurable()) {
             items.push(this.editConfigMenuItem())
         }
         items.push(this.deintegrateMenuElement())
