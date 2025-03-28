@@ -61,5 +61,5 @@ export class EmbeddedStream extends Stream {
     async settingsItems(): Promise<Dependency[]> { return [] }
     async isThereAnyRecommendation(): Promise<boolean> { return false }
     async recommendationsItems(): Promise<Dependency[]> { return [] }
-    async customItems(element: Dependency): Promise<Dependency[]> { return [] }
+    async customItems(element: Dependency): Promise<Dependency[]> { return await super.customItems(element) }
 }

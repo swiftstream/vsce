@@ -467,7 +467,7 @@ export class WebStream extends Stream {
 		return items
 	}
 
-	async customItems(element: Dependency): Promise<Dependency[]> { return [] }
+	async customItems(element: Dependency): Promise<Dependency[]> { return await super.customItems(element) }
 
 	// MARK: Helpers
 
