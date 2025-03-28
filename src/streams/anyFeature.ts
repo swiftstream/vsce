@@ -54,8 +54,8 @@ export class AnyFeature {
     
     repositoryAddress = () => `ghcr.io/${this.featureRepository}/${this.featureName}`
 
-    isConfigPresent = async (): Promise<boolean> => this.configFile ? fs.existsSync(path.join(this.projectFeatureFolderPath(), this.configFile)) : false
     isBinaryPresent = (): boolean => fs.existsSync(this.binPath)
+    isConfigPresent = (): boolean => this.configFile ? fs.existsSync(path.join(this.projectFeatureFolderPath(), this.configFile)) : false
 
     async isInUse(): Promise<boolean> {
         if (!this.isInstalled) return false
