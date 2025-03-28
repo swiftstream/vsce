@@ -45,8 +45,8 @@ export class AnyFeature {
     devcontainerPath = () => `${projectDirectory}/.devcontainer`
     devcontainerJsonPath = () => `${this.devcontainerPath()}/devcontainer.json`
 
-    getDevcontainerConfig = async (): Promise<any> => {
-        const devcontainerContent = await workspace.fs.readFile(Uri.file(this.devcontainerJsonPath()))
+    getDevcontainerConfig = (): any => {
+        const devcontainerContent = fs.readFileSync(this.devcontainerJsonPath(), 'utf8')
         return JSON5.parse(devcontainerContent.toString())
     }
 
@@ -125,8 +125,8 @@ export class AnyFeature {
     async onDidSaveTextDocument(path: string): Promise<boolean> { return false }
 
     updateIsInstalled = async () => {
-        const devcontainerConfig = await this.getDevcontainerConfig()
         this.isInstalled = this.isBinaryPresent()
+        const devcontainerConfig = this.getDevcontainerConfig()
         var features: any = devcontainerConfig.features ?? {}
         const repo = `${this.repositoryAddress()}:${this.featureVersion}`
         const check = Object.keys(features).find((x) => x.startsWith(repo))
