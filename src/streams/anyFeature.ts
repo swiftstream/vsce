@@ -124,7 +124,7 @@ export class AnyFeature {
     }
     async onDidSaveTextDocument(path: string): Promise<boolean> { return false }
 
-    updateIsInstalled = async () => {
+    private updateIsInstalled() {
         this.isInstalled = this.isBinaryPresent()
         const devcontainerConfig = this.getDevcontainerConfig()
         var features: any = devcontainerConfig.features ?? {}
@@ -205,7 +205,7 @@ export class AnyFeature {
         if (this.isDeintegrated) {
             this.isDeintegrated = false
             this.isPendingContainerRebuild = false
-            await this.updateIsInstalled()
+            this.updateIsInstalled()
         } else {
             this.isPendingContainerRebuild = true
             window.showInformationMessage(`${this.name} CLI has been added, please rebuild the container.`, 'Rebuild').then(async (x) => {
@@ -246,7 +246,7 @@ export class AnyFeature {
                 await commands.executeCommand('remote-containers.rebuildContainer')    
             })
         })
-        await this.updateIsInstalled()
+        this.updateIsInstalled()
         this.isDeintegrating = false
         this.isDeintegrated = true
         sidebarTreeView?.refresh()
