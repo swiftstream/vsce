@@ -13,8 +13,8 @@ export class CloudFeature extends WebFeature {
     projectFeatureFolderPath = () => path.join(projectDirectory!, this.name)
 
     registerCommands() {
-        extensionContext.subscriptions.push(commands.registerCommand(`Deploy||${this.name}`, () => this.deploy))
         super.registerCommands()
+        extensionContext.subscriptions.push(commands.registerCommand(this.deployMenuItem().id, async () => await this.deploy()))
     }
 
     requiresSetup(): boolean { return !this.isConfigPresent() }
