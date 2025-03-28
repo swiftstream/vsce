@@ -111,7 +111,7 @@ export class AnyFeature {
     async recommendationsItems(): Promise<Dependency[]> { return [] }
     async customItems(element: Dependency): Promise<Dependency[]> {
         if (element.id == this.name) {
-            return this.menuItems()
+            return await this.menuItems()
         }
         return []
     }
