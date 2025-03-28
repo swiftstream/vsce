@@ -57,7 +57,7 @@ export class AnyFeature {
     isBinaryPresent = (): boolean => fs.existsSync(this.binPath)
     isConfigPresent = (): boolean => this.configFile ? fs.existsSync(path.join(this.projectFeatureFolderPath(), this.configFile)) : false
 
-    async isInUse(): Promise<boolean> {
+    isInUse(): boolean {
         if (!this.isInstalled) return false
         if (this.isDeintegrated) return false
         if (this.isPendingContainerRebuild) return false

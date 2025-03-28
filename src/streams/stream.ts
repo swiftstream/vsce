@@ -57,11 +57,12 @@ export class Stream {
 			isTestable = true
 			sidebarTreeView?.refresh()
 		}
-		const promises = this.features().filter(async (x) => await x.isInUse()).map((x) => x.onStartup())
-		if (promises.length > 0) {
-			await Promise.all(promises)
+		const activeFeatures = this.features().filter((x) => x.isInUse())
+		async function proceedFeatures() {
+			await Promise.all(activeFeatures.map((x) => x.onStartup()))
 		}
-    }
+		proceedFeatures()
+	}
 
 	isDebugerAttachedLater: boolean = false
 	async onDidStartDebugSession(session: DebugSession) {}

@@ -101,7 +101,7 @@ export class ServerStream extends PureStream {
 
     async maintenanceItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
-        if (await this.nginx.isInUse()) {
+        if (this.nginx.isInUse()) {
 
         }
         return [...items, ...(await super.maintenanceItems())]
