@@ -54,14 +54,14 @@ export class AnyFeature {
     
     repositoryAddress = () => `ghcr.io/${this.featureRepository}/${this.featureName}`
 
-    isBinaryPresent = async (): Promise<boolean> => await this.bash.which(this.binName) != undefined
     isConfigPresent = async (): Promise<boolean> => this.configFile ? fs.existsSync(path.join(this.projectFeatureFolderPath(), this.configFile)) : false
+    isBinaryPresent = (): boolean => fs.existsSync(this.binPath)
 
     async isInUse(): Promise<boolean> {
         if (!this.isInstalled) return false
         if (this.isDeintegrated) return false
         if (this.isPendingContainerRebuild) return false
-        if (await this.isBinaryPresent() == false) return false
+        if (!this.isBinaryPresent()) return false
         return true
     }
 
@@ -119,15 +119,14 @@ export class AnyFeature {
     async onStartup(): Promise<boolean> {
         if (!this.isInstalled) return false
         if (this.isPendingContainerRebuild) return false
-        if (await this.isBinaryPresent() == false) return false
+        if (!this.isBinaryPresent()) return false
         return true
     }
     async onDidSaveTextDocument(path: string): Promise<boolean> { return false }
 
     updateIsInstalled = async () => {
-        const v = this.bash.which(this.binName)
-        this.isInstalled = v != undefined
         const devcontainerConfig = await this.getDevcontainerConfig()
+        this.isInstalled = this.isBinaryPresent()
         var features: any = devcontainerConfig.features ?? {}
         const repo = `${this.repositoryAddress()}:${this.featureVersion}`
         const check = Object.keys(features).find((x) => x.startsWith(repo))
