@@ -120,19 +120,6 @@ export class CloudFeature extends WebFeature {
 
     // MARK: Helpers
 
-    askToBuildReleaseFirst = () => {
-        window.showWarningMessage(`${this.name} authentication is required`, 'Proceed to login').then(async (arg) => {
-            if (arg == 'Proceed to login') {
-                this.isLoggingIn = true
-                sidebarTreeView?.refresh()
-                await this.login(() => {
-                    this.isLoggingIn = false
-                    sidebarTreeView?.refresh()
-                })
-            }
-        })
-    }
-
     askForAuthentication = () => {
         window.showWarningMessage(`${this.name} authentication is required`, 'Proceed to login').then(async (arg) => {
             if (arg == 'Proceed to login') {
