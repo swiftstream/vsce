@@ -23,6 +23,7 @@ export class Nginx extends ServerFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'nginx', featureVersion: 'latest', featureParams: {},
                 configFile: 'nginx.conf',
+                binFolder: '/usr/sbin/nginx',
                 binName: 'nginx'
             }
         )

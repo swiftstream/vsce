@@ -18,6 +18,7 @@ export class Ngrok extends ServerFeature {
                 featureRepository: 'swiftstream/vsce',
                 featureName: 'ngrok-cli', featureVersion: 'latest', featureParams: {},
                 configFile: 'ngrok.yml',
+                binFolder: '/usr/local/bin',
                 binName: 'ngrok'
             }
         )
