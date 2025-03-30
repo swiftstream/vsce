@@ -33,11 +33,11 @@ export class PureStream extends Stream {
 
     }
     
-    async isDebugBuilt(target: string): Promise<boolean> {
+    isDebugBuilt(target: string): boolean {
         return fs.existsSync(path.join(projectDirectory!, '.build', 'debug', target))
     }
     
-    async isReleaseBuilt(target: string): Promise<boolean> {
+    isReleaseBuilt(target: string): boolean {
         return fs.existsSync(path.join(projectDirectory!, '.build', 'release', target))
     }
 

@@ -387,11 +387,11 @@ export class WebStream extends Stream {
 		]
 	}
 	
-	async isDebugBuilt(): Promise<boolean> {
+	isDebugBuilt(): boolean {
 		return fs.existsSync(path.join(projectDirectory!, buildDevFolder))
 	}
 	
-	async isReleaseBuilt(): Promise<boolean> {
+	isReleaseBuilt(): boolean {
 		return fs.existsSync(path.join(projectDirectory!, buildProdFolder))
 	}
 
