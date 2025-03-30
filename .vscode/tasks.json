@@ -167,6 +167,39 @@
 			],
 			"type": "shell"
 		},
+		// MARK: Docker Pull Android Dev Image
+		{
+			"label": "Docker Pull AndroidDev Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/android-dev:latest"],
+			"type": "shell"
+		},
+		// MARK: Docker Pull Server Dev/Prod Images
+		{
+			"label": "Docker Pull ServerDev Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/server-dev:latest"],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Pull ServerProd Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/server-prod:latest"],
+			"type": "shell"
+		},
+		// MARK: Docker Pull Web Dev/Prod Images
+		{
+			"label": "Docker Pull WebDev Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/web-dev:latest"],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Pull WebProd Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/web-prod:latest"],
+			"type": "shell"
+		},
 		// MARK: Docker ForcePush Android Development Container Image
 		{
 			"label": "Docker Build & Push Multi AndroidDev Image (no cache) (step 3)",
