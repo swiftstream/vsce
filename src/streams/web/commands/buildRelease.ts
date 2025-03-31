@@ -25,7 +25,7 @@ import { AbortHandler } from '../../../bash'
 
 export async function buildReleaseCommand(webStream: WebStream, successCallback?: any) {
 	if (isBuildingRelease) return
-	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+	const abortHandler = webStream.setAbortBuildingReleaseHandler(() => {
 		measure.finish()
         status('circle-slash', `Aborted Build after ${measure.time}ms`, StatusType.Default)
         print(`🚫 Aborted Build after ${measure.time}ms`)
