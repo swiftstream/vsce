@@ -404,7 +404,7 @@ export class WebStream extends Stream {
 	}
 
 	async buildRelease(successCallback?: any) {
-		await buildReleaseCommand(successCallback)
+		await buildReleaseCommand(this, successCallback)
 	}
 
 	// MARK: Side Bar Tree View Items
