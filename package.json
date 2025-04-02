@@ -49,7 +49,7 @@
             "Verbose",
             "Unbearable"
           ],
-          "default": "Normal",
+          "default": "Detailed",
           "uniqueItems": true
         },
         "swift.showTopRunButton": {
