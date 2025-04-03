@@ -243,19 +243,34 @@ export class PureStream extends Stream {
     
     async defaultDebugActionItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '', TreeItemCollapsibleState.None, isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer'))
+            new Dependency({
+                id: SideTreeItem.BuildDebug,
+                label: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
+                version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
+                icon: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer')
+            })
         ]
     }
 
     async debugActionItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunDebug, this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run', this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '', TreeItemCollapsibleState.None, this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            new Dependency({
+                id: SideTreeItem.RunDebug,
+                label: this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run',
+                version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
+                icon: this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'
+            }),
             ...(await super.debugActionItems())
         ]
     }
     async releaseItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.RunRelease, isRunningReleaseTarget ? 'Running' : 'Run', this.swift.selectedReleaseTarget ? this.swift.selectedReleaseTarget : '', TreeItemCollapsibleState.None, isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'),
+            new Dependency({
+                id: SideTreeItem.RunRelease,
+                label: isRunningReleaseTarget ? 'Running' : 'Run',
+                version: this.swift.selectedReleaseTarget ? this.swift.selectedReleaseTarget : '',
+                icon: isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'
+            }),
             ...(await super.releaseItems())
         ]
     }

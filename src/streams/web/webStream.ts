@@ -411,16 +411,39 @@ export class WebStream extends Stream {
 
 	async debugActionItems(): Promise<Dependency[]> {
 		return [
-			new Dependency(SideTreeItem.DebugInChrome, isDebuggingInChrome ? 'Debugging in Chrome' : 'Debug in Chrome', '', TreeItemCollapsibleState.None, isDebuggingInChrome ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'),
-			new Dependency(SideTreeItem.RunCrawlServer, isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server', '', TreeItemCollapsibleState.None, isRunningCrawlServer ? 'sync~spin' : 'debug-console')
+			new Dependency({
+				id: SideTreeItem.DebugInChrome,
+				label: isDebuggingInChrome ? 'Debugging in Chrome' : 'Debug in Chrome',
+				icon: isDebuggingInChrome ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'
+			}),
+			new Dependency({
+				id: SideTreeItem.RunCrawlServer,
+				label: isRunningCrawlServer ? 'Running Crawl Server' : 'Run Crawl Server',
+				icon: isRunningCrawlServer ? 'sync~spin' : 'debug-console'
+			})
 		]
 	}
 
 	async debugOptionItems(): Promise<Dependency[]> {
 		return [
-			new Dependency(SideTreeItem.HotReload, 'Hot reload', isHotReloadEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline'),
-			new Dependency(SideTreeItem.DebugGzip, 'Gzip', isDebugGzipEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugGzipEnabled ? 'pass::charts.green' : 'circle-large-outline'),
-			new Dependency(SideTreeItem.DebugBrotli, 'Brotli', isDebugBrotliEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isDebugBrotliEnabled ? 'pass::charts.green' : 'circle-large-outline')
+			new Dependency({
+				id: SideTreeItem.HotReload,
+				label: 'Hot reload',
+				version: isHotReloadEnabled ? 'Enabled' : 'Disabled',
+				icon: isHotReloadEnabled ? 'pass::charts.green' : 'circle-large-outline'
+			}),
+			new Dependency({
+				id: SideTreeItem.DebugGzip,
+				label: 'Gzip',
+				version: isDebugGzipEnabled ? 'Enabled' : 'Disabled',
+				icon: isDebugGzipEnabled ? 'pass::charts.green' : 'circle-large-outline'
+			}),
+			new Dependency({
+				id: SideTreeItem.DebugBrotli,
+				label: 'Brotli',
+				version: isDebugBrotliEnabled ? 'Enabled' : 'Disabled',
+				icon: isDebugBrotliEnabled ? 'pass::charts.green' : 'circle-large-outline'
+			})
 		]
 	}
 
@@ -428,10 +451,26 @@ export class WebStream extends Stream {
 
 	async projectItems(): Promise<Dependency[]> {
 		// return [
-		// 	new Dependency(SideTreeItem.NewFilePage, 'New Page', '', TreeItemCollapsibleState.None, 'file-add'),
-		// 	new Dependency(SideTreeItem.NewFileClass, 'New Class', '', TreeItemCollapsibleState.None, 'file-code'),
-		// 	new Dependency(SideTreeItem.NewFileJS, 'New JS', '', TreeItemCollapsibleState.None, 'file-code'),
-		// 	new Dependency(SideTreeItem.NewFileSCSS, 'New CSS', '', TreeItemCollapsibleState.None, 'file-code')
+		// 	new Dependency({
+		// 		id: SideTreeItem.NewFilePage,
+		// 		label: 'New Page',
+		// 		icon: 'file-add'
+		// 	}),
+		// 	new Dependency({
+		// 		id: SideTreeItem.NewFileClass,
+		// 		label: 'New Class',
+		// 		icon: 'file-code'
+		// 	}),
+		// 	new Dependency({
+		// 		id: SideTreeItem.NewFileJS,
+		// 		label: 'New JS',
+		// 		icon: 'file-code'
+		// 	}),
+		// 	new Dependency({
+		// 		id: SideTreeItem.NewFileSCSS,
+		// 		label: 'New CSS',
+		// 		icon: 'file-code'
+		// 	})
 		// ]
 		return []
 	}
@@ -439,31 +478,83 @@ export class WebStream extends Stream {
 	async maintenanceItems(): Promise<Dependency[]> {
 		let items: Dependency[] = []
 		if (await this.containsAppTarget() && this.canRecompileAppTarget())
-			items.push(new Dependency(SideTreeItem.RecompileApp, isRecompilingApp ? 'Recompiling' : 'Recompile', appTargetName, TreeItemCollapsibleState.None, isRecompilingApp ? 'sync~spin' : 'repl'))
+			items.push(new Dependency({
+				id: SideTreeItem.RecompileApp,
+				label: isRecompilingApp ? 'Recompiling' : 'Recompile',
+				version: appTargetName,
+				icon: isRecompilingApp ? 'sync~spin' : 'repl'
+			}))
 		if (await this.containsServiceTarget() && this.canRecompileServiceTarget())
-			items.push(new Dependency(SideTreeItem.RecompileService, isRecompilingService ? 'Recompiling' : 'Recompile', serviceWorkerTargetName, TreeItemCollapsibleState.None, isRecompilingService ? 'sync~spin' : 'server~spin'))
-		items.push(new Dependency(SideTreeItem.RecompileJS, isRecompilingJS ? 'Recompiling' : 'Recompile', 'JS', TreeItemCollapsibleState.None, isRecompilingJS ? 'sync~spin' : 'code'))
-		items.push(new Dependency(SideTreeItem.RecompileCSS, isRecompilingCSS ? 'Recompiling' : 'Recompile', 'CSS', TreeItemCollapsibleState.None, isRecompilingCSS ? 'sync~spin' : 'symbol-color'))
-		items.push(new Dependency(SideTreeItem.RecompileHTML, isRecompilingHTML ? 'Recompiling' : 'Recompile', 'HTML', TreeItemCollapsibleState.None, isRecompilingHTML ? 'sync~spin' : 'compass'))
+			items.push(new Dependency({
+				id: SideTreeItem.RecompileService,
+				label: isRecompilingService ? 'Recompiling' : 'Recompile',
+				version: serviceWorkerTargetName,
+				icon: isRecompilingService ? 'sync~spin' : 'server~spin'
+			}))
+		items.push(new Dependency({
+			id: SideTreeItem.RecompileJS,
+			label: isRecompilingJS ? 'Recompiling' : 'Recompile',
+			version: 'JS',
+			icon: isRecompilingJS ? 'sync~spin' : 'code'
+		}))
+		items.push(new Dependency({
+			id: SideTreeItem.RecompileCSS,
+			label: isRecompilingCSS ? 'Recompiling' : 'Recompile',
+			version: 'CSS',
+			icon: isRecompilingCSS ? 'sync~spin' : 'symbol-color'
+		}))
+		items.push(new Dependency({
+			id: SideTreeItem.RecompileHTML,
+			label: isRecompilingHTML ? 'Recompiling' : 'Recompile',
+			version: 'HTML',
+			icon: isRecompilingHTML ? 'sync~spin' : 'compass'
+		}))
 		return items
 	}
 
 	async settingsItems(): Promise<Dependency[]> {
 		return [
-			new Dependency(SideTreeItem.DevPort, 'Port (debug)', `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
-			new Dependency(SideTreeItem.ProdPort, 'Port (release)', `${currentProdPort} ${pendingNewProdPort && pendingNewProdPort != currentProdPort ? `(${pendingNewProdPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
-			new Dependency(SideTreeItem.DevCrawlerPort, 'Port (crawler)', `${currentDevCrawlerPort} ${pendingNewDevCrawlerPort && pendingNewDevCrawlerPort != currentDevCrawlerPort ? `(${pendingNewDevCrawlerPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower')
+			new Dependency({
+				id: SideTreeItem.DevPort,
+				label: 'Port (debug)',
+				version: `${currentDevPort} ${pendingNewDevPort && pendingNewDevPort != currentDevPort ? `(${pendingNewDevPort} pending reload)` : ''}`,
+				icon: 'radio-tower'
+			}),
+			new Dependency({
+				id: SideTreeItem.ProdPort,
+				label: 'Port (release)',
+				version: `${currentProdPort} ${pendingNewProdPort && pendingNewProdPort != currentProdPort ? `(${pendingNewProdPort} pending reload)` : ''}`,
+				icon: 'radio-tower'
+			}),
+			new Dependency({
+				id: SideTreeItem.DevCrawlerPort,
+				label: 'Port (crawler)',
+				version: `${currentDevCrawlerPort} ${pendingNewDevCrawlerPort && pendingNewDevCrawlerPort != currentDevCrawlerPort ? `(${pendingNewDevCrawlerPort} pending reload)` : ''}`,
+				icon: 'radio-tower'
+			})
 		]
 	}
 
 	async recommendationsItems(): Promise<Dependency[]> {
 		let items: Dependency[] = []
 		// if (containsUpdateForWeb)
-		// 	items.push(new Dependency(SideTreeItem.UpdateWeb, 'Update Web to 2.0.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		// 	items.push(new Dependency({
+		// 		id: SideTreeItem.UpdateWeb,
+		// 		label: 'Update Web to 2.0.0',
+		// 		icon: 'cloud-download'
+		// 	}))
 		// if (containsUpdateForJSKit)
-		// 	items.push(new Dependency(SideTreeItem.UpdateJSKit, 'Update JSKit to 0.20.0', '', TreeItemCollapsibleState.None, 'cloud-download'))
+		// 	items.push(new Dependency({
+		// 		id: SideTreeItem.UpdateJSKit,
+		// 		label: 'Update JSKit to 0.20.0',
+		// 		icon: 'cloud-download'
+		// 	}))
 		// if (items.length == 0)
-		// 	items.push(new Dependency(SideTreeItem.UpdateJSKit, 'No recommendations for now', '', TreeItemCollapsibleState.None, 'check::charts.green', false))
+		// 	items.push(new Dependency({
+		// 		id: SideTreeItem.UpdateJSKit,
+		// 		label: 'No recommendations for now',
+		// 		icon: 'check::charts.green'
+		// 	}))
 		return items
 	}
 

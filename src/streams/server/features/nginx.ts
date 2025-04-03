@@ -38,8 +38,17 @@ export class Nginx extends ServerFeature {
         extensionContext.subscriptions.push(commands.registerCommand(this.portMenuItem().id, async () => await this.changePort()))
     }
     
-    restartMenuItem = () => new Dependency(`Restart||${this.name}`, `Restart ${this.name}`, '', TreeItemCollapsibleState.None, 'refresh')
-    portMenuItem = () => new Dependency(`Port||${this.name}`, 'Port', `${this.outerPort} ${this.pendingOuterPort && this.pendingOuterPort != this.outerPort ? `(${this.pendingOuterPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower')
+    restartMenuItem = () => new Dependency({
+        id: `Restart||${this.name}`,
+        label: `Restart ${this.name}`,
+        icon: 'refresh'
+    })
+    portMenuItem = () => new Dependency({
+        id: `Port||${this.name}`,
+        label: 'Port',
+        version: `${this.outerPort} ${this.pendingOuterPort && this.pendingOuterPort != this.outerPort ? `(${this.pendingOuterPort} pending reload)` : ''}`,
+        icon: 'radio-tower'
+    })
 
     async featureMenuItems(): Promise<Dependency[]> {
         return [

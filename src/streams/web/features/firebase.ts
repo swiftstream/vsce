@@ -62,7 +62,12 @@ export class Firebase extends CloudFeature {
         })
     }
 
-    deployModeMenuItem = () => new Dependency(`DeployMode||${this.name}`, 'Deploy Mode', this.getFullDeployMode() ? 'Full' : 'Hosting Only', TreeItemCollapsibleState.None, 'settings')
+    deployModeMenuItem = () => new Dependency({
+        id: `DeployMode||${this.name}`,
+        label: 'Deploy Mode',
+        version: this.getFullDeployMode() ? 'Full' : 'Hosting Only',
+        icon: 'settings'
+    })
 
     async featureMenuItems(): Promise<Dependency[]> {
         let items = await super.featureMenuItems()

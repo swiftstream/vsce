@@ -480,7 +480,12 @@ export class Stream {
 	}
 	async installedFeatureItems(): Promise<Dependency[]> {
 		return this.features().filter((x) => x.isInstalled).map((x) => {
-			return new Dependency(x.name, x.name, '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon(x.iconFile, x.iconFileDark))
+			return new Dependency({
+				id: x.name,
+				label: x.name,
+				state: TreeItemCollapsibleState.Collapsed,
+				icon: sidebarTreeView!.fileIcon(x.iconFile, x.iconFileDark)
+			})
 		})
 	}
 	async isThereFeaturesToAdd(): Promise<boolean> {

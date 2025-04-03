@@ -29,7 +29,11 @@ export class Ngrok extends ServerFeature {
         extensionContext.subscriptions.push(commands.registerCommand(this.startMenuItem().id, async () => await this.start() ))
     }
     
-    startMenuItem = () => new Dependency(`Start||${this.name}`, this.taskProvider?.isRestarting ? 'Restarting' : this.taskProvider?.isRunning ? 'Is running' : 'Start', '', TreeItemCollapsibleState.None, this.taskProvider?.isRestarting ? 'sync~spin::charts.orange' : this.taskProvider?.isRunning ? 'globe::charts.green' : 'globe')
+    startMenuItem = () => new Dependency({
+        id: `Start||${this.name}`,
+        label: this.taskProvider?.isRestarting ? 'Restarting' : this.taskProvider?.isRunning ? 'Is running' : 'Start',
+        icon: this.taskProvider?.isRestarting ? 'sync~spin::charts.orange' : this.taskProvider?.isRunning ? 'globe::charts.green' : 'globe'
+    })
 
     async featureMenuItems(): Promise<Dependency[]> {
         return [

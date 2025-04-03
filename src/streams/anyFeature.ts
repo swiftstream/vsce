@@ -80,12 +80,38 @@ export class AnyFeature {
         extensionContext.subscriptions.push(commands.registerCommand(this.editConfigMenuItem().id, async () => await this.openConfigInEditor()))
     }
 
-    installedMenuElement = () => new Dependency(this.name, this.name, '', TreeItemCollapsibleState.Collapsed, sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark))
-    collectionMenuElement = () => new Dependency(this.name, this.name, '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark))
-    integrateMenuElement = () => new Dependency(`Integrate||${this.name}`, this.name, this.isPendingContainerRebuild ? '(pending rebuild)' : '', TreeItemCollapsibleState.None, sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark))
-    setupMenuElement = () => new Dependency(`Setup||${this.name}`, 'Setup', '', TreeItemCollapsibleState.None, 'symbol-property')
-    deintegrateMenuElement = () => new Dependency(`Deintegrate||${this.name}`, this.isDeintegrating ? 'Deintegrating' : 'Deintegrate', '', TreeItemCollapsibleState.None, this.isDeintegrating ? 'sync~spin' : 'trash')
-    editConfigMenuItem = () => new Dependency(`EditConfig||${this.name}`, 'Configuration', '', TreeItemCollapsibleState.None, 'symbol-property')
+    installedMenuElement = () => new Dependency({
+        id: this.name,
+        label: this.name,
+        state: TreeItemCollapsibleState.Collapsed,
+        icon: sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark)
+    })
+    collectionMenuElement = () => new Dependency({
+        id: this.name,
+        label: this.name,
+        icon: sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark)
+    })
+    integrateMenuElement = () => new Dependency({
+        id: `Integrate||${this.name}`,
+        label: this.name,
+        version: this.isPendingContainerRebuild ? '(pending rebuild)' : '',
+        icon: sidebarTreeView!.fileIcon(this.iconFile, this.iconFileDark)
+    })
+    setupMenuElement = () => new Dependency({
+        id: `Setup||${this.name}`,
+        label: 'Setup',
+        icon: 'symbol-property'
+    })
+    deintegrateMenuElement = () => new Dependency({
+        id: `Deintegrate||${this.name}`,
+        label: this.isDeintegrating ? 'Deintegrating' : 'Deintegrate',
+        icon: this.isDeintegrating ? 'sync~spin' : 'trash'
+    })
+    editConfigMenuItem = () => new Dependency({
+        id: `EditConfig||${this.name}`,
+        label: 'Configuration',
+        icon: 'symbol-property'
+    })
 
     private async menuItems(): Promise<Dependency[]> {
         let items: Dependency[] = []

@@ -74,7 +74,14 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			const eCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'error')?.length ?? 0).reduce((s, a) => s + a, 0)
 			const wCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'warning')?.length ?? 0).reduce((s, a) => s + a, 0)
 			const nCount = this.errors.map((x) => x.errors.filter((f) => f.type == 'note')?.length ?? 0).reduce((s, a) => s + a, 0)
-			return new Dependency(SideTreeItem.Errors, eCount > 0 ? 'Errors' : wCount > 0 ? 'Warnings' : 'Notes', `${eCount + wCount + nCount}`, TreeItemCollapsibleState.Expanded, `bracket-error::charts.${eCount > 0 ? 'red' : wCount > 0 ? 'orange' : 'white'}`, false)
+			return new Dependency({
+				id: SideTreeItem.Errors,
+				label: eCount > 0 ? 'Errors' : wCount > 0 ? 'Warnings' : 'Notes',
+				version: `${eCount + wCount + nCount}`,
+				state: TreeItemCollapsibleState.Expanded,
+				icon: `bracket-error::charts.${eCount > 0 ? 'red' : wCount > 0 ? 'orange' : 'white'}`,
+				skipCommand: true
+			})
 		}
 		return undefined
 	}
@@ -84,34 +91,102 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		if (!isInContainer() && !env.S_DEV) {
 			if (element == null) {
 				items = [
-					new Dependency(SideTreeItem.Project, 'Project', `${workspace.name}`, TreeItemCollapsibleState.Expanded, 'terminal-bash', false)
+					new Dependency({
+						id: SideTreeItem.Project,
+						label: 'Project',
+						version: `${workspace.name}`,
+						state: TreeItemCollapsibleState.Expanded,
+						icon: 'terminal-bash',
+						skipCommand: true
+					})
 				]
 			} else if (element?.label == SideTreeItem.Project) {
 				items = [
-					new Dependency(SideTreeItem.ReopenInContainer, 'Reopen in Container', '', TreeItemCollapsibleState.None, 'folder::charts.green'),
-					new Dependency(SideTreeItem.WhyReopenInContainer, 'Why Reopen in Container?', '', TreeItemCollapsibleState.None, this.fileIcon('question-square')),
-					// new Dependency(SideTreeItem.NewProject, 'New Project', '', TreeItemCollapsibleState.None, this.fileIcon('new-project'))
+					new Dependency({
+						id: SideTreeItem.ReopenInContainer,
+						label: 'Reopen in Container',
+						icon: 'folder::charts.green'
+					}),
+					new Dependency({
+						id: SideTreeItem.WhyReopenInContainer,
+						label: 'Why Reopen in Container?',
+						icon: this.fileIcon('question-square')
+					}),
+					// new Dependency({
+					// 	id: SideTreeItem.NewProject,
+					// 	label: 'New Project',
+					// 	icon: this.fileIcon('new-project')
+					// })
 				]
 			}
 			return items
 		}
 		if (element == null) {
 			if (currentStream) {
-				items.push(new Dependency(SideTreeItem.Debug, 'Debug', `${workspace.name?.split('[Dev')[0] ?? ''}`, this.expandState(SideTreeItem.Debug), 'coffee', false))
-				items.push(new Dependency(SideTreeItem.Release, 'Release', '', this.expandState(SideTreeItem.Release), 'cloud-upload', false))
+				items.push(new Dependency({
+					id: SideTreeItem.Debug,
+					label: 'Debug',
+					version: `${workspace.name?.split('[Dev')[0] ?? ''}`,
+					state: this.expandState(SideTreeItem.Debug),
+					icon: 'coffee',
+					skipCommand: true
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.Release,
+					label: 'Release',
+					state: this.expandState(SideTreeItem.Release),
+					icon: 'cloud-upload',
+					skipCommand: true
+				}))
 				const projectItems = await currentStream!.projectItems()
 				if (projectItems.length > 0) {
-					items.push(new Dependency(SideTreeItem.Project, 'Project', '', this.expandState(SideTreeItem.Project), 'package', false))
+					items.push(new Dependency({
+						id: SideTreeItem.Project,
+						label: 'Project',
+						state: this.expandState(SideTreeItem.Project),
+						icon: 'package',
+						skipCommand: true
+					}))
 				}
-				items.push(new Dependency(SideTreeItem.Maintenance, 'Maintenance', '', this.expandState(SideTreeItem.Maintenance), 'tools', false))
-				items.push(new Dependency(SideTreeItem.Settings, 'Settings', '', this.expandState(SideTreeItem.Settings), 'debug-configure', false))
+				items.push(new Dependency({
+					id: SideTreeItem.Maintenance,
+					label: 'Maintenance',
+					state: this.expandState(SideTreeItem.Maintenance),
+					icon: 'tools',
+					skipCommand: true
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.Settings,
+					label: 'Settings',
+					state: this.expandState(SideTreeItem.Settings),
+					icon: 'debug-configure',
+					skipCommand: true
+				}))
 				if (await currentStream.isThereAnyFeature()) {
-					items.push(new Dependency(SideTreeItem.Features, 'Features', '', this.expandState(SideTreeItem.Features), 'extensions', false))
+					items.push(new Dependency({
+						id: SideTreeItem.Features,
+						label: 'Features',
+						state: this.expandState(SideTreeItem.Features),
+						icon: 'extensions',
+						skipCommand: true
+					}))
 				}
 				if (await currentStream.isThereAnyRecommendation()) {
-					items.push(new Dependency(SideTreeItem.Recommendations, 'Recommendations', '', this.expandState(SideTreeItem.Recommendations), 'lightbulb', false))
+					items.push(new Dependency({
+						id: SideTreeItem.Recommendations,
+						label: 'Recommendations',
+						state: this.expandState(SideTreeItem.Recommendations),
+						icon: 'lightbulb',
+						skipCommand: true
+					}))
 				}
-				items.push(new Dependency(SideTreeItem.Support, 'Support', '', this.expandState(SideTreeItem.Support), 'heart', false))
+				items.push(new Dependency({
+					id: SideTreeItem.Support,
+					label: 'Support',
+					state: this.expandState(SideTreeItem.Support),
+					icon: 'heart',
+					skipCommand: true
+				}))
 				const errorsItem = this.fillNewErrors()
 				if (errorsItem) {
 					items.push(errorsItem)
@@ -129,7 +204,13 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				})
 				extensionContext.subscriptions.push(command)
 				this.errorCommands.push(command)
-				items.push(new Dependency(commandId, error.name, `${error.errors.length}`, TreeItemCollapsibleState.Expanded, 'file', true))
+				items.push(new Dependency({
+					id: commandId,
+					label: error.name,
+					version: `${error.errors.length}`,
+					state: TreeItemCollapsibleState.Expanded,
+					icon: 'file'
+				}))
 			}
 		} else if (element?.id && element.id.startsWith(`${SideTreeItem.ErrorFile}:`)) {
 			const path = element.id.replace(`${SideTreeItem.ErrorFile}:`, '')
@@ -143,7 +224,11 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					})
 					extensionContext.subscriptions.push(command)
 					this.errorCommands.push(command)
-					items.push(new Dependency(commandId, `${place.line}: ${place.description}`, '', TreeItemCollapsibleState.None, place.type == 'note' ? 'edit::charts.white' : place.type == 'warning' ? 'alert::charts.orange' : 'error::charts.red', true))
+					items.push(new Dependency({
+						id: commandId,
+						label: `${place.line}: ${place.description}`,
+						icon: place.type == 'note' ? 'edit::charts.white' : place.type == 'warning' ? 'alert::charts.orange' : 'error::charts.red'
+					}))
 				}
 			}
 		} else if (currentStream && element?.id) {
@@ -154,18 +239,36 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				if (defaultItems.length > 0) {
 					items.push(...defaultItems)
 				} else {
-					items.push(new Dependency(SideTreeItem.BuildDebug, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build', '', TreeItemCollapsibleState.None, isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')))
+					items.push(new Dependency({
+						id: SideTreeItem.BuildDebug,
+						label: isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
+						icon: isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')
+					}))
 				}
 				items.push(...(await currentStream.debugActionItems()))
 				if (isTestable) {
-					items.push(new Dependency(SideTreeItem.Test, isTesting ? 'Testing' : 'Test', '', TreeItemCollapsibleState.None, isTesting ? 'sync~spin::charts.green' : 'beaker::charts.green'))
+					items.push(new Dependency({
+						id: SideTreeItem.Test,
+						label: isTesting ? 'Testing' : 'Test',
+						icon: isTesting ? 'sync~spin::charts.green' : 'beaker::charts.green'
+					}))
 				}
 				// Options
-				items.push(new Dependency(SideTreeItem.HotRebuild, 'Hot rebuild', isHotRebuildEnabled ? 'Enabled' : 'Disabled', TreeItemCollapsibleState.None, isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'))
+				items.push(new Dependency({
+					id: SideTreeItem.HotRebuild,
+					label: 'Hot rebuild',
+					version: isHotRebuildEnabled ? 'Enabled' : 'Disabled',
+					icon: isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'
+				}))
 				items.push(...(await currentStream.debugOptionItems()))
 				break
 			case SideTreeItem.Release:
-				items.push(new Dependency(SideTreeItem.BuildRelease, isBuildingRelease ? 'Building' : 'Build', currentStream?.swift.selectedReleaseTarget ? currentStream.swift.selectedReleaseTarget : '', TreeItemCollapsibleState.None, isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'))
+				items.push(new Dependency({
+					id: SideTreeItem.BuildRelease,
+					label: isBuildingRelease ? 'Building' : 'Build',
+					version: currentStream?.swift.selectedReleaseTarget ? currentStream.swift.selectedReleaseTarget : '',
+					icon: isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'
+				}))
 				items.push(...(await currentStream.releaseItems()))
 				break
 			case SideTreeItem.Project:
@@ -175,7 +278,12 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				if (await currentStream.isThereInstalledFeatures()) {
 					items.push(...(await currentStream.installedFeatureItems()))
 					if (await currentStream.isThereFeaturesToAdd()) {
-						items.push(new Dependency(SideTreeItem.FeaturesCollection, 'Collection', '', TreeItemCollapsibleState.Collapsed, 'library'))
+						items.push(new Dependency({
+							id: SideTreeItem.FeaturesCollection,
+							label: 'Collection',
+							state: TreeItemCollapsibleState.Collapsed,
+							icon: 'library'
+						}))
 					}
 				} else {
 					items.push(...(await currentStream.addFeatureItems()))
@@ -185,30 +293,76 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(...(await currentStream.addFeatureItems()))
 				break
 			case SideTreeItem.Maintenance:
-				items.push(new Dependency(SideTreeItem.ClearCaches, isClearingCache ? 'Clearing Caches' : isClearedCache ? 'Cleared Caches' : 'Clear Caches', '', TreeItemCollapsibleState.None, isClearingCache ? 'sync~spin::charts.red' : isClearedCache ? 'check::charts.green' : 'trash::charts.red'))
-				items.push(new Dependency(SideTreeItem.RestartLSP, isRestartingLSP ? 'Restarting LSP' : isRestartedLSP ? 'Restarted LSP' : 'Restart LSP', '', TreeItemCollapsibleState.None, isRestartingLSP ? 'sync~spin::charts.yellow' : isRestartedLSP ? 'check::charts.green' : 'debug-restart::charts.yellow'))
+				items.push(new Dependency({
+					id: SideTreeItem.ClearCaches,
+					label: isClearingCache ? 'Clearing Caches' : isClearedCache ? 'Cleared Caches' : 'Clear Caches',
+					icon: isClearingCache ? 'sync~spin::charts.red' : isClearedCache ? 'check::charts.green' : 'trash::charts.red'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.RestartLSP,
+					label: isRestartingLSP ? 'Restarting LSP' : isRestartedLSP ? 'Restarted LSP' : 'Restart LSP',
+					icon: isRestartingLSP ? 'sync~spin::charts.yellow' : isRestartedLSP ? 'check::charts.green' : 'debug-restart::charts.yellow'
+				}))
 				items.push(...(await currentStream.maintenanceItems()))
 				break
 			case SideTreeItem.Settings:
-				items.push(new Dependency(SideTreeItem.Toolchain, 'Toolchain', `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'versions'))
+				items.push(new Dependency({
+					id: SideTreeItem.Toolchain,
+					label: 'Toolchain',
+					version: `${currentToolchain.replace('swift-wasm-', '')} ${pendingNewToolchain && pendingNewToolchain != currentToolchain ? `(${pendingNewToolchain.replace('swift-wasm-', '')} pending reload)` : ''}`,
+					icon: 'versions'
+				}))
 				items.push(...(await currentStream.settingsItems()))
-				items.push(new Dependency(SideTreeItem.LoggingLevel, 'Logging Level', `${currentLoggingLevel}`, TreeItemCollapsibleState.None, 'output'))
+				items.push(new Dependency({
+					id: SideTreeItem.LoggingLevel,
+					label: 'Logging Level',
+					version: `${currentLoggingLevel}`,
+					icon: 'output'
+				}))
 				break
 			case SideTreeItem.Recommendations:
 				items.push(...(await currentStream.recommendationsItems()))
 				break
 			case SideTreeItem.Support:
-				items.push(new Dependency(SideTreeItem.Documentation, 'Documentation', '', TreeItemCollapsibleState.None, 'book::charts.green'))
+				items.push(new Dependency({
+					id: SideTreeItem.Documentation,
+					label: 'Documentation',
+					icon: 'book::charts.green'
+				}))
 				if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
-					items.push(new Dependency(SideTreeItem.Repository, 'Repository', '', TreeItemCollapsibleState.None, 'github-inverted'))
-					items.push(new Dependency(SideTreeItem.Discussions, 'Discussions', '', TreeItemCollapsibleState.None, 'comment-discussion::charts.purple'))
-					items.push(new Dependency(SideTreeItem.SubmitAnIssue, 'Submit an issue', '', TreeItemCollapsibleState.None, 'pencil::charts.orange'))
+					items.push(new Dependency({
+						id: SideTreeItem.Repository,
+						label: 'Repository',
+						icon: 'github-inverted'
+					}))
+					items.push(new Dependency({
+						id: SideTreeItem.Discussions,
+						label: 'Discussions',
+						icon: 'comment-discussion::charts.purple'
+					}))
+					items.push(new Dependency({
+						id: SideTreeItem.SubmitAnIssue,
+						label: 'Submit an issue',
+						icon: 'pencil::charts.orange'
+					}))
 				}
-				items.push(new Dependency(SideTreeItem.OpenDiscord, 'Discord', '', TreeItemCollapsibleState.None, this.fileIcon('discord')))
+				items.push(new Dependency({
+					id: SideTreeItem.OpenDiscord,
+					label: 'Discord',
+					icon: this.fileIcon('discord')
+				}))
 				if (isCIS()) {
-					items.push(new Dependency(SideTreeItem.OpenTelegram, 'Telegram', '', TreeItemCollapsibleState.None, this.fileIcon('telegram')))
+					items.push(new Dependency({
+						id: SideTreeItem.OpenTelegram,
+						label: 'Telegram',
+						icon: this.fileIcon('telegram')
+					}))
 				}
-				items.push(new Dependency(SideTreeItem.OpenSwiftForums, 'Swift Forums', '', TreeItemCollapsibleState.None, this.fileIcon('swift_forums')))
+				items.push(new Dependency({
+					id: SideTreeItem.OpenSwiftForums,
+					label: 'Swift Forums',
+					icon: this.fileIcon('swift_forums')
+				}))
 				break
 			default:
 				items.push(...(await currentStream.customItems(element)))
@@ -289,31 +443,34 @@ export class DepCommand implements Command {
 }
 
 export class Dependency extends TreeItem {
-	constructor(
-		public readonly id: string,
-		public readonly label: string,
-		private readonly version: string,
-		public readonly collapsibleState: TreeItemCollapsibleState,
-		public readonly iconPath: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon,
-		private readonly commandPresent: boolean = true
-	) {
-		super(label, collapsibleState)
-		this.id = id
-		this.contextValue = id
-		this.tooltip = label
-		this.description = this.version
-		if (typeof iconPath === 'string' || iconPath instanceof String) {
-			const splitted = iconPath.split('::')
+	id: string
+	
+	constructor(options: {
+		id: string,
+		label: string,
+		tooltip?: string,
+		version?: string,
+		state?: TreeItemCollapsibleState,
+		icon: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon,
+		skipCommand?: boolean
+	}) {
+		super(options.label, options.state ?? TreeItemCollapsibleState.None)
+		this.id = options.id
+		this.contextValue = options.id
+		this.tooltip = options.tooltip ?? options.label
+		this.description = options.version ?? ''
+		if (typeof options.icon === 'string' || options.icon instanceof String) {
+			const splitted = options.icon.split('::')
 			if (splitted.length == 2) {
 				this.iconPath = new ThemeIcon(`${splitted[0]}`, new ThemeColor(`${splitted[1]}`))
 			} else {
-				this.iconPath = new ThemeIcon(`${iconPath}`)
+				this.iconPath = new ThemeIcon(`${options.icon}`)
 			}
 		} else {
-			this.iconPath = iconPath
+			this.iconPath = options.icon
 		}
-		if (commandPresent) {
-			this.command = new DepCommand(label, id)
+		if (!options.skipCommand) {
+			this.command = new DepCommand(options.label, options.id)
 		}
 	}
 

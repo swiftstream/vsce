@@ -19,7 +19,11 @@ export class CloudFeature extends WebFeature {
 
     requiresSetup(): boolean { return !this.isConfigPresent() }
 
-    deployMenuItem = () => new Dependency(`Deploy||${this.name}`, this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy', '', TreeItemCollapsibleState.None, this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload')
+    deployMenuItem = () => new Dependency({
+        id: `Deploy||${this.name}`,
+        label: this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy',
+        icon: this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload'
+    })
 
     async featureMenuItems(): Promise<Dependency[]> {
         let items = await super.featureMenuItems()

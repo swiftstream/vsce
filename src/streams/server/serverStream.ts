@@ -108,7 +108,12 @@ export class ServerStream extends PureStream {
     }
     async settingsItems(): Promise<Dependency[]> {
         return [
-            new Dependency(SideTreeItem.Port, 'Port', `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`, TreeItemCollapsibleState.None, 'radio-tower'),
+            new Dependency({
+                id: SideTreeItem.Port,
+                label: 'Port',
+                version: `${currentPort} ${pendingNewPort && pendingNewPort != currentPort ? `(${pendingNewPort} pending reload)` : ''}`,
+                icon: 'radio-tower'
+            }),
             ...(await super.settingsItems())
         ]
     }
