@@ -80,6 +80,12 @@ export class PureStream extends Stream {
     features(): AnyFeature[] {
         return super.features()
     }
+    
+    // MARK: Global Keybinding
+
+    async globalKeyRun() {
+        await this.debug()
+    }
 
     // MARK: Building
 
