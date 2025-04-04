@@ -109,30 +109,10 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand('chooseDebugTarget', async () => await this.swift.chooseDebugTarget() ))
         extensionContext.subscriptions.push(commands.registerCommand('chooseReleaseTarget', async () => this.swift.chooseReleaseTarget() ))
 		extensionContext.subscriptions.push(commands.registerCommand('chooseTestTarget', async () => this.swift.chooseReleaseTarget() ))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await currentStream?.buildDebug() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await this.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await currentStream?.buildRelease() ))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Test, async () => {
-			if (isTesting) return
-			commands.executeCommand('testing.runAll')
-			async function checkIfSwiftTestRunning(ctx: Stream, attempt: number = 0): Promise<boolean> {
-				if (await ctx.pgrep.isSwiftTestRunning()) {
-					if (!isTesting) {
-						isTesting = true
-						sidebarTreeView?.refresh()
-					}
-					return true
-				}
-				if (attempt < 4) {
-					await new Promise((x) => setTimeout(x, 500))
-					return await checkIfSwiftTestRunning(ctx, attempt + 1)
-				}
-				isTesting = false
-				sidebarTreeView?.refresh()
-				return false
-			}
-			while (await checkIfSwiftTestRunning(this)) {}
-		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await this.buildRelease() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Test, async () => await this.runAllTests() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RestartLSP, async () => await restartLSPCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
@@ -354,6 +334,53 @@ export class Stream {
 	// MARK: Features
 
 	features(): AnyFeature[] { return [] }
+
+	// MARK: Global Keybinding
+
+	async globalKeyBuild() {
+		await this.buildDebug()
+	}
+
+	async globalKeyRun() {
+		print(`Run hot key is not implemented for the current stream`, LogLevel.Unbearable)
+	}
+
+	async globalKeyStop() {
+		await commands.executeCommand('workbench.action.debug.stop')
+		await this.abortBuildingDebug()
+	}
+
+	async globalKeyTest() {
+		await this.runAllTests()
+	}
+
+	// MARK: Tests
+
+	async runAllTests() {
+		if (!isTestable) {
+			window.showWarningMessage(`Unable to find test targets in your Package.swift`)
+			return
+		}
+		if (isTesting) return
+		commands.executeCommand('testing.runAll')
+		async function checkIfSwiftTestRunning(ctx: Stream, attempt: number = 0): Promise<boolean> {
+			if (await ctx.pgrep.isSwiftTestRunning()) {
+				if (!isTesting) {
+					isTesting = true
+					sidebarTreeView?.refresh()
+				}
+				return true
+			}
+			if (attempt < 4) {
+				await new Promise((x) => setTimeout(x, 500))
+				return await checkIfSwiftTestRunning(ctx, attempt + 1)
+			}
+			isTesting = false
+			sidebarTreeView?.refresh()
+			return false
+		}
+		while (await checkIfSwiftTestRunning(this)) {}
+	}
 
 	// MARK: Building Debug
 

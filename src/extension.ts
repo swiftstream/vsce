@@ -16,6 +16,7 @@ import { EmbeddedStream } from './streams/embedded/embeddedStream'
 import { PureStream } from './streams/pure/pureStream'
 import { ServerStream } from './streams/server/serverStream'
 import { copyFile } from './helpers/filesHelper'
+import { handleIfKeybindingsEditor, keybindingsFileClosed } from './helpers/keybindingEditor'
 
 enum SwiftVersion {
 	Five = 'Swift 5',
@@ -147,6 +148,14 @@ export async function activate(context: ExtensionContext) {
 		currentStream?.registerCommands()
 	}
 
+	window.onDidChangeActiveTextEditor(async (editor) => {
+		if (!editor || !isInContainer()) return
+		if (await handleIfKeybindingsEditor(editor)) return
+	})
+	workspace.onDidCloseTextDocument(doc => {
+		if (keybindingsFileClosed(doc)) return
+	})
+
 	// window.showInformationMessage(`workspace.name: ${(await workspace.findFiles('*.swift')).map((f) => f.path).join('/')}`)
 }
 
@@ -230,6 +239,10 @@ const activateWebStream = async (): Promise<boolean> => {
 }
 
 function registerCommands() {
+	extensionContext.subscriptions.push(commands.registerCommand('SwiftStreamRun', async () => currentStream?.globalKeyRun() ))
+	extensionContext.subscriptions.push(commands.registerCommand('SwiftStreamStop', async () => currentStream?.globalKeyStop() ))
+	extensionContext.subscriptions.push(commands.registerCommand('SwiftStreamBuild', async () => currentStream?.globalKeyBuild() ))
+	extensionContext.subscriptions.push(commands.registerCommand('SwiftStreamTest', async () => currentStream?.globalKeyTest() ))
 	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ReopenInContainer, reopenInContainerCommand))
 	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.WhyReopenInContainer, whyReopenInContainerCommand))
 	extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.NewProject, startNewProjectWizard))

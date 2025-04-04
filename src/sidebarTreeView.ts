@@ -241,6 +241,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				} else {
 					items.push(new Dependency({
 						id: SideTreeItem.BuildDebug,
+						tooltip: 'Cmd+B or Ctrl+B',
 						label: isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
 						icon: isBuildingDebug || currentStream.isAnyHotBuilding() ? currentStream.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : this.fileIcon('hammer')
 					}))
@@ -249,6 +250,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				if (isTestable) {
 					items.push(new Dependency({
 						id: SideTreeItem.Test,
+						tooltip: 'Cmd+U or Ctrl+U',
 						label: isTesting ? 'Testing' : 'Test',
 						icon: isTesting ? 'sync~spin::charts.green' : 'beaker::charts.green'
 					}))

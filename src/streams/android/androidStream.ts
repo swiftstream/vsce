@@ -1,4 +1,4 @@
-import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument } from 'vscode'
+import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window } from 'vscode'
 import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
 import { isInContainer } from '../../extension'
@@ -39,6 +39,12 @@ export class AndroidStream extends Stream {
 		if (!isInContainer) return false
 
         return false
+    }
+    
+    // MARK: Global Keybinding
+
+    async globalKeyRun() {
+        window.showErrorMessage(`Run key binding not assigned`)
     }
 
     // MARK: Building

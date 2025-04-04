@@ -245,6 +245,7 @@ export class PureStream extends Stream {
         return [
             new Dependency({
                 id: SideTreeItem.BuildDebug,
+                tooltip: 'Cmd+B or Ctrl+B',
                 label: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
                 version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
                 icon: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer')
@@ -256,6 +257,7 @@ export class PureStream extends Stream {
         return [
             new Dependency({
                 id: SideTreeItem.RunDebug,
+                tooltip: 'Cmd+R or Ctrl+R',
                 label: this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run',
                 version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
                 icon: this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'

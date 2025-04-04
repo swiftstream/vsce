@@ -122,6 +122,22 @@
     },
     "commands": [
       {
+        "command": "SwiftStreamRun",
+        "title": "Swift Stream: Run"
+      },
+      {
+        "command": "SwiftStreamStop",
+        "title": "Swift Stream: Stop"
+      },
+      {
+        "command": "SwiftStreamBuild",
+        "title": "Swift Stream: Build"
+      },
+      {
+        "command": "SwiftStreamTest",
+        "title": "Swift Stream: Run All Tests"
+      },
+      {
         "command": "stopDebugging",
         "title": "Stop Debugging",
         "icon": {
@@ -131,7 +147,8 @@
       },
       {
         "command": "stopRunningDebug",
-        "title": "Stop",
+        "title": "Stop (Cmd+. or Ctrl+.)",
+        "shortTitle": "Stop",
         "icon": {
           "dark": "assets/icons/stop.svg",
           "light": "assets/icons/stop.svg"
@@ -139,7 +156,8 @@
       },
       {
         "command": "stopRunningRelease",
-        "title": "Stop",
+        "title": "Stop (Cmd+. or Ctrl+.)",
+        "shortTitle": "Stop",
         "icon": {
           "dark": "assets/icons/stop.svg",
           "light": "assets/icons/stop.svg"
@@ -163,12 +181,14 @@
       },
       {
         "command": "stopBuildingDebug",
-        "title": "Stop Building",
+        "title": "Stop Building (Cmd+. or Ctrl+.)",
+        "shortTitle": "Stop Building",
         "icon": "$(debug-stop)"
       },
       {
         "command": "BuildDebug",
-        "title": "Build in Debug",
+        "title": "Build in Debug (Cmd+B or Ctrl+B)",
+        "shortTitle": "Build in Debug",
         "icon": {
           "dark": "assets/icons/hammer.svg",
           "light": "assets/icons/hammer.svg"
@@ -176,7 +196,7 @@
       },
       {
         "command": "runDebugAttached",
-        "title": "Run and attach Debugger",
+        "title": "Run and attach Debugger (Cmd+R or Ctrl+R)",
         "icon": {
           "dark": "assets/icons/bug-white.svg",
           "light": "assets/icons/bug.svg"
@@ -184,7 +204,7 @@
       },
       {
         "command": "runDebugAttachedTopBar",
-        "title": "Run and attach Debugger",
+        "title": "Run and attach Debugger (Cmd+R or Ctrl+R)",
         "icon": {
           "dark": "assets/icons/run.svg",
           "light": "assets/icons/run.svg"
@@ -192,7 +212,8 @@
       },
       {
         "command": "stopBuildingRelease",
-        "title": "Stop Building",
+        "title": "Stop Building (Cmd+. or Ctrl+.)",
+        "shortTitle": "Stop Building",
         "icon": "$(debug-stop)"
       }
     ],
@@ -264,21 +285,39 @@
     },
     "keybindings": [
       {
-        "command": "-runDebugAttached",
-        "key": "ctrl+r",
+        "key": "cmd+r",
+        "command": "-workbench.action.debug.start"
+      },
+      {
+        "key": "cmd+u",
+        "command": "-cursorUndo"
+      },
+      {
+        "command": "SwiftStreamRun",
+        "win": "ctrl+r",
+        "linux": "ctrl+r",
         "mac": "cmd+r",
         "when": "true"
       },
       {
-        "command": "-stopDebugging",
-        "key": "ctrl+.",
+        "command": "SwiftStreamStop",
+        "win": "ctrl+.",
+        "linux": "ctrl+.",
         "mac": "cmd+.",
         "when": "true"
       },
       {
-        "command": "-BuildDebug",
-        "key": "ctrl+b",
+        "command": "SwiftStreamBuild",
+        "win": "ctrl+b",
+        "linux": "ctrl+b",
         "mac": "cmd+b",
+        "when": "true"
+      },
+      {
+        "command": "SwiftStreamTest",
+        "win": "ctrl+u",
+        "linux": "ctrl+u",
+        "mac": "cmd+u",
         "when": "true"
       }
     ],

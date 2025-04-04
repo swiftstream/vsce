@@ -373,6 +373,8 @@ export class WebStream extends Stream {
 		}
 	}
 
+	// MARK: Features
+
 	features(): AnyFeature[] {
 		return [
 			this.firebase,
@@ -386,6 +388,14 @@ export class WebStream extends Stream {
 			// this.yandex
 		]
 	}
+
+	// MARK: Global Keybinding
+
+	async globalKeyRun() {
+		await debugInChromeCommand()
+	}
+
+	// MARK: Building Debug
 	
 	isDebugBuilt(): boolean {
 		return fs.existsSync(path.join(projectDirectory!, buildDevFolder))
@@ -403,6 +413,8 @@ export class WebStream extends Stream {
 		hotRebuildSwift(this, params)
 	}
 
+	// MARK: Building Release
+
 	async buildRelease(successCallback?: any) {
 		await buildReleaseCommand(this, successCallback)
 	}
@@ -413,6 +425,7 @@ export class WebStream extends Stream {
 		return [
 			new Dependency({
 				id: SideTreeItem.DebugInChrome,
+				tooltip: 'Cmd+R or Ctrl+R',
 				label: isDebuggingInChrome ? 'Debugging in Chrome' : 'Debug in Chrome',
 				icon: isDebuggingInChrome ? 'sync~spin::charts.blue' : 'debug-alt::charts.blue'
 			}),
