@@ -3,7 +3,7 @@ import { AbortHandler, Bash } from '../bash'
 import { Pgrep } from '../pgrep'
 import { Swift } from '../swift'
 import { Toolchain } from '../toolchain'
-import { ContextKey, currentStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
+import { ContextKey, currentStream, extensionContext, ExtensionStream, extensionStream, isArm64, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
 import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
@@ -434,6 +434,10 @@ export class Stream {
 				}
 			default: return false
 		}
+	}
+	
+	compilationFolder(musl: boolean): string {
+		return `${isArm64 ? 'aarch64' : 'x86_64'}-${musl ? 'swift-linux-musl' : 'unknown-linux-gnu'}`
 	}
 
 	async buildRelease(successCallback?: any) {

@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as os from 'os'
 import * as path from 'path'
 import JSON5 from 'json5'
 import { ExtensionContext, TreeView, commands, window, workspace, env as vsEnv, extensions, TextEditor, Range } from 'vscode'
@@ -17,6 +18,8 @@ import { PureStream } from './streams/pure/pureStream'
 import { ServerStream } from './streams/server/serverStream'
 import { copyFile } from './helpers/filesHelper'
 import { handleIfKeybindingsEditor, keybindingsFileClosed } from './helpers/keybindingEditor'
+
+export const isArm64 = os.arch() === 'arm64'
 
 enum SwiftVersion {
 	Five = 'Swift 5',
