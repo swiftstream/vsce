@@ -6,7 +6,7 @@ import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extension
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
 import { NPM } from '../../npm'
 import { Webpack } from '../../webpack'
-import { buildCommand, cachedSwiftTargets, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
+import { buildCommand, cachedSwiftTargets, copyDebugBundledResources, hotRebuildCSS, hotRebuildHTML, hotRebuildJS, hotRebuildSwift } from './commands/build'
 import { buildReleaseCommand } from './commands/buildRelease'
 import { debugInChromeCommand } from './commands/debugInChrome'
 import { hotReloadCommand } from './commands/hotReload'
@@ -293,6 +293,7 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, hotRebuildJS))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, hotRebuildCSS))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileHTML, hotRebuildHTML))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CopyResources, async () => await copyDebugBundledResources(this) ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevCrawlerPort, portDevCrawlerCommand))
@@ -521,6 +522,13 @@ export class WebStream extends Stream {
 			label: isRecompilingHTML ? 'Recompiling' : 'Recompile',
 			version: 'HTML',
 			icon: isRecompilingHTML ? 'sync~spin' : 'compass'
+		}))
+		items.push(new Dependency({
+			id: SideTreeItem.CopyResources,
+			label: 'Copy',
+			version: 'Bundled Resources',
+			tooltip: 'If some packages contains bundled resources it copies all these files from the .build folder',
+			icon: 'copy'
 		}))
 		return items
 	}

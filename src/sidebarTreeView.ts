@@ -517,6 +517,7 @@ export enum SideTreeItem {
 		RecompileJS = 'RecompileJS',
 		RecompileCSS = 'RecompileCSS',
 		RecompileHTML = 'RecompileHTML',
+		CopyResources = 'CopyResources',
 	Settings = 'Settings',
 		Toolchain = 'Toolchain',
 		Port = 'Port',

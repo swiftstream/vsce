@@ -741,3 +741,19 @@ export async function hotRebuildHTML(webStream: WebStream) {
 		status('error', `${text} (${measure.time}ms)`, StatusType.Error)
 	}
 }
+
+export function copyDebugBundledResources(webStream: WebStream) {
+	const measure = new TimeMeasure()
+	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
+		measure.finish()
+        status('circle-slash', `Aborted Copy Bundled Resources after ${measure.time}ms`, StatusType.Default)
+        print(`🚫 Aborted Copy Bundled Resources after ${measure.time}ms`)
+        console.log(`Aborted Copy Bundled Resources after ${measure.time}ms`)
+        webStream.setBuildingDebug(false)
+        sidebarTreeView?.refresh()
+	})
+	proceedBundledResources({
+		release: false,
+		abortHandler: abortHandler
+	})
+}
