@@ -290,9 +290,9 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileService, () => {
 			this.hotRebuildSwift({ target: serviceWorkerTargetName })
 		}))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, hotRebuildJS))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, hotRebuildCSS))
-		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileHTML, hotRebuildHTML))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileJS, async () => await hotRebuildJS(this) ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileCSS, async () => await hotRebuildCSS(this) ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RecompileHTML, async () => await hotRebuildHTML(this) ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CopyResources, async () => await copyDebugBundledResources(this) ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevPort, portDevCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ProdPort, portProdCommand))
