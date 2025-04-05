@@ -224,12 +224,13 @@ export class PureStream extends Stream {
             }
         }
         await this.swift.askToChooseTargetIfNeeded({ release: options.release })
-        if (!this.swift.selectedDebugTarget) 
+        const selectedTarget = this.swift.selectedTarget({ release: options.release })
+        if (!selectedTarget)
             throw `Please select Swift target to run`
-        if (await this.checkBinaryAndBuildIfNeeded({ release: options.release, target: this.swift.selectedDebugTarget }) === false) return
+        if (await this.checkBinaryAndBuildIfNeeded({ release: options.release, target: selectedTarget }) === false) return
         const runningTask = await this.swift.startRunTask({
             release: options.release,
-            target: this.swift.selectedDebugTarget,
+            target: selectedTarget,
             args: []
         })
         if (options.release) {

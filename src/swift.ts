@@ -40,24 +40,28 @@ export class Swift {
         this.runTaskProvider = undefined
     }
 
-    private async execute(args: string[], options?: {
+    private async execute(args: string[], options: {
+        type: SwiftBuildType,
         abortHandler?: AbortHandler | undefined
     }): Promise<string> {
         var env = process.env
-        env.WEBBER = 'TRUE'
+        env.SWIFT_MODE = `${options.type}`.toUpperCase()
         const result = await this.stream.bash.execute({
             path: this.stream.toolchain.swiftPath,
             description: `get executable target`,
             cwd: projectDirectory,
             env: env,
-            abortHandler: options?.abortHandler
+            abortHandler: options.abortHandler
         }, args)
         if (result.stderr.length > 0)
             throw result.stderr
         return result.stdout
     }
 
-    async getTargets(options?: { abortHandler: AbortHandler }): Promise<SwiftTargets> {
+    async getTargets(options: {
+        type: SwiftBuildType,
+        abortHandler: AbortHandler | undefined
+    }): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
@@ -65,7 +69,8 @@ export class Swift {
         try {
             let result = new SwiftTargets()
             const dump = await this.execute(['package', 'dump-package'], {
-                abortHandler: options?.abortHandler
+                type: options.type,
+                abortHandler: options.abortHandler
             })
             const json = JSON.parse(dump)
             for (let target of json.targets) {
@@ -103,7 +108,9 @@ export class Swift {
         }
     }
 
-    async getWebTargets(options?: { abortHandler?: AbortHandler | undefined }): Promise<SwiftWebTargets> {
+    async getWebTargets(options?: {
+        abortHandler?: AbortHandler | undefined
+    }): Promise<SwiftWebTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
@@ -114,6 +121,7 @@ export class Swift {
                 serviceWorkers: []
             }
             const dump = await this.execute(['package', 'dump-package'], {
+                type: SwiftBuildType.Wasi,
                 abortHandler: options?.abortHandler
             })
             const json = JSON.parse(dump)
@@ -141,13 +149,17 @@ export class Swift {
         return content.includes('.testTarget')
     }
 
-    async packageDump(options: { abortHandler: AbortHandler }): Promise<PackageContent | undefined> {
+    async packageDump(options: {
+        type: SwiftBuildType,
+        abortHandler: AbortHandler
+    }): Promise<PackageContent | undefined> {
         const args: string[] = ['package', 'dump-package']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
             const result = await this.execute(args, {
+                type: options.type,
                 abortHandler: options.abortHandler
             })
             const json = JSON.parse(result)
@@ -176,11 +188,14 @@ export class Swift {
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
+        var env = process.env
+        env.SWIFT_MODE = `${SwiftBuildType.Native}`.toUpperCase()
         try {
             const result = await this.stream.bash.execute({
                 path: executablePath,
                 description: `grab PWA manifest`,
                 cwd: projectDirectory,
+                env: env,
                 abortHandler: options.abortHandler
             }, [])
             return JSON.parse(result.stdout)
@@ -198,11 +213,14 @@ export class Swift {
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
         }
+        var env = process.env
+        env.SWIFT_MODE = `${SwiftBuildType.Native}`.toUpperCase()
         try {
             const result = await this.stream.bash.execute({
                 path: executablePath,
                 description: `grab Index`,
                 cwd: projectDirectory,
+                env: env,
                 abortHandler: options.abortHandler
             }, ['--index'])
             const startCode = '==INDEX-START=='
@@ -230,11 +248,14 @@ export class Swift {
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
+        var env = process.env
+        env.SWIFT_MODE = `${options.type}`.toUpperCase()
         try {
             const result = await this.stream.bash.execute({
                 path: this.stream.toolchain.swiftPath,
                 description: `resolve dependencies for ${options.type}`,
                 cwd: projectDirectory,
+                env: env,
                 abortHandler: options.abortHandler,
                 processInstanceHandler: (process) => {
                     options.abortHandler.addProcess(process)
@@ -264,19 +285,23 @@ export class Swift {
     async version(): Promise<string | undefined> {
         const args: string[] = ['--version']
         try {
-            return await this.execute(args)
+            return await this.execute(args, { type: SwiftBuildType.Native })
         } catch (error: any) {
             return undefined
         }
     }
 
-    async previews(moduleName: string, previewNames: string[]): Promise<Preview[] | undefined> {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', moduleName, '--previews', ...previewNames.map((x) => `${moduleName}/${x}`), '--build-path', './.build']
+    async previews(options: {
+        type: SwiftBuildType,
+        moduleName: string,
+        previewNames: string[]
+    }): Promise<Preview[] | undefined> {
+        const args: string[] = ['run', '-Xswiftc', '-DWEBPREVIEW', options.moduleName, '--previews', ...options.previewNames.map((x) => `${options.moduleName}/${x}`), '--build-path', './.build']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const result = await this.execute(args)
+            const result = await this.execute(args, { type: options.type })
             const json: any = JSON.parse(result)
             return json.previews
         } catch (error: any) {
@@ -284,14 +309,17 @@ export class Swift {
         }
     }
 
-    async splash(productName: string) {
-        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', productName, '--build-path', './.build']
+    async splash(options: {
+        type: SwiftBuildType,
+        productName: string
+    }) {
+        const args: string[] = ['run', '-Xswiftc', '-DWEBSPLASH', '-Xswiftc', '-DWEBPREVIEW', options.productName, '--build-path', './.build']
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
         }
         try {
             const splashDelimiter = "==SPLASH=="
-            const str: string = await this.execute(args)
+            const str: string = await this.execute(args, { type: options.type })
             const components = str.split(splashDelimiter)
             if (components.length == 0)
                 return undefined
@@ -337,6 +365,7 @@ export class Swift {
             throw `Missing Package.swift file`
         }
         var env = process.env
+        env.SWIFT_MODE = `${options.type}`.toUpperCase()
         try {
             if (options.abortHandler.isCancelled) return
             print(`🧰 ${this.stream.toolchain.swiftPath} ${args.join(' ')}`, LogLevel.Verbose)
@@ -557,12 +586,22 @@ export class Swift {
     selectedReleaseTarget: string | undefined
     selectedTestTarget: string | undefined
 
+    selectedTarget(options: { release: boolean }): string | undefined {
+        switch (options.release) {
+            case true: return this.selectedReleaseTarget
+            case false: return this.selectedDebugTarget
+        }
+    }
+    
     async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean }) {
-        let selectedTarget = options.release ? this.selectedReleaseTarget : this.selectedDebugTarget
-        if (options?.force === true || !selectedTarget) {
+        let selectedTarget = this.selectedTarget({ release: options.release })
+        if (options.force === true || !selectedTarget) {
             try {
-                if (options?.force === true || !this.cachedBuildTargets) {
-                    const targetsDump = await this.getTargets(options.abortHandler ? { abortHandler: options.abortHandler } : undefined)
+                if (options.force === true || !this.cachedBuildTargets) {
+                    const targetsDump = await this.getTargets({
+                        type: SwiftBuildType.Native,
+                        abortHandler: options.abortHandler
+                    })
                     this.cachedBuildTargets = targetsDump
                 }
                 const allTargets = this.cachedBuildTargets.all({ excludeTests: true })
