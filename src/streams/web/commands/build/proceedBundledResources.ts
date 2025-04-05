@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as path from 'path'
 import { SwiftBuildType } from '../../../../swift'
 import { projectDirectory } from '../../../../extension'
 import { buildDevFolder, buildProdFolder } from '../../../../streams/web/webStream'
@@ -20,10 +21,11 @@ export function proceedBundledResources(options: {
     print(`📄 Processing bundle resources`, LogLevel.Detailed)
     for (let f = 0; f < resourceFolders.length; f++) {
         const folder = resourceFolders[f]
-        const dirPath = `${buildFolder}/${folder}`
+        const baseDirPath = `${buildFolder}/${folder}`
         // NOTE: Rewritten from cpFileSync because of EACCESS issue with folders, cause it is copying folder permissions as well
-        function proceedFolder(dirPath: string, toFolder?: string | undefined) {
-            const newDestPath = toFolder ? `${destPath}/${toFolder}` : `${destPath}`
+        function proceedFolder(dirPath: string) {
+            const relativePath = dirPath.slice(baseDirPath.length)
+            const newDestPath = path.join(destPath, relativePath)
             if (!fs.existsSync(newDestPath))
                 fs.mkdirSync(newDestPath, { recursive: true })
             const items = fs.readdirSync(dirPath)
@@ -32,7 +34,7 @@ export function proceedBundledResources(options: {
                 const fromFile = `${dirPath}/${item}`
                 const isFolder = fs.statSync(fromFile).isDirectory()
                 if (isFolder) {
-                    proceedFolder(fromFile, item)
+                    proceedFolder(fromFile) 
                 } else {
                     // skip .map files for production
                     if (options.release && fromFile.endsWith('.map'))
@@ -60,12 +62,12 @@ export function proceedBundledResources(options: {
                             print(`🚨 fs.rmSync(${fromFile}) failed: ${error}`, LogLevel.Detailed)
                         }
                     } else {
-                        print(`🚨 Skipping ${toFile}: something is wrong with it`, LogLevel.Detailed)
+                        print(`🚨 Skipping ${toFile}: since it is empty`, LogLevel.Detailed)
                     }
                 }
             }
         }
-        proceedFolder(dirPath)
+        proceedFolder(baseDirPath)
     }
     if (options.abortHandler.isCancelled) return
     measure.finish()
