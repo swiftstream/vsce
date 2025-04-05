@@ -165,8 +165,8 @@ export class AnyFeature {
         throw `Setup is not implemented for ${this.name}`
     }
 
-    getDefaultProjectId = () => this.getConfig()?.defaultProjectId
-    setDefaultProjectId = (projectId: string) => this.changeConfigKey('defaultProjectId', projectId)
+    getDefaultProjectId() { return this.getConfig()?.defaultProjectId }
+    setDefaultProjectId(value: string) { this.changeConfigKey('defaultProjectId', value) }
 
     getNeverAskToSaveProjectAsDefault = () => this.getConfig()?.neverAskToSaveProjectAsDefault == true
     setNeverAskToSaveProjectAsDefault = () => this.changeConfigKey('neverAskToSaveProjectAsDefault', true)
