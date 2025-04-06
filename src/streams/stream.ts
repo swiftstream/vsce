@@ -122,6 +122,7 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RestartLSP, async () => await restartLSPCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearLogOnRebuild, clearLogOnRebuildCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
 				openWebDocumentation()
