@@ -13,7 +13,7 @@ export class Pgrep {
             this.binPath = await this.stream.bash.which('pgrep')
         if (!this.binPath)
             throw 'Path to pgrep is undefined'
-        print(`executing pgrep ${args.join(' ')}`, LogLevel.Verbose)
+        print(`executing pgrep ${args.join(' ')}`, LogLevel.Unbearable)
         const result = await this.stream.bash.execute({
             path: this.binPath,
             description: `pgrep`,
