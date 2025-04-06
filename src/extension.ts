@@ -140,7 +140,7 @@ export async function activate(context: ExtensionContext) {
 	commands.executeCommand('setContext', ContextKey.isSwiftlangInstalled, extensions.getExtension('swiftlang.swift-vscode') !== undefined)
 
 	registerCommands()
-
+	
 	if (!projectDirectory) {
 		updateExtensionState(ExtensionState.NoProjectFolder)
 		return
