@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent } from 'vscode'
-import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP, isClearLogBeforeBuildEnabled } from './streams/stream'
+import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP, isClearLogBeforeBuildEnabled, isResolvingPackages } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
@@ -305,6 +305,11 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					label: isRestartingLSP ? 'Restarting LSP' : isRestartedLSP ? 'Restarted LSP' : 'Restart LSP',
 					icon: isRestartingLSP ? 'sync~spin::charts.yellow' : isRestartedLSP ? 'check::charts.green' : 'debug-restart::charts.yellow'
 				}))
+				items.push(new Dependency({
+					id: SideTreeItem.ResolvePackages,
+					label: isResolvingPackages ? 'Resolving Packages' : isResolvingPackages ? 'Resolved Packages' : 'Resolve Packages',
+					icon: isResolvingPackages ? 'sync~spin::charts.yellow' : isResolvingPackages ? 'check::charts.green' : 'clone::charts.yellow'
+				}))
 				items.push(...(await currentStream.maintenanceItems()))
 				break
 			case SideTreeItem.Settings:
@@ -526,6 +531,7 @@ export enum SideTreeItem {
 	Maintenance = 'Maintenance',
 		ClearCaches = 'ClearCaches',
 		RestartLSP = 'RestartLSP',
+		ResolvePackages = 'ResolvePackages',
 		RecompileApp = 'RecompileApp',
 		RecompileService = 'RecompileService',
 		RecompileJS = 'RecompileJS',
