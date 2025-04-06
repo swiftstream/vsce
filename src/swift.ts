@@ -586,6 +586,16 @@ export class Swift {
     selectedReleaseTarget: string | undefined
     selectedTestTarget: string | undefined
 
+    makeTmpCopyOfTargetBinary(options: { release: boolean }): boolean {
+        const selectedTarget = this.selectedTarget({ release: options.release })
+        if (!selectedTarget) return false
+        const pathFrom = path.join(projectDirectory!, '.build', options.release ? 'release' : 'debug', selectedTarget)
+        const pathTo = path.join(projectDirectory!, '.build', options.release ? 'release' : 'debug', '_AppToDeploy')
+        if (!fs.existsSync(pathFrom)) return false
+        fs.copyFileSync(pathFrom, pathTo)
+        return true
+    }
+    
     selectedTarget(options: { release: boolean }): string | undefined {
         switch (options.release) {
             case true: return this.selectedReleaseTarget
