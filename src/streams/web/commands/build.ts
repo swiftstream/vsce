@@ -556,10 +556,10 @@ interface HotRebuildJSParams {
 
 let awaitingHotRebuildJS: HotRebuildJSParams[] = []
 
-export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSParams) {
+export async function hotRebuildJS(webStream: WebStream, params?: HotRebuildJSParams) {
 	if (isBuildingDebug || isHotBuildingHTML || isHotBuildingSwift || isHotBuildingJS) {
 		if (!isBuildingDebug) {
-			if (awaitingHotRebuildJS.filter((x) => x.path == params.path).length == 0) {
+			if (params && awaitingHotRebuildJS.filter((x) => x.path == params.path).length == 0) {
 				print(`👉 Delay JS hot rebuild call`, LogLevel.Verbose)
 				awaitingHotRebuildJS.push(params)
 			}
@@ -606,9 +606,11 @@ export async function hotRebuildJS(webStream: WebStream, params: HotRebuildJSPar
 		if (targetsDump.executables.length == 0)
 			throw `No targets to build`
 		const additionalFiles = listOfAdditionalJSFiles({ release: false, executableTargets: targetsDump.executables })
-		print(`changed file: ${params.path}`)
+		if (params) {
+			print(`changed file: ${params.path}`)
+		}
 		print(`additionalFiles: \n${additionalFiles.join('\n')}`)
-		if (additionalFiles.includes(params.path)) {
+		if (params && additionalFiles.includes(params.path)) {
 			proceedAdditionalJS({
 				release: false,
 				executableTargets: targetsDump.executables,
