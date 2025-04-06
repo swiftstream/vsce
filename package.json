@@ -2,7 +2,7 @@
   "name": "swiftstream",
   "displayName": "Swift Stream",
   "description": "Swift Stream by iMike",
-  "version": "1.6.4",
+  "version": "1.6.8",
   "publisher": "swiftstream",
   "icon": "media/icon.png",
   "engines": {
@@ -64,56 +64,62 @@
           "default": true,
           "description": "Show Build button at the top right corner"
         },
-        "swift.hotRebuild": {
+        "swift.clearLogBeforeBuild": {
           "order": 4,
+          "type": "boolean",
+          "default": false,
+          "description": "Clears the log before each build"
+        },
+        "swift.hotRebuild": {
+          "order": 5,
           "type": "boolean",
           "default": true,
           "description": "Hot rebuild whenever any file saved"
         },
         "web.hotReload": {
-          "order": 5,
+          "order": 6,
           "type": "boolean",
           "default": true,
           "description": "Hot reload in the browser whenever any file saved"
         },
         "web.debugGzip": {
-          "order": 6,
+          "order": 7,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Gzip during a debug build."
         },
         "web.debugBrotli": {
-          "order": 7,
+          "order": 8,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Brotli during a debug build."
         },
         "web.appTargetName": {
-          "order": 8,
+          "order": 9,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "web.serviceWorkerTargetName": {
-          "order": 9,
+          "order": 10,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
         },
         "web.webSourcesPath": {
-          "order": 10,
+          "order": 11,
           "type": "string",
           "description": "Relative path to folder with web source files and package.json",
           "default": "WebSources"
         },
         "xcode.trimEndOfLine": {
-          "order": 11,
+          "order": 12,
           "type": "boolean",
           "default": true,
           "description": "Automatically trim whitespaces at the end of the line when pressing Enter, just like in Xcode"
         },
         "menu.state": {
-          "order": 12,
+          "order": 13,
           "type": "object",
           "default": {},
           "description": "Expanded/Collapsed flags for menu items"
