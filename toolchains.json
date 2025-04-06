@@ -1,6 +1,16 @@
 {
 	"android": [
 		{
+            "name": "6.1.0-RELEASE",
+            "version": { "major": 6, "minor": 1, "patch": 0 },
+			"android_version": "24-0.1",
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.1-release/ubuntu2004-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.1-release/ubuntu2004/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04.tar.gz"
+            },
+            "artifact_url": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.1/swift-6.1-RELEASE-android-24-0.1.artifactbundle.tar.gz"
+		},
+        {
             "name": "6.0.3-RELEASE",
             "version": { "major": 6, "minor": 0, "patch": 3 },
             "android_version": "24-0.1",
