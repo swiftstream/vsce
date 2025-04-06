@@ -7,6 +7,7 @@ import { Ngrok } from './features/ngrok'
 import { AnyFeature } from '../anyFeature'
 import { DevContainerConfig } from '../../devContainerConfig'
 import { PureStream } from '../pure/pureStream'
+import { LogLevel, print } from '../stream'
 
 export var currentPort: string = `${defaultServerPort}`
 export var pendingNewPort: string | undefined
@@ -51,6 +52,7 @@ export class ServerStream extends PureStream {
             if (document.languageId === 'jsonc' && document.uri.scheme === 'file') {
                 // devcontainer.json
                 if (document.uri.path == devContainerPath) {
+                    print(`ServerStream detected changes in devcontainer file`, LogLevel.Unbearable)
                     const readPorts = readServerPortsFromDevContainer()
                     if (readPorts.portPresent && `${readPorts.port}` != currentPort) {
                         this.setPendingNewPort(`${readPorts.port}`)

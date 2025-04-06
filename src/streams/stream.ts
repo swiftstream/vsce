@@ -311,6 +311,7 @@ export class Stream {
 			if (['swift'].includes(document.languageId) && isHotRebuildEnabled) {
 				// Package.swift
 				if (document.uri.path === `${projectDirectory}/Package.swift`) {
+					print(`Stream detected changes in Package.swift file`, LogLevel.Unbearable)
 					await this.goThroughHashCheck(document, async () => {
 						await this.hotRebuildSwift()
 					})
@@ -318,6 +319,7 @@ export class Stream {
 				}
 				// Swift sources
 				else if (document.uri.path.startsWith(`${projectDirectory}/Sources/`)) {
+					print(`Stream detected changes in Swift file`, LogLevel.Unbearable)
 					const target = `${document.uri.path}`.replace(`${projectDirectory}/Sources/`, '').split('/')[0]
 					if (target) {
 						await this.goThroughHashCheck(document, async () => {

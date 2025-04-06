@@ -76,6 +76,7 @@ export class Nginx extends ServerFeature {
 
     async onDidSaveTextDocument(path: string): Promise<boolean> {
         if (path === this.configPath()) {
+            print(`Nginx feature detected changes in nginx.conf file`, LogLevel.Unbearable)
             await this.restart()
             return true
         }

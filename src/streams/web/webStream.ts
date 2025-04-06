@@ -28,7 +28,7 @@ import { Vercel } from './features/vercel'
 import { Yandex } from './features/yandex'
 import { Brotli } from '../../brotli'
 import { portDevCrawlerCommand } from './commands/portDevCrawler'
-import { isHotRebuildEnabled, Stream } from '../stream'
+import { isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
 import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
@@ -311,6 +311,7 @@ export class WebStream extends Stream {
 			if (document.uri.path.startsWith(`${projectDirectory}/${webSourcesFolder}`) && isHotRebuildEnabled) {
 				// CSS
 				if (['css', 'scss', 'sass'].includes(document.languageId)) {
+					print(`WebStream detected changes in CSS file`, LogLevel.Unbearable)
 					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildCSS(this)
 					})
@@ -318,6 +319,7 @@ export class WebStream extends Stream {
 				}
 				// JavaScript
 				else if (['javascript', 'typescript', 'typescriptreact'].includes(document.languageId) || document.uri.path === `${projectDirectory}/${webSourcesFolder}/tsconfig.json`) {
+					print(`WebStream detected changes in JS file`, LogLevel.Unbearable)
 					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildJS(this, { path: document.uri.path })
 					})
@@ -325,6 +327,7 @@ export class WebStream extends Stream {
 				}
 				// HTML
 				else if (['html'].includes(document.languageId.toLowerCase())) {
+					print(`WebStream detected changes in HTML file`, LogLevel.Unbearable)
 					await this.goThroughHashCheck(document, async () => {
 						await hotRebuildHTML(this)
 					})
@@ -335,6 +338,7 @@ export class WebStream extends Stream {
 			else if (document.languageId === 'jsonc' && document.uri.scheme === 'file') {
 				// devcontainer.json
 				if (document.uri.path == devContainerPath) {
+					print(`WebStream detected changes in devcontainer file`, LogLevel.Unbearable)
 					const readPorts = await readWebPortsFromDevContainer()
 					if (readPorts.devPortPresent && `${readPorts.devPort}` != currentDevPort) {
 						this.setPendingNewDevPort(`${readPorts.devPort}`)
