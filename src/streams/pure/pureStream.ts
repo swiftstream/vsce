@@ -93,9 +93,11 @@ export class PureStream extends Stream {
     
     async buildDebug() {
         await buildCommand(this)
+		await super.buildDebug()
     }
 
     async buildRelease() {
+        await super.buildRelease()
         await buildRelease(this)
     }
     

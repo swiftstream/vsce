@@ -14,12 +14,14 @@ import { isPackagePresentInResolved, KnownPackage } from '../commands/build/help
 import { generateChecksum } from '../helpers/filesHelper'
 import { AnyFeature } from './anyFeature'
 import { restartLSPCommand } from '../commands/restartLSP'
+import { clearLogOnRebuildCommand } from '../commands/clearLogOnRebuild'
 
 export var isTestable = false
 export var isBuildingDebug = false
 export var isBuildingRelease = false
 export var isHotBuildingSwift = false
 export var isHotRebuildEnabled = false
+export var isClearLogBeforeBuildEnabled = false
 export var isTesting = false
 export var isClearingCache = false
 export var isClearedCache = false
@@ -44,6 +46,7 @@ export class Stream {
 		if (!projectDirectory) return
 		this.setLoggingLevel()
 		this.setHotRebuild()
+		this.setClearLogBeforeBuild()
         workspace.onDidChangeConfiguration((event) => {
             this.onDidChangeConfiguration(event)
         })
@@ -73,6 +76,8 @@ export class Stream {
 			this.setLoggingLevel()
 		if (event.affectsConfiguration('swift.hotRebuild'))
 			this.setHotRebuild()
+		if (event.affectsConfiguration('swift.clearLogBeforeBuild'))
+			this.setClearLogBeforeBuild()
 		if (event.affectsConfiguration('swift.showTopRunButton'))
 			this.setShowTopRunButton()
 		if (event.affectsConfiguration('swift.showTopBuildButton'))
@@ -394,7 +399,10 @@ export class Stream {
 	}
 
 	async buildDebug() {
-		print('stream.build not implemented', LogLevel.Detailed)
+		if (isClearLogBeforeBuildEnabled) {
+			print('🧹 Log has been cleared before building because it is enabled in advanced settings', LogLevel.Unbearable)
+			clearPrint()
+		}
 	}
 
 	async hotRebuildSwift(params?: { target?: string }) {
@@ -441,7 +449,10 @@ export class Stream {
 	}
 
 	async buildRelease(successCallback?: any) {
-		print('stream.buildRelease not implemented', LogLevel.Detailed)
+		if (isClearLogBeforeBuildEnabled) {
+			print('🧹 Log has been cleared before building because it is enabled in advanced settings', LogLevel.Unbearable)
+			clearPrint()
+		}
 	}
 
 	private abortBuildingReleaseHandler: AbortHandler | undefined
@@ -571,6 +582,12 @@ export class Stream {
 	setHotRebuild(value?: boolean) {
 		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swift.hotRebuild') as boolean
 		if (value === true || value === false) workspace.getConfiguration().update('swift.hotRebuild', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setClearLogBeforeBuild(value?: boolean) {
+		isClearLogBeforeBuildEnabled = value ?? workspace.getConfiguration().get('swift.clearLogBeforeBuild') as boolean
+		if (value === true || value === false) workspace.getConfiguration().update('swift.clearLogBeforeBuild', value)
 		sidebarTreeView?.refresh()
 	}
 

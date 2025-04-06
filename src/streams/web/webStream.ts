@@ -407,6 +407,7 @@ export class WebStream extends Stream {
 	}
 
 	async buildDebug() {
+		await super.buildDebug()
 		await buildCommand(this)
 	}
 
@@ -417,6 +418,7 @@ export class WebStream extends Stream {
 	// MARK: Building Release
 
 	async buildRelease(successCallback?: any) {
+		await super.buildRelease()
 		await buildReleaseCommand(this, successCallback)
 	}
 

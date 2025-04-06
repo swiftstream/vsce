@@ -50,10 +50,12 @@ export class AndroidStream extends Stream {
     // MARK: Building
 
     async buildDebug() {
+		await super.buildDebug()
         print('stream.build not implemented', LogLevel.Detailed)
     }
 
     async buildRelease(successCallback?: any) {
+        await super.buildRelease()
         print('stream.buildRelease not implemented', LogLevel.Detailed)
     }
 

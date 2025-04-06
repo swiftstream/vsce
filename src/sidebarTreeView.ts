@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent } from 'vscode'
-import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP } from './streams/stream'
+import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP, isClearLogBeforeBuildEnabled } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
@@ -321,6 +321,20 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					version: `${currentLoggingLevel}`,
 					icon: 'output'
 				}))
+				items.push(new Dependency({
+					id: SideTreeItem.AdvancedSettings,
+					label: 'Advanced',
+					state: this.expandState(SideTreeItem.AdvancedSettings),
+					icon: 'tools'
+				}))
+				break
+			case SideTreeItem.AdvancedSettings:
+				items.push(new Dependency({
+					id: SideTreeItem.ClearLogOnRebuild,
+					label: 'Clear Log Before Build',
+					version: isClearLogBeforeBuildEnabled ? 'Enabled' : 'Disabled',
+					icon: isClearLogBeforeBuildEnabled ? 'pass' : 'circle-large-outline'
+				}))
 				break
 			case SideTreeItem.Recommendations:
 				items.push(...(await currentStream.recommendationsItems()))
@@ -525,6 +539,8 @@ export enum SideTreeItem {
 		DevCrawlerPort = 'DevCrawlerPort',
 		ProdPort = 'ProdPort',
 		LoggingLevel = 'LoggingLevel',
+		AdvancedSettings = 'AdvancedSettings',
+			ClearLogOnRebuild = 'ClearLogOnRebuild',
 	Features = 'Features',
 		FeaturesCollection = 'FeaturesCollection',
 		AddNginx = 'AddNginx',
