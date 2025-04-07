@@ -123,6 +123,18 @@
             }
 		},
         {
+            "name": "6.1.0-RELEASE",
+            "version": { "major": 6, "minor": 1, "patch": 0 },
+			"toolchain_urls": {
+                "aarch64": "https://download.swift.org/swift-6.1-release/ubuntu2004-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
+                "x86_64": "https://download.swift.org/swift-6.1-release/ubuntu2004/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04.tar.gz"
+            },
+            "artifact_urls": {
+                "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasi.artifactbundle.zip",
+                "wasip1_threads": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasip1-threads.artifactbundle.zip"
+            }
+		},
+        {
             "name": "6.0.3-RELEASE",
             "version": { "major": 6, "minor": 0, "patch": 3 },
 			"toolchain_urls": {
