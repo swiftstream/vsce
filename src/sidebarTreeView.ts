@@ -619,7 +619,7 @@ export class Dependency extends TreeItem {
 		tooltip?: string,
 		version?: string,
 		state?: TreeItemCollapsibleState,
-		icon: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon,
+		icon?: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon | undefined,
 		skipCommand?: boolean
 	}) {
 		super(options.label, options.state ?? TreeItemCollapsibleState.None)
@@ -627,15 +627,17 @@ export class Dependency extends TreeItem {
 		this.contextValue = options.id
 		this.tooltip = options.tooltip ?? options.label
 		this.description = options.version ?? ''
-		if (typeof options.icon === 'string' || options.icon instanceof String) {
-			const splitted = options.icon.split('::')
-			if (splitted.length == 2) {
-				this.iconPath = new ThemeIcon(`${splitted[0]}`, new ThemeColor(`${splitted[1]}`))
+		if (options.icon) {
+			if (typeof options.icon === 'string' || options.icon instanceof String) {
+				const splitted = options.icon.split('::')
+				if (splitted.length == 2) {
+					this.iconPath = new ThemeIcon(`${splitted[0]}`, new ThemeColor(`${splitted[1]}`))
+				} else {
+					this.iconPath = new ThemeIcon(`${options.icon}`)
+				}
 			} else {
-				this.iconPath = new ThemeIcon(`${options.icon}`)
+				this.iconPath = options.icon
 			}
-		} else {
-			this.iconPath = options.icon
 		}
 		if (!options.skipCommand) {
 			this.command = new DepCommand(options.label, options.id)
