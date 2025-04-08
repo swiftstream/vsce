@@ -16,7 +16,7 @@ The extension provides a convenient environment packed with features that togeth
 
 Projects for any of these streams can be easily created via the **"Start New Project"** wizard:
 
-![StartNewProjectDemoGIF](https://github.com/user-attachments/assets/1a3d3540-80ab-4ad1-8142-b2992d1431d9)
+![StartNewProjectDemoGIF](https://swift.stream/assets/images/github/StartNewProjectDemo.gif)
 
 ## ⌛️ Coming Soon (WIP)
 
@@ -60,6 +60,8 @@ Enhance your development experience in each stream by installing powerful featur
 **Server Stream** includes development tools like **Nginx** and **Ngrok**, as well as hosting integrations with **Fly.io**, **Heroku**, and more.
 
 **Web Stream** supports a wide range of hosting platforms, including **Azure**, **Alibaba Cloud**, **Cloudflare**, **DigitalOcean**, **Firebase**, **Fly.io**, **Heroku**, **Vercel**, **Yandex Cloud**, and others.
+
+![NgrokFeatureDemoGIF](https://swift.stream/assets/images/github/NgrokFeatureDemo.gif)
 
 ## 👨‍💻 Contributing
 
