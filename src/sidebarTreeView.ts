@@ -225,6 +225,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					icon: 'tools',
 					skipCommand: true
 				}))
+				if (await currentStream.isThereInstalledFeatures()) {
+					items.push(...(await currentStream.installedFeatureItems()))
+				}
 				items.push(new Dependency({
 					id: SideTreeItem.Settings,
 					label: 'Settings',
@@ -353,19 +356,6 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			case SideTreeItem.Project:
 				items.push(...(await currentStream.projectItems()))
 				break
-			case SideTreeItem.Features:
-				if (await currentStream.isThereInstalledFeatures()) {
-					items.push(...(await currentStream.installedFeatureItems()))
-					if (await currentStream.isThereFeaturesToAdd()) {
-						items.push(new Dependency({
-							id: SideTreeItem.FeaturesCollection,
-							label: 'Collection',
-							state: TreeItemCollapsibleState.Collapsed,
-							icon: 'library'
-						}))
-					}
-				} else {
-					items.push(...(await currentStream.addFeatureItems()))
 			case SideTreeItem.Container:
 				items.push(this.mountsItem())
 				items.push(new Dependency({
@@ -415,7 +405,6 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					}))
 				}
 				break
-			case SideTreeItem.FeaturesCollection:
 			case SideTreeItem.SSH:
 				items.push(new Dependency({
 					id: SideTreeItem.CheckSSH,
