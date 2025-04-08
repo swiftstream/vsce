@@ -332,7 +332,7 @@
       "swiftstream-sidebar": [
         {
           "id": "swiftstreamSidebar",
-          "name": "PROJECT",
+          "name": "",
           "icon": "media/dep.svg",
           "contextualTitle": "Swift Stream Actions"
         }

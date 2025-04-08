@@ -370,6 +370,7 @@ async function switchToTreeViewMode() {
 	sidebarTreeViewContainer = window.createTreeView('swiftstreamSidebar', {
 		treeDataProvider: sidebarTreeView
 	})
+	sidebarTreeViewContainer.title = `${extensionStream}`
 	sidebarTreeViewContainer.onDidCollapseElement((e) => {
 		sidebarTreeView?.onDidCollapseElement(e)
 	})
