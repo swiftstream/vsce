@@ -55,6 +55,17 @@ export class DevContainerConfig {
 
     // MARK: Mounts
 
+    public static listMounts(): any[] {
+        const config = new DevContainerConfig()
+        return config.listMounts()
+    }
+
+    public static permanentMountSources = ['swift-toolchains', 'swift-sdks']
+
+    public listMounts(): any[] {
+        return this.config.mounts
+    }
+
     public addOrChangeMount(mount: any, search: (mount: any) => boolean) {
         if (!this.config.mounts) {
             this.config.mounts = [mount]
@@ -66,6 +77,18 @@ export class DevContainerConfig {
                 this.config.mounts.push(mount)
             }
         }
+    }
+
+    public static findMount(search: (mount: any) => boolean): any | undefined {
+        const config = new DevContainerConfig()
+        return config.findMount(search)
+    }
+
+    public findMount(search: (mount: any) => boolean): any | undefined {
+        if (!this.config.mounts || this.config.mounts.length == 0) {
+            return undefined
+        }
+        return this.config.mounts.find(search)
     }
 
     public removeMount(search: (mount: any) => boolean) {

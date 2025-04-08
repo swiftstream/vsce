@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
+import { window } from 'vscode'
 
 export class Bash {
     whichCache: {} = {}
@@ -93,6 +94,19 @@ export class Bash {
                 resolve(result)
             })
         })
+    }
+
+    static runCommandInTerminal(command: string, terminalName: string) {
+        // Check if a terminal with the given name already exists
+        let terminal = window.terminals.find(t => t.name === terminalName)
+    
+        // If not, create a new one
+        if (!terminal) {
+            terminal = window.createTerminal(terminalName)
+        }
+    
+        terminal.show()
+        terminal.sendText(command)
     }
 }
 

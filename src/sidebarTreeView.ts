@@ -1,11 +1,12 @@
 import path from 'node:path'
 import { env } from 'process'
-import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent } from 'vscode'
+import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent, window } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP, isClearLogBeforeBuildEnabled, isResolvingPackages } from './streams/stream'
 import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
 import { currentToolchain, pendingNewToolchain } from './toolchain'
+import { DevContainerConfig } from './devContainerConfig'
 
 export interface ErrorInFile {
 	type: string,
@@ -19,6 +20,13 @@ export interface FileWithError {
 	path: string,
 	name: string,
 	errors: ErrorInFile[]
+}
+export interface MountedItem {
+	source: string,
+	target: string,
+	bind: boolean,
+	permanent: boolean,
+	pending: boolean
 }
 
 export class SidebarTreeView implements TreeDataProvider<Dependency> {
@@ -47,8 +55,13 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 		}
 	}
 
+	initialMounts: any[] = []
+	mountedItems: MountedItem[] = []
+	mountCommands: Disposable[] = []
+
 	constructor() {
 		this.updateExpandedItems()
+		this.initialMounts = DevContainerConfig.listMounts()
 	}
 
 	refresh(): void {
@@ -84,6 +97,63 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			})
 		}
 		return undefined
+	}
+
+	private mountsItem(): Dependency {
+		for (let i = 0; i < this.mountCommands.length; i++) {
+			this.mountCommands[i].dispose()
+		}
+		this.mountCommands = []
+		this.mountedItems = DevContainerConfig.listMounts().map(x => {
+			return {
+				source: x.source,
+				target: x.target,
+				bind: x.type === 'bind',
+				permanent: DevContainerConfig.permanentMountSources.includes(x.source),
+				pending: this.initialMounts.findIndex(m => m.source === x.source) === -1
+			}
+		}).sort((a, b) => {
+			const rank = (item: MountedItem) => {
+				if (!item.bind && item.permanent) return 0
+				if (!item.bind && !item.permanent) return 1
+				return 2
+			}
+			return rank(a) - rank(b)
+		})
+		const itemsToRegister = this.mountedItems.filter(m => !m.permanent)
+		for (let i = 0; i < itemsToRegister.length; i++) {
+			const mounted = itemsToRegister[i]
+			const commandId = `${SideTreeItem.MountedItem}:${mounted.source}`
+			const command = commands.registerCommand(commandId, async () => {
+				const action = mounted.pending ? 'Delete' : 'Unmount'
+				switch (await window.showQuickPick([action, 'Cancel'], {
+					placeHolder: `Would you like to ${action.toLowerCase()} ${mounted.source}${mounted.bind ? '' : ' volume'}?`
+				})) {
+					case action:
+						DevContainerConfig.transaction(c => c.removeMount(m => m.source === mounted.source))
+						this.refresh()
+						switch (await window.showInformationMessage(`${mounted.bind ? 'The item' : 'Volume'} will be unmounted at after the continer is rebuilt.`, 'Rebuild Now', 'Later')) {
+							case 'Rebuild Now':
+								await commands.executeCommand('remote-containers.rebuildContainer')
+								break
+							default: break
+						}
+						break
+					default: break
+				}
+			})
+			extensionContext.subscriptions.push(command)
+			this.errorCommands.push(command)
+		}
+		return new Dependency({
+			id: SideTreeItem.Mounts,
+			label: 'Mounts',
+			version: `${this.mountedItems.length}`,
+			tooltip: 'Mounted volumes, files, and folders from the host machine',
+			state: TreeItemCollapsibleState.Collapsed,
+			icon: 'file-submodule',
+			skipCommand: true
+		})
 	}
 
 	async getChildren(element?: Dependency): Promise<Dependency[]> {
@@ -162,7 +232,14 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					icon: 'debug-configure',
 					skipCommand: true
 				}))
-				if (await currentStream.isThereAnyFeature()) {
+				items.push(new Dependency({
+					id: SideTreeItem.Container,
+					label: 'Dev Container',
+					state: this.expandState(SideTreeItem.Container),
+					icon: 'remote-explorer',
+					skipCommand: true
+				}))
+				if (await currentStream.isThereFeaturesToAdd()) {
 					items.push(new Dependency({
 						id: SideTreeItem.Features,
 						label: 'Features',
@@ -289,9 +366,79 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					}
 				} else {
 					items.push(...(await currentStream.addFeatureItems()))
+			case SideTreeItem.Container:
+				items.push(this.mountsItem())
+				items.push(new Dependency({
+					id: SideTreeItem.SSH,
+					label: 'SSH Agent',
+					tooltip: 'The SSH agent provides transparent access to SSH keys located on your host machine',
+					state: TreeItemCollapsibleState.Collapsed,
+					icon: 'shield',
+					skipCommand: true
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.RebuildContainer,
+					label: 'Rebuild',
+					tooltip: 'Rebuilds dev container',
+					icon: 'history'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.RebuildContainerWithoutCache,
+					label: 'Rebuild',
+					version: 'Without Cache',
+					tooltip: 'Rebuilds dev container without cache',
+					icon: 'history'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.LocalTerminal,
+					label: 'Local Terminal',
+					tooltip: 'Access to the terminal on your host machine',
+					icon: 'console'
+				}))
+				break
+			case SideTreeItem.Mounts:
+				items.push(new Dependency({
+					id: SideTreeItem.MountNewItem,
+					label: 'Add Mount',
+					tooltip: 'Click to mount a new volume, file, or folder from the host machine',
+					icon: 'add'
+				}))
+				for (let i = 0; i < this.mountedItems.length; i++) {
+					const mount = this.mountedItems[i]
+					items.push(new Dependency({
+						id: `${SideTreeItem.MountedItem}:${mount.source}`,
+						label: path.basename(mount.source),
+						version: mount.target,
+						tooltip: (mount.permanent ? 'Permanent item required for the Swift Stream container to work properly' : `Click to ${mount.pending ? 'delete' : 'unmount'}`),
+						icon: mount.bind ? 'file-symlink-directory' : this.fileIcon('drive'),
+						skipCommand: mount.permanent
+					}))
 				}
 				break
 			case SideTreeItem.FeaturesCollection:
+			case SideTreeItem.SSH:
+				items.push(new Dependency({
+					id: SideTreeItem.CheckSSH,
+					label: 'Check',
+					version: 'Loaded Keys',
+					tooltip: 'Check if SSH keys are loaded',
+					icon: 'git-fetch'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.CheckGithubAccess,
+					label: 'Check',
+					version: 'Github Access',
+					tooltip: 'Check if you have access to GitHub using your SSH keys',
+					icon: 'github-alt'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.SSHHostInstructions,
+					label: 'Host Instructions',
+					tooltip: 'Click to get instructions on how to set up the SSH agent on the host machine',
+					icon: 'inspect'
+				}))
+				break
+			case SideTreeItem.Features:
 				items.push(...(await currentStream.addFeatureItems()))
 				break
 			case SideTreeItem.Maintenance:
@@ -528,6 +675,17 @@ export enum SideTreeItem {
 		NewFileClass = 'NewFileClass',
 		NewFileJS = 'NewFileJS',
 		NewFileSCSS = 'NewFileCSS',
+	Container = 'Container',
+		Mounts = 'MountedFolders',
+			MountedItem = 'MountedFolderItem',
+			MountNewItem = 'MountedFolderAdd',
+		SSH = 'SSH',
+			CheckSSH = 'CheckSSH',
+			CheckGithubAccess = 'CheckGithubAccess',
+			SSHHostInstructions = 'HostSSHCommand',
+		RebuildContainer = 'RebuildContainer',
+		RebuildContainerWithoutCache = 'RebuildContainerWithoutCache',
+		LocalTerminal = 'LocalTerminal',
 	Maintenance = 'Maintenance',
 		ClearCaches = 'ClearCaches',
 		RestartLSP = 'RestartLSP',

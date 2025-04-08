@@ -16,6 +16,9 @@ import { AnyFeature } from './anyFeature'
 import { restartLSPCommand } from '../commands/restartLSP'
 import { clearLogOnRebuildCommand } from '../commands/clearLogOnRebuild'
 import { resolvePackagesCommand } from '../commands/resolvePackages'
+import { mountNewItemCommand } from '../commands/mountNewItem'
+import { sshHostInstructions } from '../commands/sshHostInstructions'
+import { rebuildContainer } from '../commands/rebuildContainer'
 
 export var isTestable = false
 export var isBuildingDebug = false
@@ -120,7 +123,14 @@ export class Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildRelease, async () => await this.buildRelease() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Test, async () => await this.runAllTests() ))
-        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
+        extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.MountNewItem, async () => await mountNewItemCommand() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CheckSSH, async () => Bash.runCommandInTerminal('clear && echo -e "\\x1b[1;32m\\nAlready loaded keys:\\n\\x1b[0m" && ssh-add -l && echo -e "\n"', 'SSH Agent') ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.CheckGithubAccess, async () => Bash.runCommandInTerminal('clear && echo -e "\\x1b[1;33m\\nChecking connection to GitHub:\\n\\x1b[0m" && ssh -A -T git@github.com; echo -e "\n"', 'SSH Agent') ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SSHHostInstructions, async () => await sshHostInstructions() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LocalTerminal, async () => commands.executeCommand('workbench.action.terminal.newLocal') ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RebuildContainer, async () => await rebuildContainer() ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RebuildContainerWithoutCache, async () => await rebuildContainer({ noCache: true }) ))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearCaches, async () => await clearCachesCommand() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.RestartLSP, async () => await restartLSPCommand() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ResolvePackages, async () => await resolvePackagesCommand() ))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Toolchain, toolchainCommand))
