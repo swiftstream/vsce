@@ -531,6 +531,13 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					label: 'Swift Forums',
 					icon: this.fileIcon('swift_forums')
 				}))
+				items.push(new Dependency({
+					id: SideTreeItem.ContactAuthor,
+					label: 'Mikhail Isaev',
+					version: 'the author',
+					tooltip: 'Mikhail Isaev is the author of this VSCode extension',
+					icon: 'mention',
+				}))
 				break
 			default:
 				items.push(...(await currentStream.customItems(element)))
@@ -718,5 +725,6 @@ export enum SideTreeItem {
 		SubmitAnIssue = 'SubmitAnIssue',
 		OpenDiscord = 'OpenDiscord',
 		OpenTelegram = 'OpenTelegram',
-		OpenSwiftForums = 'OpenSwiftForums'
+		OpenSwiftForums = 'OpenSwiftForums',
+		ContactAuthor = 'ContactAuthor'
 }

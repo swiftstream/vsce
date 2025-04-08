@@ -8,7 +8,7 @@ import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
 import { loggingLevelCommand } from '../commands/loggingLevel'
-import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums, submitSwiftStreamVSCEIssue, submitCrawlServerIssue, openSwiftGettingStarted } from '../commands/support'
+import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums, submitSwiftStreamVSCEIssue, submitCrawlServerIssue, openSwiftGettingStarted, emailTheAuthor } from '../commands/support'
 import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
@@ -289,6 +289,19 @@ export class Stream {
 				openServerForums()
 			} else {
 				openSwiftForums()
+			}
+		}))
+		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ContactAuthor, async () => {
+			const writeAnEmail = 'Write an email'
+			switch (await window.showQuickPick([
+				writeAnEmail
+			], {
+				placeHolder: `How would you like to contact the author?`
+			})) {
+				case writeAnEmail:
+					emailTheAuthor()
+					break
+				default: break
 			}
 		}))
 		const features = this.features()

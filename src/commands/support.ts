@@ -1,4 +1,6 @@
 import { env, Uri } from 'vscode'
+import { currentToolchain } from '../toolchain'
+import { extensionStream } from '../extension'
 
 export function openWebDocumentation() {
 	env.openExternal(Uri.parse('https://swifweb.com'))
@@ -126,4 +128,10 @@ export function openAndroidForums() {
 
 export function openSwiftForums() {
 	env.openExternal(Uri.parse('https://forums.swift.org'))
+}
+
+export function emailTheAuthor() {
+	const subject = encodeURIComponent('Swift Stream Feedback')
+	const body = encodeURIComponent(`Hi Mike,\n\n\n\n---Project Details---\nType: ${extensionStream}\nToolchain: ${currentToolchain}`)
+	env.openExternal(Uri.parse(`mailto:imike@swift.stream?subject=${subject}&body=${body}`))
 }
