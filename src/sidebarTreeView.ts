@@ -218,6 +218,9 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 						skipCommand: true
 					}))
 				}
+				if (await currentStream.isThereInstalledFeatures()) {
+					items.push(...(await currentStream.installedFeatureItems()))
+				}
 				items.push(new Dependency({
 					id: SideTreeItem.Maintenance,
 					label: 'Maintenance',
@@ -225,9 +228,6 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					icon: 'tools',
 					skipCommand: true
 				}))
-				if (await currentStream.isThereInstalledFeatures()) {
-					items.push(...(await currentStream.installedFeatureItems()))
-				}
 				items.push(new Dependency({
 					id: SideTreeItem.Settings,
 					label: 'Settings',
