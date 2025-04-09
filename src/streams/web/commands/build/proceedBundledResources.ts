@@ -43,9 +43,9 @@ export function proceedBundledResources(options: {
                     print(`📑 Copy file ${folder.replace('.resources', '')}/${item} → ${options.release ? buildProdFolder : buildDevFolder}/${item}`, LogLevel.Verbose)
                     if (fs.existsSync(toFile))
                         print(`🚨 \`/${item}\` file has been overwritten`, LogLevel.Detailed)
-                    let data: string | undefined
+                    let data: Buffer | undefined
                     try {
-                        data = fs.readFileSync(fromFile, 'utf8')
+                        data = fs.readFileSync(fromFile)
                     } catch (error) {
                         print(`🚨 fs.openSync(${fromFile}) failed: ${error}`, LogLevel.Detailed)
                     }
