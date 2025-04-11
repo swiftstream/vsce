@@ -51,7 +51,7 @@
 		},
 		{
 			"source": "swift-sdks",
-			"target": "/root/.swiftpm/swift-sdks",
+			"target": "/swift/sdks",
 			"type": "volume"
 		}
 	]
