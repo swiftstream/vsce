@@ -345,6 +345,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(...(await currentStream.debugOptionItems()))
 				break
 			case SideTreeItem.Release:
+				items.push(...(await currentStream.defaultReleaseItems()))
 				items.push(new Dependency({
 					id: SideTreeItem.BuildRelease,
 					label: isBuildingRelease ? 'Building' : 'Build',

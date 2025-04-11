@@ -511,6 +511,9 @@ export class Stream {
         }))
 		return items
 	}
+	async defaultReleaseItems(): Promise<Dependency[]> {
+		return []
+	}
 	async releaseItems(): Promise<Dependency[]> {
 		let items: Dependency[] = []
 		await Promise.all(this.features().map(async (feature) => {
