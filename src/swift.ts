@@ -780,6 +780,25 @@ export function allSwiftBuildTypes(): SwiftBuildType[] {
     /// Really important to have Native first!
     return [SwiftBuildType.Native, SwiftBuildType.Wasi]
 }
+export function compilationFolder(params: {
+    target: string,
+    mode: SwiftBuildMode,
+    release: boolean
+}): string {
+    const platform = isArm64 ? 'aarch64' : 'x86_64'
+    const type = params.release ? 'release' : 'debug'
+    switch (params.mode) {
+        case SwiftBuildMode.Standard:
+            return path.join(projectDirectory!, '.build', `${platform}-unknown-linux-gnu`, type, params.target)
+        case SwiftBuildMode.StaticLinuxX86:
+        case SwiftBuildMode.StaticLinuxArm:
+            return path.join(projectDirectory!, '.build', `${platform}-swift-linux-musl`, type, params.target)
+        case SwiftBuildMode.Wasi:
+            return path.join(projectDirectory!, '.build', '.wasi', `wasm32-unknown-wasi`, type, params.target)
+        case SwiftBuildMode.Wasip1Threads:
+            return path.join(projectDirectory!, '.build', '.wasi', `wasm32-unknown-wasip1-threads`, type, params.target)
+    }
+}
 
 export function createSymlinkFoldersIfNeeded() {
     const buildPath = `${projectDirectory}/.build`
