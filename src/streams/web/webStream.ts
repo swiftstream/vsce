@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, TreeItemCollapsibleState } from 'vscode'
+import { commands, workspace, DebugSession, FileRenameEvent, FileDeleteEvent, ConfigurationChangeEvent, TextDocument, window } from 'vscode'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, isInContainer, projectDirectory, sidebarTreeView, ContextKey } from '../../extension'
 import { readWebPortsFromDevContainer } from '../../helpers/readPortsFromDevContainer'
@@ -34,6 +34,10 @@ import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
 import { AnyFeature } from '../anyFeature'
 import { restartLSPCommand } from '../../commands/restartLSP'
+import { Swift, SwiftBuildMode } from '../../swift'
+import { env } from 'process'
+import { DevContainerConfig } from '../../devContainerConfig'
+import { getWebArtifactURLsForToolchain } from '../../commands/toolchain'
 
 export var indexFile = 'main.html'
 export var webSourcesFolder = 'WebSources'
@@ -48,6 +52,17 @@ export var currentProdPort: string = `${defaultWebProdPort}`
 export var pendingNewDevPort: string | undefined
 export var pendingNewDevCrawlerPort: string | undefined
 export var pendingNewProdPort: string | undefined
+
+export enum WebBuildMode {
+	Wasi = 'Wasi',
+	Wasip1Threads = 'Wasi Preview 1 (threads)'
+}
+export function webBuildModeToSwiftBuildMode(mode: WebBuildMode): SwiftBuildMode {
+	const m: string = mode
+	return Object.values(SwiftBuildMode).includes(m as SwiftBuildMode) ? m as SwiftBuildMode : SwiftBuildMode.Standard
+}
+export var debugBuildMode: WebBuildMode = WebBuildMode.Wasi
+export var releaseBuildMode: WebBuildMode = WebBuildMode.Wasi
 
 export var isDebuggingInChrome = false
 export var isHotBuildingCSS = false
@@ -118,6 +133,8 @@ export class WebStream extends Stream {
 		this.setDebugGzip()
 		this.setDebugBrotli()
 		this.setWebSourcesPath()
+        this.setDebugBuildMode()
+        this.setReleaseBuildMode()
 		const isBuildButtonEnabled = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
         this.setContext(ContextKey.isNavigationBuildButtonEnabled, isBuildButtonEnabled ?? true)
         const isRunButtonEnabled = workspace.getConfiguration().get('swift.showTopRunButton') as boolean
@@ -299,7 +316,24 @@ export class WebStream extends Stream {
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.DevCrawlerPort, portDevCrawlerCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateWeb, updateWebCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.UpdateJSKit, updateJSKitCommand))
+        extensionContext.subscriptions.push(commands.registerCommand(this.debugBuildModeElement().id, async () => await this.changeBuildMode({ debug: true }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.releseBuildModeElement().id, async () => await this.changeBuildMode({ debug: false }) ))
 	}
+
+    debugBuildModeElement = () => new Dependency({
+        id: SideTreeItem.DebugBuildMode,
+        label: 'Mode',
+        version: `${debugBuildMode}`,
+        tooltip: 'Debug Build Mode',
+        icon: 'layout'
+    })
+    releseBuildModeElement = () => new Dependency({
+        id: SideTreeItem.ReleaseBuildMode,
+        label: 'Mode',
+        version: `${releaseBuildMode}`,
+        tooltip: 'Release Build Mode',
+        icon: 'layout'
+    })
 	
 	async onDidSaveTextDocument(document: TextDocument): Promise<boolean> {
 		if (await super.onDidSaveTextDocument(document)) return true
@@ -399,6 +433,82 @@ export class WebStream extends Stream {
 	async globalKeyRun() {
 		await debugInChromeCommand()
 	}
+	
+	// MARK: Mode
+
+	setDebugBuildMode(value?: WebBuildMode) {
+		debugBuildMode = value ?? workspace.getConfiguration().get('web.debugBuildMode') as WebBuildMode
+		if (value) workspace.getConfiguration().update('web.debugBuildMode', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setReleaseBuildMode(value?: WebBuildMode) {
+		releaseBuildMode = value ?? workspace.getConfiguration().get('web.releaseBuildMode') as WebBuildMode
+		if (value) workspace.getConfiguration().update('web.releaseBuildMode', value)
+		sidebarTreeView?.refresh()
+	}
+
+	async changeBuildMode(params: { debug: boolean }) {
+		const wasiOption = `${WebBuildMode.Wasi}`
+		const wasip1ThreadsOption = `${WebBuildMode.Wasip1Threads}`
+		switch (await window.showQuickPick([wasiOption, wasip1ThreadsOption], {
+			placeHolder: `Choose ${params.debug ? 'debug' : 'release'} build mode`
+		})) {
+			case wasiOption:
+				if (params.debug) debugBuildMode = WebBuildMode.Wasi
+				else releaseBuildMode = WebBuildMode.Wasi
+				sidebarTreeView?.refresh()
+				break
+			case wasip1ThreadsOption:
+				if (!await this.isWasip1ThreadsSDKInstalled()) break
+				if (params.debug) debugBuildMode = WebBuildMode.Wasip1Threads
+				else releaseBuildMode = WebBuildMode.Wasip1Threads
+				sidebarTreeView?.refresh()
+				break
+			default:
+				break
+		}
+	}
+
+	async isWasip1ThreadsSDKInstalled(): Promise<boolean> {
+		if (!env.S_ARTIFACT_WASIP1_THREADS_URL) {
+			const rebuildAction = 'Add and Rebuild the Container'
+			switch (await window.showInformationMessage(
+				`${WebBuildMode.Wasip1Threads} artifact is not installed. Would you like to add it? Rebuilding the container is required.`,
+				'Add and Rebuild the Container'
+			)) {
+				case rebuildAction:
+					const artifactUrl = await getWebArtifactURLsForToolchain()
+					if (!artifactUrl || !artifactUrl.wasip1_threads) {
+						return false
+					}
+					DevContainerConfig.transaction(c => c.setWasip1ThreadsArtifactURL(artifactUrl.wasip1_threads!))
+					await commands.executeCommand('remote-containers.rebuildContainer')
+					break
+				default: break
+			}
+			return false
+		}
+		const artifactBaseName = path.basename(env.S_ARTIFACT_WASIP1_THREADS_URL)
+		const artifactFolder = artifactBaseName.replace(/^swift-wasm-/, '')
+                                               .replace(/^swift-/, '')
+                                               .replace(/\.artifactbundle\.tar\.gz$/, '')
+                                               .replace(/\.artifactbundle\.zip$/, '')
+		if (!fs.existsSync(path.join('/root/.swiftpm/swift-sdks', `swift-wasm-${artifactFolder}.artifactbundle`))) {
+			const rebuildAction = 'Rebuild the Container'
+			switch (await window.showInformationMessage(
+				`${WebBuildMode.Wasip1Threads} SDK artifact haven't been downloaded yet. Rebuilding the container is required.`,
+				'Rebuild the Container'
+			)) {
+				case rebuildAction:
+					await commands.executeCommand('remote-containers.rebuildContainer')
+					break
+				default: break
+			}
+			return false
+		}
+		return true
+	}
 
 	// MARK: Building Debug
 	
@@ -412,21 +522,30 @@ export class WebStream extends Stream {
 
 	async buildDebug() {
 		await super.buildDebug()
-		await buildCommand(this)
+		await buildCommand(this, debugBuildMode)
 	}
 
 	async hotRebuildSwift(params?: { target?: string }) {
-		hotRebuildSwift(this, params)
+		hotRebuildSwift(this, {
+			target: params?.target,
+			mode: debugBuildMode
+		})
 	}
 
 	// MARK: Building Release
 
 	async buildRelease(successCallback?: any) {
 		await super.buildRelease()
-		await buildReleaseCommand(this, successCallback)
+		await buildReleaseCommand(this, releaseBuildMode, successCallback)
 	}
 
 	// MARK: Side Bar Tree View Items
+
+    async defaultDebugActionItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (Swift.v6Mode) items.push(this.debugBuildModeElement())
+        return items
+    }
 
 	async debugActionItems(): Promise<Dependency[]> {
 		return [
@@ -467,6 +586,14 @@ export class WebStream extends Stream {
 		]
 	}
 
+    async defaultReleaseItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (Swift.v6Mode) items.push(this.releseBuildModeElement())
+        return [
+            ...items,
+            ...(await super.defaultReleaseItems())
+        ]
+    }
 	async releaseItems(): Promise<Dependency[]> { return [] }
 
 	async projectItems(): Promise<Dependency[]> {

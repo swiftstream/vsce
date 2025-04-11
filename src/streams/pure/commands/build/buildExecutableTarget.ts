@@ -5,9 +5,11 @@ import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
 import { SwiftBuildType } from '../../../../swift'
 import { buildStatus, clearStatus, LogLevel, print } from '../../../stream'
 import { AbortHandler } from '../../../../bash'
+import { PureBuildMode, pureBuildModeToSwiftBuildMode } from '../../pureStream'
 
 export async function buildExecutableTarget(options: {
     type?: SwiftBuildType,
+    mode: PureBuildMode,
     target: string,
     release: boolean,
     force: boolean,
@@ -27,6 +29,7 @@ export async function buildExecutableTarget(options: {
     try {
         await buildSwiftTarget({
             type: options.type ?? SwiftBuildType.Native,
+            mode: pureBuildModeToSwiftBuildMode(options.mode),
             targetName: options.target,
             release: options.release,
             abortHandler: options.abortHandler,

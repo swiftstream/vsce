@@ -69,7 +69,8 @@
           "type": "string",
           "enum": [
             "Standard (glibc)",
-            "Static Linux (musl)"
+            "Static Linux (x86-musl)",
+            "Static Linux (arm-musl)"
           ],
           "default": "Standard (glibc)",
           "uniqueItems": true
@@ -79,7 +80,8 @@
           "type": "string",
           "enum": [
             "Standard (glibc)",
-            "Static Linux (musl)"
+            "Static Linux (x86-musl)",
+            "Static Linux (arm-musl)"
           ],
           "default": "Standard (glibc)",
           "uniqueItems": true
@@ -101,7 +103,7 @@
           "type": "string",
           "enum": [
             "Wasi",
-            "Wasip1-threads"
+            "Wasi Preview 1 (threads)"
           ],
           "default": "Wasi",
           "uniqueItems": true
@@ -111,7 +113,7 @@
           "type": "string",
           "enum": [
             "Wasi",
-            "Wasip1-threads"
+            "Wasi Preview 1 (threads)"
           ],
           "default": "Wasi",
           "uniqueItems": true

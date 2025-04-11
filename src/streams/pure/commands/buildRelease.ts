@@ -3,11 +3,11 @@ import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDe
 import { ContextKey, sidebarTreeView } from '../../../extension'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { buildStatus, isBuildingRelease, LogLevel, print, status, StatusType } from '../../stream'
-import { PureStream } from '../pureStream'
+import { PureBuildMode, PureStream } from '../pureStream'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
 import { isString } from '../../../helpers/isString'
 
-export async function buildRelease(stream: PureStream, successCallback?: any) {
+export async function buildRelease(stream: PureStream, buildMode: PureBuildMode, successCallback?: any) {
     if (isBuildingRelease) { return }
     const measure = new TimeMeasure()
     const abortHandler = stream.setAbortBuildingReleaseHandler(() => {
@@ -43,6 +43,7 @@ export async function buildRelease(stream: PureStream, successCallback?: any) {
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
             target: stream.swift.selectedReleaseTarget,
+            mode: buildMode,
             release: true,
             force: true,
             abortHandler: abortHandler

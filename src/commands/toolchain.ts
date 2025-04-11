@@ -3,37 +3,70 @@ import JSON5 from 'json5'
 import { ProgressLocation, window } from 'vscode'
 import { extensionStream, ExtensionStream, projectDirectory } from '../extension'
 import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from '../toolchain'
+import { env } from 'process'
+
+const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`
+
+async function getTags(mode: ExtensionStream): Promise<any[]> {
+	const response = await fetch(`${toolchainsURL}`)
+	if (!response.ok) throw new Error('Toolchains response was not ok')
+	const text = await response.text()
+	const json = JSON5.parse(text)
+	let key: string = `${mode}`.toLowerCase()
+	switch (mode) {
+		case ExtensionStream.Android: break
+		case ExtensionStream.Web: break
+		default: key = 'pure'
+	}
+	const filtered = json[key]
+	return filtered
+}
+
+export async function getPureArtifactURLForToolchain(): Promise<string | undefined> {
+    const result = await fetchCurrentToolchainMetadata('pure')
+    return result.artifact_url
+}
+
+export async function getWebArtifactURLsForToolchain(): Promise<{ wasi: string, wasip1_threads?: string } | undefined> {
+    const result = await fetchCurrentToolchainMetadata('web')
+    return result.artifact_urls
+}
+
+export async function fetchCurrentToolchainMetadata(stream: string): Promise<any | undefined> {
+    if (!env.S_TOOLCHAIN_URL_X86) return undefined
+    return new Promise((resolve, reject) => {
+        window.withProgress({
+            location: ProgressLocation.Notification,
+            title: 'Fetching toolchain metadata...',
+            cancellable: false
+        }, async (progress, token) => {
+            try {
+                const response = await fetch(`${toolchainsURL}`)
+                if (!response.ok) throw new Error('Toolchain response was not ok')
+                const text = await response.text()
+                const json = JSON5.parse(text)
+                const filtered = json[stream]
+                if (!filtered) throw new Error(`Unable to find ${stream} stream in the list`)
+                resolve(filtered.find(x => x.toolchain_urls.x86_64 === env.S_TOOLCHAIN_URL_X86 ))
+            } catch(error: any) {
+                console.dir(error)
+                window.showErrorMessage(`Unable to fetch the toolchain metadata`, 'Retry', 'Cancel').then(answer => {
+                    if (answer == 'Retry') {
+                        try {
+                            getPureArtifactURLForToolchain().then(x => resolve(x))
+                        } catch {
+                            resolve(undefined)
+                        }
+                    } else {
+                        resolve(undefined)
+                    }
+                })
+            }
+        })
+    })
+}
 
 export async function toolchainCommand(selectedType?: string) {
-	const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`
-	interface AnyTag {
-		name: string,
-		version: { major: number, minor: number, patch: number },
-		toolchain_urls: { aarch64: string, x86_64: string }
-	}
-	interface TagAndroid extends AnyTag {
-		android_version: string,
-		artifact_url: string
-	}
-	interface TagServer extends AnyTag {}
-	interface TagWeb extends AnyTag {
-		mode: string,
-		artifact_url?: string
-	}
-	async function getTags<Tag>(mode: ExtensionStream): Promise<Tag[]> {
-		const response = await fetch(`${toolchainsURL}`)
-		if (!response.ok) throw new Error('Toolchains response was not ok')
-		const text = await response.text()
-		const json = JSON5.parse(text)
-		let key: string = `${mode}`.toLowerCase()
-		switch (mode) {
-			case ExtensionStream.Android: break
-			case ExtensionStream.Web: break
-			default: key = 'pure'
-		}
-		const filtered = json[key]
-		return filtered
-	}
 	var tags: any[] = []
 	var afterLoadingClosure = async () => {}
 	if (!selectedType)
@@ -49,7 +82,7 @@ export async function toolchainCommand(selectedType?: string) {
 		})
 	window.withProgress({
 		location: ProgressLocation.Notification,
-		title: "Loading toolchain tags...",
+		title: 'Fetching toolchain tags...',
 		cancellable: false
 	}, async (progress, token) => {
 		try {
@@ -80,6 +113,7 @@ export async function toolchainCommand(selectedType?: string) {
 		const selectedTag = selectedTags.filter((x) => x.name == selectedToolchainName)[0]
 		if (!selectedTag)
 			return
+
 		const devContainerPath = `${projectDirectory}/.devcontainer/devcontainer.json`
 		var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 		if (devContainerContent) {
@@ -108,9 +142,11 @@ export async function toolchainCommand(selectedType?: string) {
 					devContainerJson.containerEnv.S_ARTIFACT_WASI_URL = undefined
 					devContainerJson.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = undefined
 				}
-			} else {
-				devContainerJson.containerEnv.S_ARTIFACT_URL = selectedTag.artifact_url
-			}
+			} else if (extensionStream == ExtensionStream.Android) {
+                devContainerJson.containerEnv.S_ARTIFACT_ANDROID_URL = selectedTag.artifact_url
+            } else if (extensionStream == ExtensionStream.Pure || extensionStream == ExtensionStream.Server) {
+                devContainerJson.containerEnv.S_ARTIFACT_STATIC_LINUX_URL = selectedTag.artifact_url
+            }
 			devContainerJson.customizations.vscode.settings['swift.path'] = `/swift/toolchains/${newName}/usr/bin`
 			devContainerJson.customizations.vscode.settings['lldb.library'] = `/swift/toolchains/${newName}/usr/lib/liblldb.so`
 			fs.writeFileSync(devContainerPath, JSON.stringify(devContainerJson, null, '\t'))

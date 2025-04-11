@@ -1,4 +1,4 @@
-import { commands, window } from 'vscode'
+import { commands } from 'vscode'
 import { isDebuggingInChrome } from '../webStream'
 import { sidebarTreeView, webStream } from '../../../extension'
 import { webDebugConfig } from '../../../helpers/createDebugConfigIfNeeded'

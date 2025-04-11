@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from '../../../extension'
-import { appTargetName, buildProdFolder, currentProdPort, serviceWorkerTargetName, WebStream } from '../../../streams/web/webStream'
+import { appTargetName, buildProdFolder, currentProdPort, serviceWorkerTargetName, WebBuildMode, WebStream } from '../../../streams/web/webStream'
 import { isBuildingRelease, buildStatus, clearStatus, print, status, StatusType } from '../../../streams/stream'
 import { LogLevel } from '../../../streams/stream'
 import { window } from 'vscode'
@@ -21,9 +21,8 @@ import { proceedWasmFile } from './build/proceedWasmFile'
 import { awaitGzipping, shouldAwaitGzipping } from './build/awaitGzipping'
 import { proceedAdditionalJS } from './build/proceedAdditionalJS'
 import { awaitBrotling, shouldAwaitBrotling } from './build/awaitBrotling'
-import { AbortHandler } from '../../../bash'
 
-export async function buildReleaseCommand(webStream: WebStream, successCallback?: any) {
+export async function buildReleaseCommand(webStream: WebStream, mode: WebBuildMode, successCallback?: any) {
 	if (isBuildingRelease) return
 	const abortHandler = webStream.setAbortBuildingReleaseHandler(() => {
 		measure.finish()
@@ -104,6 +103,7 @@ export async function buildReleaseCommand(webStream: WebStream, successCallback?
 				const target = targetsDump.executables[i]
 				await buildExecutableTarget({
 					type: type,
+					mode: mode,
 					target: target,
 					release: type == SwiftBuildType.Wasi,
 					force: true,

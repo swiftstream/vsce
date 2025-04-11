@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { projectDirectory, sidebarTreeView } from '../../../extension'
-import { appTargetName, currentDevPort, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, serviceWorkerTargetName, WebStream } from '../webStream'
+import { appTargetName, currentDevPort, isHotBuildingCSS, isHotBuildingHTML, isHotBuildingJS, serviceWorkerTargetName, WebBuildMode, WebStream } from '../webStream'
 import { buildStatus, print, status, StatusType, isBuildingDebug, isHotBuildingSwift, LogLevel } from '../../stream'
 import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
@@ -27,7 +27,7 @@ export let cachedSwiftTargets: SwiftWebTargets | undefined
 let cachedIsPWA: boolean | undefined
 let hasRestartedLSP = false
 
-export async function buildCommand(webStream: WebStream) {
+export async function buildCommand(webStream: WebStream, mode: WebBuildMode) {
 	if (isBuildingDebug || webStream.isAnyHotBuilding()) { return }
 	const abortHandler = webStream.setAbortBuildingDebugHandler(() => {
 		measure.finish()
@@ -82,7 +82,7 @@ export async function buildCommand(webStream: WebStream) {
 			const result = await window.showErrorMessage(text, 'Retry', 'Cancel')
 			if (result == 'Retry') {
 				print(`Going to retry debug build command`, LogLevel.Verbose)
-				buildCommand(webStream)
+				buildCommand(webStream, mode)
 			}
 			return
 		}
@@ -118,6 +118,7 @@ export async function buildCommand(webStream: WebStream) {
 				const target = targetsDump.executables[i]
 				await buildExecutableTarget({
 					type: type,
+					mode: mode,
 					target: target,
 					release: false,
 					force: true,
@@ -262,11 +263,12 @@ export async function buildCommand(webStream: WebStream) {
 
 interface HotRebuildSwiftParams {
 	target?: string
+	mode: WebBuildMode
 }
 
 let awaitingHotRebuildSwift: HotRebuildSwiftParams[] = []
 
-export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSwiftParams = {}) {
+export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSwiftParams) {
 	if (isBuildingDebug || isHotBuildingHTML || isHotBuildingJS || isHotBuildingSwift) {
 		if (!isBuildingDebug) {
 			if (awaitingHotRebuildSwift.filter((x) => x.target == params.target).length == 0) {
@@ -357,6 +359,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 							const target = targetsToRebuild[i]
 							await buildExecutableTarget({
 								type: buildType,
+								mode: params.mode,
 								target: target,
 								release: false,
 								force: true,

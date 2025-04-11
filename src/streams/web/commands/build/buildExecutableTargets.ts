@@ -6,9 +6,11 @@ import { buildStatus, clearStatus, print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { buildSwiftTarget } from '../../../../commands/build/helpers'
 import { AbortHandler } from '../../../../bash'
+import { WebBuildMode, webBuildModeToSwiftBuildMode } from '../../webStream'
 
 export async function buildExecutableTarget(options: {
     type: SwiftBuildType,
+    mode: WebBuildMode,
     target: string,
     release: boolean,
     force: boolean,
@@ -27,6 +29,7 @@ export async function buildExecutableTarget(options: {
     try {
         await buildSwiftTarget({
             type: options.type,
+            mode: webBuildModeToSwiftBuildMode(options.mode),
             targetName: options.target,
             release: options.release,
             abortHandler: options.abortHandler,

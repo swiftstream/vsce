@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import { projectDirectory, currentStream } from '../../extension'
 import { print } from '../../streams/stream'
 import { LogLevel } from '../../streams/stream'
-import { SwiftBuildType } from '../../swift'
+import { SwiftBuildMode, SwiftBuildType } from '../../swift'
 import { AbortHandler } from '../../bash'
 
 export enum KnownPackage {
@@ -32,6 +32,7 @@ export function isPackagePresentInResolved(packageName: KnownPackage): boolean {
 }
 export async function buildSwiftTarget(options: {
 	type: SwiftBuildType,
+	mode: SwiftBuildMode,
 	targetName: string,
 	release: boolean,
 	abortHandler: AbortHandler,
@@ -40,6 +41,7 @@ export async function buildSwiftTarget(options: {
 	if (!currentStream) { throw `stream is null` }
 	await currentStream.swift.build({
 		type: options.type,
+		mode: options.mode,
 		targetName: options.targetName,
 		release: options.release,
 		abortHandler: options.abortHandler,

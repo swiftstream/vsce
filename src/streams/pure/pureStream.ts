@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, TreeItemCollapsibleState, window, workspace } from 'vscode'
+import { commands, ConfigurationChangeEvent, DebugSession, FileDeleteEvent, FileRenameEvent, TextDocument, window, workspace } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, Stream } from '../stream'
 import { Dependency, SideTreeItem } from '../../sidebarTreeView'
 import { ContextKey, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
@@ -8,7 +8,22 @@ import { AnyFeature } from '../anyFeature'
 import { buildCommand, rebuildSwift } from './commands/build'
 import { buildRelease } from './commands/buildRelease'
 import { pureAttachDebuggerConfig, pureDebugConfig } from '../../helpers/createDebugConfigIfNeeded'
+import { env } from 'process'
+import { DevContainerConfig } from '../../devContainerConfig'
+import { getPureArtifactURLForToolchain } from '../../commands/toolchain'
+import { compilationFolder, Swift, SwiftBuildMode } from '../../swift'
 
+export enum PureBuildMode {
+	Standard = 'Standard (glibc)',
+	StaticLinuxX86 = 'Static Linux (x86-musl)',
+	StaticLinuxArm = 'Static Linux (arm-musl)',
+}
+export function pureBuildModeToSwiftBuildMode(mode: PureBuildMode): SwiftBuildMode {
+    const m: string = mode
+    return Object.values(SwiftBuildMode).includes(m as SwiftBuildMode) ? m as SwiftBuildMode : SwiftBuildMode.Standard
+}
+export var debugBuildMode: PureBuildMode = PureBuildMode.Standard
+export var releaseBuildMode: PureBuildMode = PureBuildMode.Standard
 export var isDebugging = false
 export var runningDebugTargetPid: number | undefined
 export var isRunningDebugTarget = false
@@ -22,6 +37,8 @@ export class PureStream extends Stream {
     
     configure() {
         super.configure()
+        this.setDebugBuildMode()
+        this.setReleaseBuildMode()
         const isBuildButtonEnabled = workspace.getConfiguration().get('swift.showTopBuildButton') as boolean
         this.setContext(ContextKey.isNavigationBuildButtonEnabled, isBuildButtonEnabled ?? true)
         const isRunButtonEnabled = workspace.getConfiguration().get('swift.showTopRunButton') as boolean
@@ -30,15 +47,26 @@ export class PureStream extends Stream {
 
     async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         super.onDidChangeConfiguration(event)
-
+        if (event.affectsConfiguration('swift.debugBuildMode'))
+			this.setDebugBuildMode()
+        if (event.affectsConfiguration('swift.releaseBuildMode'))
+			this.setReleaseBuildMode()
     }
     
-    isDebugBuilt(target: string): boolean {
-        return fs.existsSync(path.join(projectDirectory!, '.build', 'debug', target))
+    isDebugBuilt(target: string, buildMode: PureBuildMode): boolean {
+        return fs.existsSync(compilationFolder({
+            target: target,
+            mode: pureBuildModeToSwiftBuildMode(buildMode),
+            release: false
+        }))
     }
     
-    isReleaseBuilt(target: string): boolean {
-        return fs.existsSync(path.join(projectDirectory!, '.build', 'release', target))
+    isReleaseBuilt(target: string, buildMode: PureBuildMode): boolean {
+        return fs.existsSync(compilationFolder({
+            target: target,
+            mode: pureBuildModeToSwiftBuildMode(buildMode),
+            release: true
+        }))
     }
 
     registerCommands() {
@@ -49,8 +77,24 @@ export class PureStream extends Stream {
         extensionContext.subscriptions.push(commands.registerCommand('runDebugAttachedTopBar', async () => { await this.debug() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
+        extensionContext.subscriptions.push(commands.registerCommand(this.debugBuildModeElement().id, async () => await this.changeBuildMode({ debug: true }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.releseBuildModeElement().id, async () => await this.changeBuildMode({ debug: false }) ))
     }
 
+    debugBuildModeElement = () => new Dependency({
+        id: SideTreeItem.DebugBuildMode,
+        label: 'Mode',
+        version: `${debugBuildMode}`,
+        tooltip: 'Debug Build Mode',
+        icon: 'layout'
+    })
+    releseBuildModeElement = () => new Dependency({
+        id: SideTreeItem.ReleaseBuildMode,
+        label: 'Mode',
+        version: `${releaseBuildMode}`,
+        tooltip: 'Release Build Mode',
+        icon: 'layout'
+    })
     onDidRenameFiles(event: FileRenameEvent) {
         super.onDidRenameFiles(event)
 
@@ -87,18 +131,128 @@ export class PureStream extends Stream {
         await this.debug()
     }
 
+    // MARK: Mode
+
+    setDebugBuildMode(value?: PureBuildMode) {
+        debugBuildMode = value ?? workspace.getConfiguration().get('swift.debugBuildMode') as PureBuildMode
+        if (value) workspace.getConfiguration().update('swift.debugBuildMode', value)
+        sidebarTreeView?.refresh()
+    }
+
+    setReleaseBuildMode(value?: PureBuildMode) {
+        releaseBuildMode = value ?? workspace.getConfiguration().get('swift.releaseBuildMode') as PureBuildMode
+        if (value) workspace.getConfiguration().update('swift.releaseBuildMode', value)
+        sidebarTreeView?.refresh()
+    }
+
+    async changeBuildMode(params: { debug: boolean }) {
+        const standardOption = `${PureBuildMode.Standard}`
+        const staticX86Option = `${PureBuildMode.StaticLinuxX86}`
+        const staticArmOption = `${PureBuildMode.StaticLinuxArm}`
+        switch (await window.showQuickPick([standardOption, staticX86Option, staticArmOption], {
+            placeHolder: `Choose ${params.debug ? 'debug' : 'release'} build mode`
+        })) {
+            case standardOption:
+                if (params.debug) debugBuildMode = PureBuildMode.Standard
+                else releaseBuildMode = PureBuildMode.Standard
+                sidebarTreeView?.refresh()
+                break
+            case staticX86Option:
+                if (!await this.isMuslSDKInstalled()) break
+                if (params.debug) debugBuildMode = PureBuildMode.StaticLinuxX86
+                else releaseBuildMode = PureBuildMode.StaticLinuxX86
+                sidebarTreeView?.refresh()
+                break
+            case staticArmOption:
+                if (!await this.isMuslSDKInstalled()) break
+                if (params.debug) debugBuildMode = PureBuildMode.StaticLinuxArm
+                else releaseBuildMode = PureBuildMode.StaticLinuxArm
+                sidebarTreeView?.refresh()
+                break
+            default:
+                break
+        }
+    }
+
+    async isMuslSDKInstalled(): Promise<boolean> {
+        if (!env.S_ARTIFACT_STATIC_LINUX_URL) {
+            const rebuildAction = 'Add and Rebuild the Container'
+            switch (await window.showInformationMessage(
+                'Static Linux SDK artifact is not installed. Would you like to add it? Rebuilding the container is required.',
+                'Add and Rebuild the Container'
+            )) {
+                case rebuildAction:
+                    const artifactUrl = await getPureArtifactURLForToolchain()
+                    if (!artifactUrl) {
+                        return false
+                    }
+                    DevContainerConfig.transaction(c => c.setStaticLinuxArtifactURL(artifactUrl))
+                    await commands.executeCommand('remote-containers.rebuildContainer')
+                    break
+                default: break
+            }
+            return false
+        }
+        const artifactBaseName = path.basename(env.S_ARTIFACT_STATIC_LINUX_URL)
+        const artifactFolder = artifactBaseName.replace(/^swift-/, "")
+                                               .replace(/\.artifactbundle\.tar\.gz$/, "")
+                                               .replace(/\.artifactbundle\.zip$/, "")
+        if (!fs.existsSync(path.join('/root/.swiftpm/swift-sdks', `swift-${artifactFolder}.artifactbundle`))) {
+            const rebuildAction = 'Rebuild the Container'
+            switch (await window.showInformationMessage(
+                `Static Linux SDK artifact haven't been downloaded yet. Rebuilding the container is required.`,
+                'Rebuild the Container'
+            )) {
+                case rebuildAction:
+                    await commands.executeCommand('remote-containers.rebuildContainer')
+                    break
+                default: break
+            }
+            return false
+        }
+        return true
+    }
+
     // MARK: Building
 
     private isAwaitingBuild: boolean = false
     
     async buildDebug() {
-        await buildCommand(this)
+        if ([PureBuildMode.StaticLinuxX86, PureBuildMode.StaticLinuxArm].includes(debugBuildMode) && !await this.isMuslSDKInstalled()) {
+            const switchToStandardAction = 'Switch to Standard (glibc) build mode'
+            switch (await window.showWarningMessage(
+                `Static Linux SDK is not installed. Would you like to switch to Standard (glibc) build mode?`,
+                switchToStandardAction
+            )) {
+                case switchToStandardAction:
+                    this.setDebugBuildMode(PureBuildMode.Standard)
+                    break
+                default:
+                window.showWarningMessage(`Build debug was cancelled because Static Linux SDK is not installed.`)
+                return
+            }
+        }
 		await super.buildDebug()
+        await buildCommand(this, debugBuildMode)
     }
 
     async buildRelease() {
+        if ([PureBuildMode.StaticLinuxX86, PureBuildMode.StaticLinuxArm].includes(releaseBuildMode) && !await this.isMuslSDKInstalled()) {
+            const switchToStandardAction = 'Switch to Standard (glibc) build mode'
+            switch (await window.showWarningMessage(
+                `Static Linux SDK is not installed. Would you like to switch to Standard (glibc) build mode?`,
+                switchToStandardAction
+            )) {
+                case switchToStandardAction:
+                    this.setReleaseBuildMode(PureBuildMode.Standard)
+                    break
+                default:
+                window.showWarningMessage(`Build release was cancelled because Static Linux SDK is not installed.`)
+                return
+            }
+        }
         await super.buildRelease()
-        await buildRelease(this)
+        await buildRelease(this, releaseBuildMode)
     }
     
     async hotRebuildSwift(params?: { target?: string }) {
@@ -251,7 +405,10 @@ export class PureStream extends Stream {
     // MARK: Side Bar Tree View Items
     
     async defaultDebugActionItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (Swift.v6Mode) items.push(this.debugBuildModeElement())
         return [
+            ...items,
             new Dependency({
                 id: SideTreeItem.BuildDebug,
                 tooltip: 'Cmd+B or Ctrl+B',
@@ -272,6 +429,21 @@ export class PureStream extends Stream {
                 icon: this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'
             }),
             ...(await super.debugActionItems())
+        ]
+    }
+    async debugOptionItems(): Promise<Dependency[]> {
+		let items: Dependency[] = []
+		await Promise.all(this.features().map(async (feature) => {
+            items.push(...(await super.debugOptionItems()))
+        }))
+		return items
+	}
+    async defaultReleaseItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (Swift.v6Mode) items.push(this.releseBuildModeElement())
+        return [
+            ...items,
+            ...(await super.defaultReleaseItems())
         ]
     }
     async releaseItems(): Promise<Dependency[]> {

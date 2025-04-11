@@ -4,13 +4,13 @@ import { ContextKey, sidebarTreeView } from '../../../extension'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } from '../../stream'
-import { PureStream } from '../pureStream'
+import { PureBuildMode, PureStream } from '../pureStream'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
 import { restartLSPCommand } from '../../../commands/restartLSP'
 
 let hasRestartedLSP = false
 
-export async function buildCommand(stream: PureStream) {
+export async function buildCommand(stream: PureStream, buildMode: PureBuildMode) {
     if (isBuildingDebug || stream.isAnyHotBuilding()) { return }
     const measure = new TimeMeasure()
     const abortHandler = stream.setAbortBuildingDebugHandler(() => {
@@ -42,11 +42,12 @@ export async function buildCommand(stream: PureStream) {
         await stream.swift.askToChooseTargetIfNeeded({ release: false, abortHandler: abortHandler, force: true })
         if (!stream.swift.selectedDebugTarget) 
             throw `Please select Swift target to build`
-        const shouldRestartLSP = !hasRestartedLSP || !stream.isDebugBuilt(stream.swift.selectedDebugTarget)
+        const shouldRestartLSP = !hasRestartedLSP || !stream.isDebugBuilt(stream.swift.selectedDebugTarget, buildMode)
         // Phase 3: Build executable targets
         print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         await buildExecutableTarget({
             target: stream.swift.selectedDebugTarget,
+            mode: buildMode,
             release: false,
             force: true,
             abortHandler: abortHandler
