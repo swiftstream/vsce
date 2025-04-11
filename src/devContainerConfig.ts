@@ -27,6 +27,37 @@ export class DevContainerConfig {
         fs.writeFileSync(this.path, devContainerContent, 'utf8')
     }
 
+    public static checkIfStaticLinuxArtifactURLPresent(): boolean {
+        const config = new DevContainerConfig()
+        return config.checkIfKeyExists('S_ARTIFACT_STATIC_LINUX_URL')
+    }
+
+    public static checkIfAndroidArtifactURLPresent(): boolean {
+        const config = new DevContainerConfig()
+        return config.checkIfKeyExists('S_ARTIFACT_ANDROID_URL')
+    }
+
+    public static checkIfWasiThreadsArtifactURLPresent(): boolean {
+        const config = new DevContainerConfig()
+        return config.checkIfKeyExists('S_ARTIFACT_WASIP1_THREADS_URL')
+    }
+
+    public setStaticLinuxArtifactURL(url: string) {
+        this.config.containerEnv.S_ARTIFACT_STATIC_LINUX_URL = url
+    }
+
+    public setAndroidArtifactURL(url: string) {
+        this.config.containerEnv.S_ARTIFACT_ANDROID_URL = url
+    }
+
+    public setWasip1ThreadsArtifactURL(url: string) {
+        this.config.containerEnv.S_ARTIFACT_WASIP1_THREADS_URL = url
+    }
+    
+    private checkIfKeyExists(key: string): boolean {
+        return false
+    }
+
     // MARK: Ports
 
     public addOrChangePort(outer: string, inner: string) {
