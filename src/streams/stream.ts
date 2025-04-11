@@ -472,10 +472,6 @@ export class Stream {
 			default: return false
 		}
 	}
-	
-	compilationFolder(musl: boolean): string {
-		return `${isArm64 ? 'aarch64' : 'x86_64'}-${musl ? 'swift-linux-musl' : 'unknown-linux-gnu'}`
-	}
 
 	async buildRelease(successCallback?: any) {
 		if (isClearLogBeforeBuildEnabled) {
