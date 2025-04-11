@@ -3,7 +3,7 @@ import * as path from 'path'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { currentLoggingLevel } from './streams/stream'
-import { ContextKey, extensionContext, projectDirectory, sidebarTreeView } from './extension'
+import { ContextKey, extensionContext, isArm64, projectDirectory, sidebarTreeView } from './extension'
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
@@ -12,6 +12,9 @@ import { AbortHandler } from './bash'
 
 export class Swift {
     constructor(private stream: Stream) {}
+
+    static v5Mode = process.env.S_VERSION_MAJOR === '5'
+    static v6Mode = process.env.S_VERSION_MAJOR === '6'
 
     private runTaskProvider?: SwiftRunTaskProvider
 
@@ -333,6 +336,7 @@ export class Swift {
 
     async build(options: {
         type: SwiftBuildType,
+        mode: SwiftBuildMode,
         targetName: string,
         release: boolean,
         abortHandler: AbortHandler,
@@ -345,21 +349,48 @@ export class Swift {
             '--product', options.targetName,
             '--build-path', options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`
         ]
-        // TODO: check swift version, it is different for >=6.0.0 because of SDK
-        if (options.type == SwiftBuildType.Wasi) {
-            args = [...args,
-                '--enable-test-discovery',
-                '--static-swift-stdlib',
-                '--triple', 'wasm32-unknown-wasi',
-                '-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS',
-                '-Xswiftc', '-Xclang-linker',
-                '-Xswiftc', '-mexec-model=reactor',
-                '-Xlinker', '-lCoreFoundation',
-                '-Xlinker', '-licuuc',
-                '-Xlinker', '-licui18n',
-                '-Xlinker', '--stack-first',
-                '-Xlinker', '--export=main'
-            ]
+        switch (options.mode) {
+            case SwiftBuildMode.Standard:
+                if (Swift.v5Mode) args.push('--enable-test-discovery')
+                break
+            case SwiftBuildMode.StaticLinuxX86:
+                if (Swift.v5Mode) throw `Static Linux SDK is not available for Swift 5`
+                args.push(...['--swift-sdk', 'x86_64-swift-linux-musl'])
+                args.push(...['--static-swift-stdlib'])
+                break
+            case SwiftBuildMode.StaticLinuxArm:
+                if (Swift.v5Mode) throw `Static Linux SDK is not available for Swift 5`
+                args.push(...['--swift-sdk', 'aarch64-swift-linux-musl'])
+                args.push(...['--static-swift-stdlib'])
+                if (options.release) args.push('-Xlinker', '-s')
+                break
+            case SwiftBuildMode.Wasi:
+                if (Swift.v5Mode) args.push('--enable-test-discovery')
+                if (Swift.v5Mode) args.push(...['--triple', 'wasm32-unknown-wasi'])
+                else args.push(...['--swift-sdk', 'wasm32-unknown-wasi'])
+                args.push(...['--static-swift-stdlib'])
+                args.push(...['-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS'])
+                args.push(...['-Xswiftc', '-Xclang-linker'])
+                args.push(...['-Xswiftc', '-mexec-model=reactor'])
+                args.push(...['-Xlinker', '-lCoreFoundation'])
+                args.push(...['-Xlinker', '-licuuc'])
+                args.push(...['-Xlinker', '-licui18n'])
+                args.push(...['-Xlinker', '--stack-first'])
+                args.push(...['-Xlinker', '--export=main'])
+                break
+            case SwiftBuildMode.Wasip1Threads:
+                if (Swift.v5Mode) throw `Wasi Preview 1 (threads) SDK is not available for Swift 5`
+                args.push(...['--swift-sdk', 'wasm32-unknown-wasip1-threads'])
+                args.push(...['--static-swift-stdlib'])
+                args.push(...['-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS'])
+                args.push(...['-Xswiftc', '-Xclang-linker'])
+                args.push(...['-Xswiftc', '-mexec-model=reactor'])
+                args.push(...['-Xlinker', '-lCoreFoundation'])
+                args.push(...['-Xlinker', '-licuuc'])
+                args.push(...['-Xlinker', '-licui18n'])
+                args.push(...['-Xlinker', '--stack-first'])
+                args.push(...['-Xlinker', '--export=main'])
+                break
         }
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `Missing Package.swift file`
@@ -737,6 +768,13 @@ export interface PackageContent {
 export enum SwiftBuildType {
     Native = 'native',
     Wasi = 'wasi'
+}
+export enum SwiftBuildMode {
+    Standard = 'Standard (glibc)',
+	StaticLinuxX86 = 'Static Linux (x86-musl)',
+	StaticLinuxArm = 'Static Linux (arm-musl)',
+    Wasi = 'Wasi',
+	Wasip1Threads = 'Wasi Preview 1 (threads)'
 }
 export function allSwiftBuildTypes(): SwiftBuildType[] {
     /// Really important to have Native first!
