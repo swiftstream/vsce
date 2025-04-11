@@ -15,7 +15,6 @@ _toolchainURLarm="${S_TOOLCHAIN_URL_ARM}"
 semVerMajor="${S_VERSION_MAJOR}"
 semVerMinor="${S_VERSION_MINOR}"
 semVerPatch="${S_VERSION_PATCH}"
-artifactURL="${S_ARTIFACT_URL}"
 
 # MARK: SWIFT TOOLCHAIN
 # automatic detection of arm64 otherwise fallback to x86 even if it's not x86
@@ -93,6 +92,9 @@ fi
 echo "export PATH=${PATH}:${toolchainPath}/usr/bin" > ~/.bashrc
 source ~/.bashrc
 
+# Cleanup SDK symlinks
+rm -rf /root/.swiftpm/swift-sdks/*/
+
 # MARK: SWIFT ARTIFACT
 install_artifact() {
     local _artifactURL="$1"
@@ -106,48 +108,80 @@ install_artifact() {
         esac
     }
 
+    retrying=0
+
     while true; do
         # artifact related variables
         artifactBaseName=$(basename "$_artifactURL")
         sdkName=$(echo "$artifactBaseName" | sed 's/^swift-//; s/\.artifactbundle\.tar\.gz$//; s/\.artifactbundle\.zip$//')
         artifactName="${sdkName}"
-        # path to all swift sdks
-        artifactsPath="/root/.swiftpm/swift-sdks"
+        
+        # paths
+        artifactSymlinksPath="/root/.swiftpm/swift-sdks"
+        artifactsPath="/swift/sdks"
         artifactTarPath="${artifactsPath}/${artifactBaseName}"
+        artifactExtractedPath="${artifactsPath}/${artifactBaseName%.tar.gz}"
+        artifactExtractedPath="${artifactExtractedPath%.zip}"
+        artifactFolder="${artifactBaseName%.tar.gz}"
+        artifactFolder="${artifactFolder%.zip}"
+        artifactSymlink="${artifactSymlinksPath}/${artifactFolder}"
 
-        # check and install artifact if needed
-        if swift sdk list | grep -q "${sdkName}"; then
-            echo -e "SDK ${BOLD}${artifactName}${NORM} ${GREEN}is ready${NC}"
-            break
-        else
-            echo -e "${BLUE}SDK${NC} ${BOLD}${artifactName}${NORM} ${BLUE}not installed yet${NC}"
-            echo -e "${YELLOW}Downloading SDK${NC} ${BOLD}${artifactName}${NORM} ${YELLOW}${_artifactURL}${NC}"
-            if ! wget "${_artifactURL}" -O "${artifactTarPath}"; then
-                echo -e "${RED}Unable to download${NC} ${BOLD}${artifactName}${NORM} SDK"
-                retry
-            else
-                echo -e "${YELLOW}Installing SDK${NC} ${BOLD}${artifactName}${NORM} ${YELLOW}${_artifactURL}${NC}"
-                if ! swift sdk install ${artifactTarPath}; then
-                    echo -e "${RED}Unable to install${NC} ${BOLD}${artifactName}${NORM} SDK"
-                    retry
-                else
-                    # removing artifact archive
-                    rm "${artifactTarPath}"
-                    # patch for v6.0.1
-                    if [[ "$semVerMajor" -eq 6 && "$semVerMinor" -eq 0 && "$semVerPatch" -eq 1 ]]; then
-                        perl -pi -e 's%canImport\(Bionic%canImport\(Android%' "${toolchainPath}/usr/bin/swift-package"
-                        perl -pi -e 's%import Bionic%import Android%' "${toolchainPath}/usr/bin/swift-package"
-                        perl -pi -e 's%TSCBasic, would be%TSCBasic, would %' "${toolchainPath}/usr/bin/swift-package"
-                    fi
-                    echo -e "SDK ${BOLD}${artifactName}${NORM} ${GREEN}successfully installed${NC}"
-                    break
-                fi
-            fi
+        mkdir -p "$artifactSymlinksPath"
+
+        # only show info once unless retrying
+        if [[ $retrying -eq 0 ]]; then
+            echo -e "${BLUE}Preparing SDK${NC} ${BOLD}${artifactName}${NORM}"
         fi
+
+        if [[ ! -d "$artifactExtractedPath" ]]; then
+            if [[ $retrying -eq 0 ]]; then
+                echo -e "${YELLOW}Downloading SDK${NC} ${BOLD}${artifactName}${NORM} from ${YELLOW}${_artifactURL}${NC}"
+            fi
+
+            if ! wget -q "${_artifactURL}" -O "${artifactTarPath}"; then
+                echo -e "${RED}Unable to download${NC} ${BOLD}${artifactName}${NORM} SDK"
+                retrying=1
+                retry
+            fi
+
+            if [[ $retrying -eq 0 ]]; then
+                echo -e "${YELLOW}Extracting SDK${NC} ${BOLD}${artifactName}${NORM}"
+            fi
+
+            if [[ "$artifactTarPath" == *.tar.gz ]]; then
+                if ! tar -xzf "${artifactTarPath}" -C "${artifactsPath}"; then
+                    echo -e "${RED}Unable to extract${NC} ${BOLD}${artifactName}${NORM} SDK (tar.gz)"
+                    retrying=1
+                    retry
+                fi
+            elif [[ "$artifactTarPath" == *.zip ]]; then
+                if ! unzip -q "${artifactTarPath}" -d "${artifactsPath}"; then
+                    echo -e "${RED}Unable to extract${NC} ${BOLD}${artifactName}${NORM} SDK (zip)"
+                    retrying=1
+                    retry
+                fi
+            else
+                echo -e "${RED}Unknown SDK archive format:${NC} ${BOLD}${artifactBaseName}${NORM}"
+                exit 1
+            fi
+
+            rm -f "${artifactTarPath}"
+        fi
+
+        # create or refresh symlink
+        if [[ $retrying -eq 0 ]]; then
+            echo -e "${BLUE}Linking SDK${NC} to ${artifactSymlink}"
+        fi
+        ln -sfn "${artifactExtractedPath}" "${artifactSymlink}"
+
+        if [[ $retrying -eq 0 ]]; then
+            echo -e "SDK ${BOLD}${artifactName}${NORM} ${GREEN}successfully prepared${NC}"
+        fi
+        break
     done
 }
 
-# checking if artifactURL present
-if [[ -n "$artifactURL" ]]; then
-    install_artifact "$artifactURL"
-fi
+# iterate over artifact urls
+for var in $(env | grep '^S_ARTIFACT_' | cut -d= -f1); do
+    install_artifact "${!var}"
+done
