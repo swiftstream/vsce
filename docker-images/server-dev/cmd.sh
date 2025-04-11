@@ -15,7 +15,6 @@ _toolchainURLarm="${S_TOOLCHAIN_URL_ARM}"
 semVerMajor="${S_VERSION_MAJOR}"
 semVerMinor="${S_VERSION_MINOR}"
 semVerPatch="${S_VERSION_PATCH}"
-artifactURL="${S_ARTIFACT_URL}"
 
 # MARK: SWIFT TOOLCHAIN
 # automatic detection of arm64 otherwise fallback to x86 even if it's not x86
@@ -93,6 +92,9 @@ fi
 echo "export PATH=${PATH}:${toolchainPath}/usr/bin" > ~/.bashrc
 source ~/.bashrc
 
+# Cleanup SDK symlinks
+rm -rf /root/.swiftpm/swift-sdks/*/
+
 # MARK: SWIFT ARTIFACT
 install_artifact() {
     local _artifactURL="$1"
@@ -106,9 +108,6 @@ install_artifact() {
         esac
     }
 
-    # Cleanup SDK symlinks
-    rm -rf /root/.swiftpm/swift-sdks/*/
-
     retrying=0
 
     while true; do
@@ -120,11 +119,11 @@ install_artifact() {
         # paths
         artifactSymlinksPath="/root/.swiftpm/swift-sdks"
         artifactsPath="/swift/sdks"
-        artifactFolder="${artifactBaseName%.tar.gz}"
-        artifactFolder="${artifactFolder%.zip}"
         artifactTarPath="${artifactsPath}/${artifactBaseName}"
         artifactExtractedPath="${artifactsPath}/${artifactBaseName%.tar.gz}"
         artifactExtractedPath="${artifactExtractedPath%.zip}"
+        artifactFolder="${artifactBaseName%.tar.gz}"
+        artifactFolder="${artifactFolder%.zip}"
         artifactSymlink="${artifactSymlinksPath}/${artifactFolder}"
 
         mkdir -p "$artifactSymlinksPath"
@@ -182,10 +181,10 @@ install_artifact() {
     done
 }
 
-# checking if artifactURL present
-if [[ -n "$artifactURL" ]]; then
-    install_artifact "$artifactURL"
-fi
+# iterate over artifact urls
+for var in $(env | grep '^S_ARTIFACT_' | cut -d= -f1); do
+    install_artifact "${!var}"
+done
 
 # Check if launchAfterFirstStart.sh exists in the project directory
 if [ -f "./launchAfterFirstStart.sh" ]; then
