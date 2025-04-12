@@ -8,7 +8,7 @@
 		"S_MODE": "ANDROID",
 		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.1-release/ubuntu2004/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04.tar.gz",
 		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.1-release/ubuntu2004-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
-		"S_ARTIFACT_URL": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.1/swift-6.1-RELEASE-android-24-0.1.artifactbundle.tar.gz",
+		"S_ARTIFACT_ANDROID_URL": "https://github.com/finagolfin/swift-android-sdk/releases/download/6.1/swift-6.1-RELEASE-android-24-0.1.artifactbundle.tar.gz",
 		"S_ANDROID_VERSION": "24-0.1",
 		"S_VERSION_MAJOR": "6",
 		"S_VERSION_MINOR": "1",
