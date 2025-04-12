@@ -212,15 +212,7 @@
         }
       },
       {
-        "command": "chooseDebugTarget",
-        "title": "Choose target",
-        "icon": {
-          "dark": "assets/icons/target-white.svg",
-          "light": "assets/icons/target.svg"
-        }
-      },
-      {
-        "command": "chooseReleaseTarget",
+        "command": "chooseTestTarget",
         "title": "Choose target",
         "icon": {
           "dark": "assets/icons/target-white.svg",
@@ -291,13 +283,8 @@
       "view/item/context": [
         {
           "group": "inline",
-          "command": "chooseDebugTarget",
-          "when": "view == swiftstreamSidebar && viewItem == BuildDebug && hasCachedTargets && !isBuildingDebug"
-        },
-        {
-          "group": "inline",
-          "command": "chooseReleaseTarget",
-          "when": "view == swiftstreamSidebar && viewItem == BuildRelease && hasCachedTargets && !isBuildingRelease"
+          "command": "chooseTestTarget",
+          "when": "view == swiftstreamSidebar && viewItem == Test && hasCachedTargets && !isBuildingDebug"
         },
         {
           "group": "inline",

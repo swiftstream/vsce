@@ -116,8 +116,6 @@ export class Stream {
             showOutput()
         }))
         extensionContext.subscriptions.push(commands.registerCommand('clickOnStatusBarItem', showOutput))
-		extensionContext.subscriptions.push(commands.registerCommand('chooseDebugTarget', async () => await this.swift.chooseDebugTarget() ))
-        extensionContext.subscriptions.push(commands.registerCommand('chooseReleaseTarget', async () => this.swift.chooseReleaseTarget() ))
 		extensionContext.subscriptions.push(commands.registerCommand('chooseTestTarget', async () => this.swift.chooseReleaseTarget() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.BuildDebug, async () => await this.buildDebug() ))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.HotRebuild, hotRebuildCommand))
@@ -386,6 +384,17 @@ export class Stream {
 
 	async globalKeyTest() {
 		await this.runAllTests()
+	}
+
+	// MARK: Target
+
+	async chooseTarget(options: {
+		release: boolean,
+		abortHandler?: AbortHandler,
+		alwaysShowList?: boolean
+	}) {
+		commands.executeCommand('setContext', ContextKey.hasCachedTargets, this.swift.selectedDebugTarget !== undefined)
+        await this.swift.askToChooseTargetIfNeeded({ release: options.release, abortHandler: options.abortHandler, force: true, alwaysShowList: options.alwaysShowList })
 	}
 
 	// MARK: Tests

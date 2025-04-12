@@ -1,6 +1,5 @@
-import { commands } from 'vscode'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { ContextKey, sidebarTreeView } from '../../../extension'
+import { sidebarTreeView } from '../../../extension'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { buildStatus, isBuildingRelease, LogLevel, print, status, StatusType } from '../../stream'
 import { PureBuildMode, PureStream } from '../pureStream'
@@ -35,8 +34,7 @@ export async function buildRelease(stream: PureStream, buildMode: PureBuildMode,
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', ContextKey.hasCachedTargets, stream.swift.selectedReleaseTarget !== undefined)
-        await stream.swift.askToChooseTargetIfNeeded({ release: true, abortHandler: abortHandler, force: true })
+        await stream.chooseTarget({ release: true, abortHandler: abortHandler })
         if (!stream.swift.selectedReleaseTarget) 
             throw `Please select Swift target to build`
         // Phase 3: Build executable targets

@@ -7,7 +7,7 @@ import { ContextKey, extensionContext, isArm64, projectDirectory, sidebarTreeVie
 import { isString } from './helpers/isString'
 import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
-import { commands, ShellExecution, Task, TaskExecution, TaskProvider, tasks, TaskScope, Terminal, window } from 'vscode'
+import { commands, ProgressLocation, ShellExecution, Task, TaskExecution, TaskProvider, tasks, TaskScope, Terminal, window } from 'vscode'
 import { AbortHandler } from './bash'
 
 export class Swift {

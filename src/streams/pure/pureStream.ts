@@ -413,7 +413,6 @@ export class PureStream extends Stream {
                 id: SideTreeItem.BuildDebug,
                 tooltip: 'Cmd+B or Ctrl+B',
                 label: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
-                version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
                 icon: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer')
             })
         ]
@@ -425,7 +424,6 @@ export class PureStream extends Stream {
                 id: SideTreeItem.RunDebug,
                 tooltip: 'Cmd+R or Ctrl+R',
                 label: this.isAwaitingBuild ? 'Awaiting build' : isDebugging ? 'Debugging' : isRunningDebugTarget ? 'Running' : 'Run',
-                version: this.swift.selectedDebugTarget ? this.swift.selectedDebugTarget : '',
                 icon: this.isAwaitingBuild ? 'sync~spin::charts.orange' : isDebugging ? 'debug-rerun::charts.orange' : isRunningDebugTarget ? 'debug-rerun::charts.green' : 'debug-start'
             }),
             ...(await super.debugActionItems())
@@ -451,7 +449,6 @@ export class PureStream extends Stream {
             new Dependency({
                 id: SideTreeItem.RunRelease,
                 label: isRunningReleaseTarget ? 'Running' : 'Run',
-                version: this.swift.selectedReleaseTarget ? this.swift.selectedReleaseTarget : '',
                 icon: isRunningReleaseTarget ? 'debug-rerun::charts.green' : 'debug-start'
             }),
             ...(await super.releaseItems())

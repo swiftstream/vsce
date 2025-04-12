@@ -1,6 +1,5 @@
-import { commands } from 'vscode'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { ContextKey, sidebarTreeView } from '../../../extension'
+import { sidebarTreeView } from '../../../extension'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } from '../../stream'
@@ -38,8 +37,7 @@ export async function buildCommand(stream: PureStream, buildMode: PureBuildMode)
         })
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        commands.executeCommand('setContext', ContextKey.hasCachedTargets, stream.swift.selectedDebugTarget !== undefined)
-        await stream.swift.askToChooseTargetIfNeeded({ release: false, abortHandler: abortHandler, force: true })
+        await stream.chooseTarget({ release: false, abortHandler: abortHandler })
         if (!stream.swift.selectedDebugTarget) 
             throw `Please select Swift target to build`
         const shouldRestartLSP = !hasRestartedLSP || !stream.isDebugBuilt(stream.swift.selectedDebugTarget, buildMode)

@@ -349,7 +349,6 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 				items.push(new Dependency({
 					id: SideTreeItem.BuildRelease,
 					label: isBuildingRelease ? 'Building' : 'Build',
-					version: currentStream?.swift.selectedReleaseTarget ? currentStream.swift.selectedReleaseTarget : '',
 					icon: isBuildingRelease ? 'sync~spin::charts.green' : 'globe::charts.green'
 				}))
 				items.push(...(await currentStream.releaseItems()))
@@ -667,10 +666,12 @@ export enum SideTreeItem {
 		DebugGzip = 'DebugGzip',
 		DebugBrotli = 'DebugBrotli',
 		DebugBuildMode = 'DebugBuildMode',
+		DebugTarget = 'DebugTarget',
 	Release = 'Release',
 		BuildRelease = 'BuildRelease',
 		RunRelease = 'RunRelease',
 		ReleaseBuildMode = 'ReleaseBuildMode',
+		ReleaseTarget = 'ReleaseTarget',
 	Project = 'Project',
 		NewFilePage = 'NewFilePage',
 		NewFileClass = 'NewFileClass',
