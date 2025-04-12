@@ -80,9 +80,15 @@
 		},
 		// MARK: Docker Create Server
 		{
-			"label": "Docker Create BuildX Container Server (step 2)",
+			"label": "Docker Create BuildX Container ServerDev (step 2)",
 			"command": "docker",
 			"args": ["buildx", "create", "--name", "server-container", "--driver=docker-container"],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Create BuildX Container ServerProd (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "serverprod-container", "--driver=docker-container"],
 			"type": "shell"
 		},
 		// MARK: Docker Create Web
@@ -137,6 +143,19 @@
 				"--builder", "server-container",
 				"--push",
 				"./docker-images/server-dev"
+			],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Build & Push Multi ServerProd Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/server-prod:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "serverprod-container",
+				"--push",
+				"./docker-images/server-prod"
 			],
 			"type": "shell"
 		},
@@ -227,6 +246,20 @@
 				"--builder", "server-container",
 				"--push",
 				"./docker-images/server-dev"
+			],
+			"type": "shell"
+		},
+		{
+			"label": "Docker Build & Push Multi ServerProd Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/server-prod:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "serverprod-container",
+				"--push",
+				"./docker-images/server-prod"
 			],
 			"type": "shell"
 		},
