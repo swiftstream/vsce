@@ -1,0 +1,22 @@
+primary_region = "iad"
+defaultProjectId = "vaporserver"
+
+[[services]]
+internal_port = 3081
+protocol = "tcp"
+
+  [[services.ports]]
+  handlers = [ "http" ]
+  port = "80"
+
+[[services]]
+internal_port = 3080
+protocol = "tcp"
+
+  [[services.ports]]
+  handlers = [ "tls", "http" ]
+  port = "443"
+
+[deploy]
+strategy = "immediate"
+count = 1

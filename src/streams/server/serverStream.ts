@@ -7,6 +7,7 @@ import { Ngrok } from './features/ngrok'
 import { AnyFeature } from '../anyFeature'
 import { DevContainerConfig } from '../../devContainerConfig'
 import { PureStream } from '../pure/pureStream'
+import { FlyIO } from './features/flyio'
 import { LogLevel, print } from '../stream'
 
 export var currentPort: string = `${defaultServerPort}`
@@ -15,11 +16,13 @@ export var pendingNewPort: string | undefined
 export class ServerStream extends PureStream {
     public nginx: Nginx
     public ngrok: Ngrok
+    public flyio: FlyIO
 
     constructor(overrideConfigure: boolean = false) {
         super(true)
         this.nginx = new Nginx(this)
         this.ngrok = new Ngrok(this)
+        this.flyio = new FlyIO(this)
         if (!overrideConfigure) this.configure()
     }
 
@@ -95,7 +98,8 @@ export class ServerStream extends PureStream {
         return [
             ...super.features(),
             this.nginx,
-            this.ngrok
+            this.ngrok,
+            this.flyio
         ]
     }
 
