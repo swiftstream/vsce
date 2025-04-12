@@ -100,6 +100,23 @@ rm -rf /root/.swiftpm/swift-sdks/*/
 install_artifact() {
     local _artifactURL="$1"
 
+    # artifact related variables
+    artifactBaseName=$(basename "$_artifactURL")
+    sdkName=$(echo "$artifactBaseName" | sed 's/^swift-//; s/\.artifactbundle\.tar\.gz$//; s/\.artifactbundle\.zip$//')
+    artifactName="${sdkName}"
+    
+    # paths
+    artifactSymlinksPath="/root/.swiftpm/swift-sdks"
+    artifactsPath="/swift/sdks"
+    artifactTarPath="${artifactsPath}/${artifactBaseName}"
+    artifactExtractedPath="${artifactsPath}/${artifactBaseName%.tar.gz}"
+    artifactExtractedPath="${artifactExtractedPath%.zip}"
+    artifactFolder="${artifactBaseName%.tar.gz}"
+    artifactFolder="${artifactFolder%.zip}"
+    artifactSymlink="${artifactSymlinksPath}/${artifactFolder}"
+
+    mkdir -p "$artifactSymlinksPath"
+
     retry() {
         read -p "Do you want to retry? (y/n): " choice
         case "$choice" in
@@ -112,23 +129,6 @@ install_artifact() {
     retrying=0
 
     while true; do
-        # artifact related variables
-        artifactBaseName=$(basename "$_artifactURL")
-        sdkName=$(echo "$artifactBaseName" | sed 's/^swift-//; s/\.artifactbundle\.tar\.gz$//; s/\.artifactbundle\.zip$//')
-        artifactName="${sdkName}"
-        
-        # paths
-        artifactSymlinksPath="/root/.swiftpm/swift-sdks"
-        artifactsPath="/swift/sdks"
-        artifactTarPath="${artifactsPath}/${artifactBaseName}"
-        artifactExtractedPath="${artifactsPath}/${artifactBaseName%.tar.gz}"
-        artifactExtractedPath="${artifactExtractedPath%.zip}"
-        artifactFolder="${artifactBaseName%.tar.gz}"
-        artifactFolder="${artifactFolder%.zip}"
-        artifactSymlink="${artifactSymlinksPath}/${artifactFolder}"
-
-        mkdir -p "$artifactSymlinksPath"
-
         # only show info once unless retrying
         if [[ $retrying -eq 0 ]]; then
             echo -e "${BLUE}Preparing SDK${NC} ${BOLD}${artifactName}${NORM}"
@@ -139,7 +139,7 @@ install_artifact() {
                 echo -e "${YELLOW}Downloading SDK${NC} ${BOLD}${artifactName}${NORM} from ${YELLOW}${_artifactURL}${NC}"
             fi
 
-            if ! wget -q "${_artifactURL}" -O "${artifactTarPath}"; then
+            if ! wget "${_artifactURL}" -O "${artifactTarPath}"; then
                 echo -e "${RED}Unable to download${NC} ${BOLD}${artifactName}${NORM} SDK"
                 retrying=1
                 retry
