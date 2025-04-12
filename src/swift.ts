@@ -634,20 +634,37 @@ export class Swift {
         }
     }
     
-    async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean }) {
+    async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean, alwaysShowList?: boolean }) {
         let selectedTarget = this.selectedTarget({ release: options.release })
         if (options.force === true || !selectedTarget) {
             try {
                 if (options.force === true || !this.cachedBuildTargets) {
-                    const targetsDump = await this.getTargets({
-                        type: SwiftBuildType.Native,
-                        abortHandler: options.abortHandler
+                    await new Promise(async (resolve, reject) => {
+                        window.withProgress({
+                            location: ProgressLocation.Notification,
+                            title: 'Fetching targets...',
+                            cancellable: false
+                        }, async (progress, token) => {
+                            try {
+                                const targetsDump = await this.getTargets({
+                                    type: SwiftBuildType.Native,
+                                    abortHandler: options.abortHandler
+                                })
+                                this.cachedBuildTargets = targetsDump
+                                resolve(undefined)
+                            } catch(error: any) {
+                                reject(error)
+                            }
+                        })
                     })
-                    this.cachedBuildTargets = targetsDump
+                }
+                if (!this.cachedBuildTargets) {
+                    window.showErrorMessage('Unable to fetch targets')
+                    return
                 }
                 const allTargets = this.cachedBuildTargets.all({ excludeTests: true })
                 commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
-                if (allTargets.length == 1) {
+                if (allTargets.length == 1 && !options.alwaysShowList) {
                     this.selectedReleaseTarget = allTargets[0]
                     this.selectedDebugTarget = allTargets[0]
                 } else if (allTargets.length > 0) {
