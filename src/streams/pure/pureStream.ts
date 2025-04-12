@@ -11,7 +11,7 @@ import { pureAttachDebuggerConfig, pureDebugConfig } from '../../helpers/createD
 import { env } from 'process'
 import { DevContainerConfig } from '../../devContainerConfig'
 import { getPureArtifactURLForToolchain } from '../../commands/toolchain'
-import { compilationFolder, Swift, SwiftBuildMode } from '../../swift'
+import { pathToCompiledBinary, Swift, SwiftBuildMode } from '../../swift'
 
 export enum PureBuildMode {
 	Standard = 'Standard (glibc)',
@@ -78,7 +78,9 @@ export class PureStream extends Stream {
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand(this.debugBuildModeElement().id, async () => await this.changeBuildMode({ debug: true }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.debugTargetElement().id, async () => await this.chooseTarget({ release: false, alwaysShowList: true }) ))
         extensionContext.subscriptions.push(commands.registerCommand(this.releseBuildModeElement().id, async () => await this.changeBuildMode({ debug: false }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.releaseTargetElement().id, async () => await this.chooseTarget({ release: true, alwaysShowList: true }) ))
     }
 
     debugBuildModeElement = () => new Dependency({
@@ -88,12 +90,26 @@ export class PureStream extends Stream {
         tooltip: 'Debug Build Mode',
         icon: 'layout'
     })
+    debugTargetElement = () => new Dependency({
+        id: SideTreeItem.DebugTarget,
+        label: 'Target',
+        version: `${this.swift.selectedDebugTarget ?? ''}`,
+        tooltip: 'Debug Target To Build/Run/Test',
+        icon: 'target'
+    })
     releseBuildModeElement = () => new Dependency({
         id: SideTreeItem.ReleaseBuildMode,
         label: 'Mode',
         version: `${releaseBuildMode}`,
         tooltip: 'Release Build Mode',
         icon: 'layout'
+    })
+    releaseTargetElement = () => new Dependency({
+        id: SideTreeItem.ReleaseTarget,
+        label: 'Target',
+        version: `${this.swift.selectedReleaseTarget ?? ''}`,
+        tooltip: 'Release Target To Build/Run/Test',
+        icon: 'target'
     })
     onDidRenameFiles(event: FileRenameEvent) {
         super.onDidRenameFiles(event)
@@ -407,6 +423,7 @@ export class PureStream extends Stream {
     async defaultDebugActionItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
         if (Swift.v6Mode) items.push(this.debugBuildModeElement())
+        items.push(this.debugTargetElement())
         return [
             ...items,
             new Dependency({
@@ -439,6 +456,7 @@ export class PureStream extends Stream {
     async defaultReleaseItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
         if (Swift.v6Mode) items.push(this.releseBuildModeElement())
+        items.push(this.releaseTargetElement())
         return [
             ...items,
             ...(await super.defaultReleaseItems())
