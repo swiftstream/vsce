@@ -54,7 +54,7 @@ export class PureStream extends Stream {
     }
     
     isDebugBuilt(target: string, buildMode: PureBuildMode): boolean {
-        return fs.existsSync(compilationFolder({
+        return fs.existsSync(pathToCompiledBinary({
             target: target,
             mode: pureBuildModeToSwiftBuildMode(buildMode),
             release: false
@@ -62,7 +62,7 @@ export class PureStream extends Stream {
     }
     
     isReleaseBuilt(target: string, buildMode: PureBuildMode): boolean {
-        return fs.existsSync(compilationFolder({
+        return fs.existsSync(pathToCompiledBinary({
             target: target,
             mode: pureBuildModeToSwiftBuildMode(buildMode),
             release: true
