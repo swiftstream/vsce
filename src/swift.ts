@@ -357,6 +357,7 @@ export class Swift {
                 if (Swift.v5Mode) throw `Static Linux SDK is not available for Swift 5`
                 args.push(...['--swift-sdk', 'x86_64-swift-linux-musl'])
                 args.push(...['--static-swift-stdlib'])
+                if (options.release) args.push('-Xlinker', '-s')
                 break
             case SwiftBuildMode.StaticLinuxArm:
                 if (Swift.v5Mode) throw `Static Linux SDK is not available for Swift 5`
