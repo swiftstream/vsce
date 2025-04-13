@@ -133,7 +133,7 @@ install_artifact() {
             echo -e "${BLUE}Preparing SDK${NC} ${BOLD}${artifactName}${NORM}"
         fi
 
-        if [[ ! -d "$artifactExtractedPath" ]]; then
+        if [[ ! -d "$artifactExtractedPath" || -z "$(ls -A "$artifactExtractedPath" 2>/dev/null)" ]]; then
             if [[ $retrying -eq 0 ]]; then
                 echo -e "${YELLOW}Downloading SDK${NC} ${BOLD}${artifactName}${NORM} from ${YELLOW}${_artifactURL}${NC}"
             fi
