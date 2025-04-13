@@ -187,7 +187,11 @@ export class Swift {
         serviceWorkerTarget: string,
         abortHandler: AbortHandler
     }): Promise<any> {
-        const executablePath = `${projectDirectory}/.build/debug/${options.serviceWorkerTarget}`
+        const executablePath = pathToCompiledBinary({
+            target: options.serviceWorkerTarget,
+            mode: SwiftBuildMode.Standard,
+            release: false
+        })
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the service target, can't retrieve manifest`
         }
@@ -212,7 +216,11 @@ export class Swift {
         target: string,
         abortHandler: AbortHandler
     }): Promise<Index | undefined> {
-        const executablePath = `${projectDirectory}/.build/debug/${options.target}`
+        const executablePath = pathToCompiledBinary({
+            target: options.target,
+            mode: SwiftBuildMode.Standard,
+            release: false
+        })
         if (!fs.existsSync(executablePath)) {
             throw `Missing executable binary of the ${options.target} target, can't retrieve index data`
         }
@@ -370,6 +378,7 @@ export class Swift {
                 if (Swift.v5Mode) args.push(...['--triple', 'wasm32-unknown-wasi'])
                 else args.push(...['--swift-sdk', 'wasm32-unknown-wasi'])
                 args.push(...['--static-swift-stdlib'])
+                // MEMO: -Xlinker -s is redundant because wasm-strip is more efficient
                 args.push(...['-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS'])
                 args.push(...['-Xswiftc', '-Xclang-linker'])
                 args.push(...['-Xswiftc', '-mexec-model=reactor'])

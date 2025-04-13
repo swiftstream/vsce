@@ -1,7 +1,7 @@
 import { projectDirectory } from '../../../../extension'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified, wasPathModified } from '../../../../helpers/filesHelper'
 import { TimeMeasure } from '../../../../helpers/timeMeasureHelper'
-import { SwiftBuildType } from '../../../../swift'
+import { SwiftBuildMode, SwiftBuildType } from '../../../../swift'
 import { buildStatus, clearStatus, print } from '../../../../streams/stream'
 import { LogLevel } from '../../../../streams/stream'
 import { buildSwiftTarget } from '../../../../commands/build/helpers'
@@ -29,7 +29,7 @@ export async function buildExecutableTarget(options: {
     try {
         await buildSwiftTarget({
             type: options.type,
-            mode: webBuildModeToSwiftBuildMode(options.mode),
+            mode: options.type == SwiftBuildType.Native ? SwiftBuildMode.Standard : webBuildModeToSwiftBuildMode(options.mode),
             targetName: options.target,
             release: options.release,
             abortHandler: options.abortHandler,
