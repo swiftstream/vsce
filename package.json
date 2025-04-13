@@ -1,8 +1,8 @@
 {
   "name": "swiftstream",
   "displayName": "Swift Stream",
-  "description": "🐳 Containerized Swift Development — by iMike",
-  "version": "1.8.1",
+  "description": "🔋 Swift IDE with batteries included — by iMike",
+  "version": "1.8.2",
   "publisher": "swiftstream",
   "icon": "media/icon.png",
   "engines": {
