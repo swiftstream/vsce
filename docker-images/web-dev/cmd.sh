@@ -94,7 +94,7 @@ echo "export PATH=${PATH}:${toolchainPath}/usr/bin" > ~/.bashrc
 source ~/.bashrc
 
 # Cleanup SDK symlinks
-rm -rf /root/.swiftpm/swift-sdks/*/
+find /root/.swiftpm/swift-sdks -maxdepth 1 -type l -exec rm -f {} \;
 
 # MARK: SWIFT ARTIFACT
 install_artifact() {
