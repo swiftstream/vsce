@@ -150,7 +150,7 @@ export class AnyFeature {
     }
     async onDidSaveTextDocument(path: string): Promise<boolean> { return false }
 
-    private updateIsInstalled() {
+    updateIsInstalled() {
         this.isInstalled = this.isBinaryPresent()
         const devcontainerConfig = this.getDevcontainerConfig()
         var features: any = devcontainerConfig.features ?? {}

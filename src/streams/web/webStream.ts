@@ -28,7 +28,7 @@ import { Vercel } from './features/vercel'
 import { Yandex } from './features/yandex'
 import { Brotli } from '../../brotli'
 import { portDevCrawlerCommand } from './commands/portDevCrawler'
-import { isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
+import { isBuildingDebug, isHotRebuildEnabled, LogLevel, print, Stream } from '../stream'
 import { debugGzipCommand } from './commands/debugGzip'
 import { debugBrotliCommand } from './commands/debugBrotli'
 import { startWebSocketServer } from './commands/webSocketServer'
@@ -544,6 +544,12 @@ export class WebStream extends Stream {
     async defaultDebugActionItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
         if (Swift.v6Mode) items.push(this.debugBuildModeElement())
+		items.push(new Dependency({
+			id: SideTreeItem.BuildDebug,
+			tooltip: 'Cmd+B or Ctrl+B',
+			label: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
+			icon: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer')
+		}))
         return items
     }
 
