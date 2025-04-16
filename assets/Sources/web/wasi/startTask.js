@@ -97,8 +97,9 @@ export const startWasiTask = async (wasi, target, isService) => {
     if (instance.exports._initialize) {
         instance.exports._initialize()
         if (instance.exports.__main_argc_argv) {
-            instance.exports.main = instance.exports.__main_argc_argv
+            instance.exports.__main_argc_argv()
+        } else {
+            instance.exports.main()
         }
-        instance.exports.main()
     }
 }
