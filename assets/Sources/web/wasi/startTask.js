@@ -11,7 +11,11 @@ export const startWasiTask = async (wasi, target, isService) => {
     const reader = response.body.getReader()
 
     // Step 2: get total length
-    const contentLength = +response.headers.get('Content-Length')
+    const headResponse = await fetch(`/${target}.wasm`, {
+        method: 'HEAD',
+        headers: { 'Accept-Encoding': 'identity' }
+    })
+    const contentLength = headResponse.headers.get('Content-Length')
 
     if (!isService) {
         if (response.status == 304) {
