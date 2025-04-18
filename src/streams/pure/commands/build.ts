@@ -24,7 +24,10 @@ export async function buildCommand(stream: PureStream, buildMode: PureBuildMode)
     sidebarTreeView?.cleanupErrors()
     sidebarTreeView?.refresh()
     try {
-        print(`🏗️ Started building debug`, LogLevel.Normal, true)
+        print({
+            normal: `🏗️ Started building debug`,
+            detailed: `🏗️ Started building debug for ${buildMode}`
+        }, LogLevel.Normal, true)
         // Phase 1: Resolve Swift dependencies for each build type
         print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
         await resolveSwiftDependencies({
