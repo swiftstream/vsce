@@ -397,11 +397,15 @@ export class Swift {
                 args.push(...['-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS'])
                 args.push(...['-Xswiftc', '-Xclang-linker'])
                 args.push(...['-Xswiftc', '-mexec-model=reactor'])
-                args.push(...['-Xlinker', '-lCoreFoundation'])
-                args.push(...['-Xlinker', '-licuuc'])
-                args.push(...['-Xlinker', '-licui18n'])
-                args.push(...['-Xlinker', '--stack-first'])
-                args.push(...['-Xlinker', '--export=main'])
+                if (Swift.v5Mode) {
+                    args.push(...['-Xlinker', '-lCoreFoundation'])
+                    args.push(...['-Xlinker', '-licuuc'])
+                    args.push(...['-Xlinker', '-licui18n'])
+                    args.push(...['-Xlinker', '--stack-first'])
+                    args.push(...['-Xlinker', '--export=main'])
+                } else {
+                    args.push(...['-Xlinker', '--export-if-defined=__main_argc_argv'])
+                }
                 break
             case SwiftBuildMode.Wasip1Threads:
                 if (Swift.v5Mode) throw `Wasi Preview 1 (threads) SDK is not available for Swift 5`
@@ -410,11 +414,15 @@ export class Swift {
                 args.push(...['-Xswiftc', '-DJAVASCRIPTKIT_WITHOUT_WEAKREFS'])
                 args.push(...['-Xswiftc', '-Xclang-linker'])
                 args.push(...['-Xswiftc', '-mexec-model=reactor'])
-                args.push(...['-Xlinker', '-lCoreFoundation'])
-                args.push(...['-Xlinker', '-licuuc'])
-                args.push(...['-Xlinker', '-licui18n'])
-                args.push(...['-Xlinker', '--stack-first'])
-                args.push(...['-Xlinker', '--export=main'])
+                if (Swift.v5Mode) {
+                    args.push(...['-Xlinker', '-lCoreFoundation'])
+                    args.push(...['-Xlinker', '-licuuc'])
+                    args.push(...['-Xlinker', '-licui18n'])
+                    args.push(...['-Xlinker', '--stack-first'])
+                    args.push(...['-Xlinker', '--export=main'])
+                } else {
+                    args.push(...['-Xlinker', '--export-if-defined=__main_argc_argv'])
+                }
                 break
         }
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
