@@ -583,8 +583,9 @@ export class Stream {
 	}
 	async customItems(element: Dependency): Promise<Dependency[]> {
 		let items: Dependency[] = []
-		const feature = this.features().find((x) => x.name === element.id)
-		if (feature) {
+		const features = this.features()
+		for (let i = 0; i < features.length; i++) {
+			const feature = features[i]
 			items.push(...(await feature.customItems(element)))
 		}
 		return items
