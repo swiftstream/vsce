@@ -71,7 +71,7 @@ export class Wasm {
             throw 'Path to wasm-opt is undefined'
         const fullPath = `${options.destPath}/${options.lowercasedTarget}.wasm`
         const originalSize = fs.statSync(fullPath).size
-        const args: string[] = ['-Os', '--enable-bulk-memory', fullPath, '-o', fullPath]
+        const args: string[] = ['-Os', '--enable-bulk-memory', '--enable-sign-ext', fullPath, '-o', fullPath]
         print(`💾 Optimizing ${options.lowercasedTarget}.wasm`, LogLevel.Detailed)
         print(`executing wasm-opt ${args.join(' ')}`, LogLevel.Verbose)
         const result = await this.webStream.bash.execute({
