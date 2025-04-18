@@ -64,7 +64,7 @@ export class Swift {
     async getTargets(options: {
         type: SwiftBuildType,
         abortHandler: AbortHandler | undefined
-    }): Promise<SwiftTargets> {
+    }, attempt: number = 0): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
@@ -106,14 +106,20 @@ export class Swift {
             print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Unbearable)
             return result
         } catch (error: any) {
-            console.dir({getTargetsError: error})
-            throw `Unable to get executable targets from the package dump`
+            if (`${error}`.includes('Another instance of SwiftPM') && attempt < 10) {
+                console.warn(`Retrying getTargets, attempt ${attempt + 1}`)
+                await new Promise(x => setTimeout(x, 2000))
+                return await this.getTargets(options, attempt + 1)
+            } else {
+                console.dir({getTargetsError: error})
+                throw `Unable to get executable targets from the package dump`
+            }
         }
     }
 
     async getWebTargets(options?: {
         abortHandler?: AbortHandler | undefined
-    }): Promise<SwiftWebTargets> {
+    }, attempt: number = 0): Promise<SwiftWebTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `No Package.swift file in the project directory`
@@ -123,7 +129,10 @@ export class Swift {
                 executables: [],
                 serviceWorkers: []
             }
-            const dump = await this.execute(['package', 'dump-package'], {
+            const dump = await this.execute([
+                'package', 'dump-package',
+                '--build-path', `./.build/.${SwiftBuildType.Wasi}`
+            ], {
                 type: SwiftBuildType.Wasi,
                 abortHandler: options?.abortHandler
             })
@@ -140,8 +149,14 @@ export class Swift {
             print(`Retrieved targets: [${result.executables.join(', ')}]`, LogLevel.Unbearable)
             return result
         } catch (error: any) {
-            console.dir({getTargetsError: error})
-            throw `Unable to get executable targets from the package dump`
+            if (`${error}`.includes('Another instance of SwiftPM') && attempt < 10) {
+                console.warn(`Retrying getWebTargets, attempt ${attempt + 1}`)
+                await new Promise(x => setTimeout(x, 2000))
+                return await this.getWebTargets(options, attempt + 1)
+            } else {
+                console.dir({getWebTargetsError: error})
+                throw `Unable to get executable web targets from the package dump`
+            }
         }
     }
 
