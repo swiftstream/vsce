@@ -1,8 +1,8 @@
 {
   "name": "swiftstream",
   "displayName": "Swift Stream",
-  "description": "🔋 Swift IDE with batteries included — by iMike",
-  "version": "1.8.2",
+  "description": "🔋 Swift IDE with batteries included",
+  "version": "1.8.3",
   "publisher": "swiftstream",
   "icon": "media/icon.png",
   "engines": {
