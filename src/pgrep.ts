@@ -26,7 +26,7 @@ export class Pgrep {
     async isAnyBlockingSwiftProcessRunning(): Promise<boolean> {
         if (!projectDirectory) return false
         try {
-            const result = await this.execute(['-fl', `swift-(build|package)`], projectDirectory)
+            const result = await this.execute(['-fl', `swift-(build|package|frontend|backtrace|help)`], projectDirectory)
             if (result.code != 0) return false
             return result.stdout.includes('swift')
         } catch {
