@@ -78,6 +78,13 @@
 			"args": ["buildx", "create", "--name", "android-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Embedded ESP32
+		{
+			"label": "Docker Create BuildX Container Embedded ESP32 (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "esp32-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Server
 		{
 			"label": "Docker Create BuildX Container ServerDev (step 2)",
@@ -129,6 +136,20 @@
 				"--builder", "android-container",
 				"--push",
 				"./docker-images/android-dev"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker Push Embedded ESP32 Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded ESP32 Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/embedded-esp32:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "esp32-container",
+				"--push",
+				"./docker-images/embedded-esp32"
 			],
 			"type": "shell"
 		},
@@ -193,6 +214,13 @@
 			"args": ["pull", "swiftstream/android-dev:latest"],
 			"type": "shell"
 		},
+		// MARK: Docker Pull Embedded ESP32 Dev Image
+		{
+			"label": "Docker Pull Embedded ESP32 Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/embedded-esp32:latest"],
+			"type": "shell"
+		},
 		// MARK: Docker Pull Server Dev/Prod Images
 		{
 			"label": "Docker Pull ServerDev Image (step 4)",
@@ -231,6 +259,21 @@
 				"--builder", "android-container",
 				"--push",
 				"./docker-images/android-dev"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Embedded ESP32 Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded ESP32 Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/embedded-esp32:latest",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "esp32-container",
+				"--push",
+				"./docker-images/embedded-esp32"
 			],
 			"type": "shell"
 		},

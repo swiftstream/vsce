@@ -6,15 +6,19 @@
     },
 	"containerEnv": {
 		"S_MODE": "EMBEDDED",
-		"S_SDK": "##SDK##",
+		"S_CHIP": "ESP32",
 		"S_TOOLCHAIN_URL_X86": "https://download.swift.org/swift-6.1-release/ubuntu2004/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04.tar.gz",
 		"S_TOOLCHAIN_URL_ARM": "https://download.swift.org/swift-6.1-release/ubuntu2004-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
 		"S_VERSION_MAJOR": "6",
 		"S_VERSION_MINOR": "1",
-		"S_VERSION_PATCH": "0"
+		"S_VERSION_PATCH": "0",
+		"IDF_VERSION": "5.3",
+		"IDF_CHIP_TARGETS": "esp32c6",
+		"IDF_TARGET": "esp32c6",
+		"IDF_PATH": "/embedded/esp",
+		"IDF_TOOLS_PATH": "/embedded/esp/.espressif"
 	},
 	"appPort": [
-		"8080:8080"
 	],
 	"postStartCommand": "cmd.sh",
 	"customizations": {
@@ -27,11 +31,11 @@
 			"settings": {
 				"extensions.ignoreRecommendations": true,
 				"remote.autoForwardPorts": false,
-				"swift.path": "/swift/toolchains/6.0.2-RELEASE/usr/bin",
+				"swift.path": "/swift/toolchains/6.1-RELEASE/usr/bin",
 				"swift.swiftEnvironmentVariables": {
 					"DEVELOPER_DIR": "public"
 				},
-				"lldb.library": "/swift/toolchains/6.0.2-RELEASE/usr/lib/liblldb.so",
+				"lldb.library": "/swift/toolchains/6.1-RELEASE/usr/lib/liblldb.so",
 				"lldb.launch.expressions": "native",
 				"swift.disableAutoResolve": false,
 				"swift.autoGenerateLaunchConfigurations": true,
@@ -55,6 +59,11 @@
 		{
 			"source": "swift-sdks",
 			"target": "/swift/sdks",
+			"type": "volume"
+		},
+		{
+			"source": "esp-idf",
+			"target": "/embedded/esp",
 			"type": "volume"
 		}
 	]
