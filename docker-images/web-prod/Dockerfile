@@ -22,7 +22,7 @@ RUN cd nginx-$NGINX_VERSION \
     && make modules
 
 # ---- Stage 2: Final Ubuntu 20.04 (focal) Image ----
-FROM swiftstream/base:latest
+FROM swiftstream/base:focal
 
 # Install Nginx and Brotli
 RUN apt update && apt install -y nginx brotli libbrotli1
