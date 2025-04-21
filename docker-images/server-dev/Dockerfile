@@ -1,4 +1,4 @@
-FROM swiftstream/base:latest
+FROM swiftstream/base:noble
 
 ENV S_IMAGE_VERSION=100
 
