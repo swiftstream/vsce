@@ -1,4 +1,4 @@
-FROM swiftstream/web-prod:latest
+FROM swiftstream/web-prod:focal
 
 COPY wasm-strip /usr/local/bin/
 COPY wasm-opt /usr/local/bin/
