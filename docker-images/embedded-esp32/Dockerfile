@@ -1,10 +1,10 @@
-FROM swiftstream/base:latest
+FROM swiftstream/base:noble
 
 ENV S_IMAGE_VERSION=100
 
 # install esp-idf required packages
 RUN apt-get update && apt-get install -y \
-flex bison gperf python3 python3-pip python3.8-venv ninja-build ccache \
+flex bison gperf python3 python3-pip python3-venv ninja-build ccache \
 libffi-dev libssl-dev dfu-util libusb-1.0-0
 
 # Install architecture-specific CMake 3.31.7
