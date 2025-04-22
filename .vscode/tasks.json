@@ -111,17 +111,31 @@
 			"args": ["buildx", "create", "--name", "webprod-container", "--driver=docker-container"],
 			"type": "shell"
 		},
-		// MARK: Docker Push BASE
+		// MARK: Docker Push BASE focal
 		{
-			"label": "Docker Build & Push Multi BASE Image (step 3)",
+			"label": "Docker Build & Push Multi BASE focal Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/base:latest",
+				"--tag", "swiftstream/base:focal",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "swift-base-container",
 				"--push",
-				"./docker-images/base"
+				"./docker-images/base/focal"
+			],
+			"type": "shell"
+		},
+		// MARK: Docker Push BASE noble
+		{
+			"label": "Docker Build & Push Multi BASE noble Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/base:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "swift-base-container",
+				"--push",
+				"./docker-images/base/noble"
 			],
 			"type": "shell"
 		},
@@ -131,7 +145,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/android-dev:latest",
+				"--tag", "swiftstream/android-dev:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
@@ -145,7 +159,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/embedded-esp32:latest",
+				"--tag", "swiftstream/embedded-esp32:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "esp32-container",
 				"--push",
@@ -159,7 +173,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/server-dev:latest",
+				"--tag", "swiftstream/server-dev:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
@@ -172,7 +186,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/server-prod:latest",
+				"--tag", "swiftstream/server-prod:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "serverprod-container",
 				"--push",
@@ -186,7 +200,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/web-dev:latest",
+				"--tag", "swiftstream/web-dev:focal",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webdev-container",
 				"--push",
@@ -199,7 +213,7 @@
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/web-prod:latest",
+				"--tag", "swiftstream/web-prod:focal",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webprod-container",
 				"--push",
@@ -211,40 +225,40 @@
 		{
 			"label": "Docker Pull AndroidDev Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/android-dev:latest"],
+			"args": ["pull", "swiftstream/android-dev:noble"],
 			"type": "shell"
 		},
 		// MARK: Docker Pull Embedded ESP32 Dev Image
 		{
 			"label": "Docker Pull Embedded ESP32 Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/embedded-esp32:latest"],
+			"args": ["pull", "swiftstream/embedded-esp32:noble"],
 			"type": "shell"
 		},
 		// MARK: Docker Pull Server Dev/Prod Images
 		{
 			"label": "Docker Pull ServerDev Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/server-dev:latest"],
+			"args": ["pull", "swiftstream/server-dev:noble"],
 			"type": "shell"
 		},
 		{
 			"label": "Docker Pull ServerProd Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/server-prod:latest"],
+			"args": ["pull", "swiftstream/server-prod:noble"],
 			"type": "shell"
 		},
 		// MARK: Docker Pull Web Dev/Prod Images
 		{
 			"label": "Docker Pull WebDev Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/web-dev:latest"],
+			"args": ["pull", "swiftstream/web-dev:focal"],
 			"type": "shell"
 		},
 		{
 			"label": "Docker Pull WebProd Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/web-prod:latest"],
+			"args": ["pull", "swiftstream/web-prod:focal"],
 			"type": "shell"
 		},
 		// MARK: Docker ForcePush Android Development Container Image
@@ -254,7 +268,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/android-dev:latest",
+				"--tag", "swiftstream/android-dev:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
@@ -269,7 +283,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/embedded-esp32:latest",
+				"--tag", "swiftstream/embedded-esp32:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "esp32-container",
 				"--push",
@@ -284,7 +298,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/server-dev:latest",
+				"--tag", "swiftstream/server-dev:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
@@ -298,7 +312,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/server-prod:latest",
+				"--tag", "swiftstream/server-prod:noble",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "serverprod-container",
 				"--push",
@@ -313,7 +327,7 @@
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/web-dev:latest",
+				"--tag", "swiftstream/web-dev:focal",
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webdev-container",
 				"--push",
