@@ -26,6 +26,7 @@
     		"extensions": [
 				"swiftstream.swiftstream",
 				"swiftlang.swift-vscode",
+				"wokwi.wokwi-vscode",
 				"mateocerquetella.xcode-12-theme"
 			],
 			"settings": {
