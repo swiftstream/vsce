@@ -221,6 +221,20 @@
 			],
 			"type": "shell"
 		},
+		// MARK: Docker Pull BASE focal Dev Image
+		{
+			"label": "Docker Pull Base focal Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/base:focal"],
+			"type": "shell"
+		},
+		// MARK: Docker Pull BASE noble Dev Image
+		{
+			"label": "Docker Pull Base noble Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/base:noble"],
+			"type": "shell"
+		},
 		// MARK: Docker Pull Android Dev Image
 		{
 			"label": "Docker Pull AndroidDev Image (step 4)",
