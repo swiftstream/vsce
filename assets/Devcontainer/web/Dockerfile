@@ -1,1 +1,1 @@
-FROM swiftstream/web-dev:latest
+FROM swiftstream/web-dev:focal

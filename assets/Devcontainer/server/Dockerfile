@@ -1,1 +1,1 @@
-FROM swiftstream/server-dev:latest
+FROM swiftstream/server-dev:noble

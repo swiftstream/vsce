@@ -1,1 +1,1 @@
-FROM swiftstream/embedded-esp32:latest
+FROM swiftstream/embedded-esp32:noble
