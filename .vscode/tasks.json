@@ -149,8 +149,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
-				"./docker-images/android-dev"
+				"--file", "android-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		// MARK: Docker Push Embedded ESP32 Development Container Image
@@ -163,8 +167,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "esp32-container",
 				"--push",
-				"./docker-images/embedded-esp32"
+				"--file", "embedded-esp32/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		// MARK: Docker Push Server Development Container Image
@@ -177,8 +185,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
-				"./docker-images/server-dev"
+				"--file", "server-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		{
@@ -204,8 +216,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webdev-container",
 				"--push",
-				"./docker-images/web-dev"
+				"--file", "web-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		{
@@ -286,8 +302,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "android-container",
 				"--push",
-				"./docker-images/android-dev"
+				"--file", "android-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		// MARK: Docker ForcePush Embedded ESP32 Development Container Image
@@ -301,8 +321,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "esp32-container",
 				"--push",
-				"./docker-images/embedded-esp32"
+				"--file", "embedded-esp32/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		// MARK: Docker ForcePush Server Development Container Image
@@ -316,8 +340,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "server-container",
 				"--push",
-				"./docker-images/server-dev"
+				"--file", "server-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		},
 		{
@@ -345,8 +373,12 @@
 				"--platform", "linux/amd64,linux/arm64",
 				"--builder", "webdev-container",
 				"--push",
-				"./docker-images/web-dev"
+				"--file", "web-dev/Dockerfile",
+    			"."
 			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
 			"type": "shell"
 		}
 	]

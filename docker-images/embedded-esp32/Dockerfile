@@ -22,7 +22,8 @@ RUN ARCH=$(uname -m) && \
     rm /tmp/cmake-install.sh
 
 # copy required files
-COPY cmd.sh /usr/local/bin/
+COPY embedded-esp32/cmd.sh /usr/local/bin/
+COPY dev-base.sh /usr/local/bin/
 
 RUN ["chmod", "+x", "/usr/local/bin/cmd.sh"]
 CMD ["cmd.sh"]
