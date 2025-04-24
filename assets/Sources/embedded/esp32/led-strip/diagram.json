@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "author": "",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-c6-devkitc-1",
+      "id": "esp",
+      "top": -13.91,
+      "left": 90.52,
+      "attrs": { "builder": "esp-idf" }
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb1",
+      "top": 182.4,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb2",
+      "top": 220.8,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb3",
+      "top": -48,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb4",
+      "top": -9.6,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb5",
+      "top": 144,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb6",
+      "top": 28.8,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb7",
+      "top": 105.6,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb8",
+      "top": 67.2,
+      "left": 41.1,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": -96,
+      "left": 38.4,
+      "attrs": { "text": "Swift Stream Led Strip" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "rgb2:DIN", "esp:0", "green", [ "v8.8", "h19.2", "v-124.8" ] ],
+    [ "rgb2:DOUT", "rgb1:DIN", "green", [ "v-9.6", "h10.5" ] ],
+    [ "rgb5:DOUT", "rgb7:DIN", "green", [ "v-9.6", "h10.5" ] ],
+    [ "rgb8:DOUT", "rgb6:DIN", "green", [ "v-9.6", "h10.5" ] ],
+    [ "rgb6:DOUT", "rgb4:DIN", "green", [ "v-9.6", "h10.5" ] ],
+    [ "rgb4:DOUT", "rgb3:DIN", "green", [ "h0.9", "v-9.6", "h9.6" ] ],
+    [ "rgb1:DOUT", "rgb5:DIN", "green", [ "v-9.6", "h10.5" ] ],
+    [ "rgb2:VSS", "esp:5V", "red", [ "h0.9", "v18.4", "h38.4", "v-67.2" ] ],
+    [ "rgb2:VDD", "rgb1:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb1:VDD", "rgb5:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb5:VDD", "rgb7:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb7:VDD", "rgb8:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb8:VDD", "rgb6:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb6:VDD", "rgb4:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb4:VDD", "rgb3:VSS", "red", [ "v-9.6", "h-9.6", "v-8.8" ] ],
+    [ "rgb3:VDD", "esp:GND.4", "black", [ "v-9.6", "h125.9" ] ],
+    [ "rgb8:DIN", "rgb7:DOUT", "green", [ "v8.8", "h-10.5" ] ]
+  ],
+  "dependencies": {}
+}
