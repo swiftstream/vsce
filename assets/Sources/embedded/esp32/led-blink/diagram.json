@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "author": "",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-c6-devkitc-1",
+      "id": "esp",
+      "top": 5.29,
+      "left": 4.12,
+      "attrs": { "builder": "esp-idf" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 72,
+      "left": -115.75,
+      "rotate": 90,
+      "attrs": { "value": "0" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -3.6,
+      "left": -111.4,
+      "attrs": { "color": "red" }
+    },
+    { "type": "wokwi-neopixel", "id": "rgb1", "top": 121.3, "left": 152.6, "attrs": {} },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": -48,
+      "left": -28.8,
+      "attrs": { "text": "Swift Stream LED BLINK" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "r1:2", "esp:10", "red", [ "v18", "h67.2", "v-5.29" ] ],
+    [ "r1:1", "led1:A", "red", [ "h0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:9", "rgb1:DIN", "violet", [ "h27.7", "v-28.8", "h57.6", "v19.2" ] ],
+    [ "rgb1:VSS", "esp:NC1", "gold", [ "h8.8", "v27.9" ] ],
+    [ "rgb1:DOUT", "esp:GND.2", "black", [ "h-19.2", "v37.5" ] ]
+  ],
+  "dependencies": {}
+}
