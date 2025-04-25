@@ -6,7 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Check how it blinks in wokwi simulator, just click on diagram.json
+// Check how it blinks in wokwi simulator,
+// after successfull build just click on diagram.json.
+// Build the project to have Swift syntax highlight and autocomplete.
 @_cdecl("app_main")
 func main() {
     print("Hello from Swift on ESP32-C6!")
