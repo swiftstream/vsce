@@ -85,6 +85,13 @@
 			"args": ["buildx", "create", "--name", "esp32-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Embedded RASPBERRY
+		{
+			"label": "Docker Create BuildX Container Embedded RASPBERRY (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "raspberry-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Server
 		{
 			"label": "Docker Create BuildX Container ServerDev (step 2)",
@@ -168,6 +175,24 @@
 				"--builder", "esp32-container",
 				"--push",
 				"--file", "embedded-esp32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker Push Embedded RASPBERRY Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded RASPBERRY Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/embedded-raspberry:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "raspberry-container",
+				"--push",
+				"--file", "embedded-raspberry/Dockerfile",
     			"."
 			],
 			"options": {
@@ -265,6 +290,13 @@
 			"args": ["pull", "swiftstream/embedded-esp32:noble"],
 			"type": "shell"
 		},
+		// MARK: Docker Pull Embedded RASPBERRY Dev Image
+		{
+			"label": "Docker Pull Embedded RASPBERRY Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/embedded-raspberry:noble"],
+			"type": "shell"
+		},
 		// MARK: Docker Pull Server Dev/Prod Images
 		{
 			"label": "Docker Pull ServerDev Image (step 4)",
@@ -322,6 +354,25 @@
 				"--builder", "esp32-container",
 				"--push",
 				"--file", "embedded-esp32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Embedded RASPBERRY Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded RASPBERRY Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/embedded-raspberry:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "raspberry-container",
+				"--push",
+				"--file", "embedded-raspberry/Dockerfile",
     			"."
 			],
 			"options": {
