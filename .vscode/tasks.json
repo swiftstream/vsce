@@ -85,6 +85,13 @@
 			"args": ["buildx", "create", "--name", "esp32-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Embedded STM32
+		{
+			"label": "Docker Create BuildX Container Embedded STM32 (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "stm32-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Embedded RASPBERRY
 		{
 			"label": "Docker Create BuildX Container Embedded RASPBERRY (step 2)",
@@ -175,6 +182,24 @@
 				"--builder", "esp32-container",
 				"--push",
 				"--file", "embedded-esp32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker Push Embedded STM32 Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded STM32 Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/embedded-stm32:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "stm32-container",
+				"--push",
+				"--file", "embedded-stm32/Dockerfile",
     			"."
 			],
 			"options": {
@@ -290,6 +315,13 @@
 			"args": ["pull", "swiftstream/embedded-esp32:noble"],
 			"type": "shell"
 		},
+		// MARK: Docker Pull Embedded STM32 Dev Image
+		{
+			"label": "Docker Pull Embedded STM32 Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/embedded-stm32:noble"],
+			"type": "shell"
+		},
 		// MARK: Docker Pull Embedded RASPBERRY Dev Image
 		{
 			"label": "Docker Pull Embedded RASPBERRY Image (step 4)",
@@ -354,6 +386,25 @@
 				"--builder", "esp32-container",
 				"--push",
 				"--file", "embedded-esp32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Embedded STM32 Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded STM32 Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/embedded-stm32:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "stm32-container",
+				"--push",
+				"--file", "embedded-stm32/Dockerfile",
     			"."
 			],
 			"options": {
