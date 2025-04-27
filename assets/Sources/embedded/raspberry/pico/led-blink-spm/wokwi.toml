@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = ".build/armv6m-none-none-eabi/release/blinky.hex"
+elf = '.build/armv6m-none-none-eabi/release/blinky.elf'

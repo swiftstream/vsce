@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "author": "",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-pi-pico", "id": "pico", "top": 0, "left": 0, "attrs": { "variant": "pico" } },
+    {
+      "type": "wokwi-led",
+      "id": "led",
+      "top": 34.8,
+      "left": 80.6,
+      "attrs": { "color": "magenta" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": -38.4,
+      "left": -38.4,
+      "attrs": { "text": "Swift Stream Led Blink" }
+    }
+  ],
+  "connections": [
+    [ "pico:GP26", "led:A", "magenta", [ "v0", "h0" ] ],
+    [ "led:C", "pico:GND.7", "black", [ "v0", "h0" ] ]
+  ],
+  "dependencies": {}
+}
