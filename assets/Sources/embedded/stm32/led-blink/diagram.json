@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "author": "",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-stm32-bluepill", "id": "stm32", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 51.4,
+      "left": 95.15,
+      "rotate": 270,
+      "attrs": { "value": "1000" }
+    },
+    { "type": "wokwi-led", "id": "led1", "top": -42, "left": 99.8, "attrs": { "color": "red" } },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": -67.2,
+      "left": -28.8,
+      "attrs": { "text": "Swift Stream Led Blink" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text2",
+      "top": 211.2,
+      "left": -19.2,
+      "attrs": { "text": "NUCLEO_F103RB" }
+    }
+  ],
+  "connections": [
+    [ "stm32:A10", "$serialMonitor:TX", "green", [] ],
+    [ "stm32:A9", "$serialMonitor:RX", "green", [] ],
+    [ "stm32:A5", "r1:1", "red", [ "v-1.36", "h52.04" ] ],
+    [ "r1:2", "led1:A", "red", [ "h0" ] ],
+    [ "led1:C", "stm32:GND.2", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
