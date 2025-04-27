@@ -10,8 +10,9 @@ The extension provides a convenient environment packed with features that togeth
 
 ## 🌊 Choose Your Stream
 
-- **Web**: Progressive web apps using WebAssembly  
-- **Server**: Backend apps using Vapor and Hummingbird  
+- **Web**: Progressive web apps using WebAssembly
+- **Server**: Backend apps using Vapor and Hummingbird
+- **Embedded**: ESP32-C6, Raspberry Pi Pico, STM32, nrf52
 - **Pure**: Libraries, macros, CLI tools, etc.
 
 Projects for any of these streams can be easily created via the **"Start New Project"** wizard:
@@ -20,8 +21,7 @@ Projects for any of these streams can be easily created via the **"Start New Pro
 
 ## ⌛️ Coming Soon (WIP)
 
-- **Android**: Apps and libraries via JNI  
-- **Embedded**: ESP32-C6
+- **Android**: Apps and libraries via JNI
 
 ## 📱 iOS, macOS, etc.
 
