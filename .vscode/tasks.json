@@ -92,6 +92,13 @@
 			"args": ["buildx", "create", "--name", "stm32-container", "--driver=docker-container"],
 			"type": "shell"
 		},
+		// MARK: Docker Create Embedded ZEPHYR
+		{
+			"label": "Docker Create BuildX Container Embedded ZEPHYR (step 2)",
+			"command": "docker",
+			"args": ["buildx", "create", "--name", "zephyr-container", "--driver=docker-container"],
+			"type": "shell"
+		},
 		// MARK: Docker Create Embedded RASPBERRY
 		{
 			"label": "Docker Create BuildX Container Embedded RASPBERRY (step 2)",
@@ -200,6 +207,24 @@
 				"--builder", "stm32-container",
 				"--push",
 				"--file", "embedded-stm32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker Push Embedded ZEPHYR Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded ZEPHYR Image (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--tag", "swiftstream/embedded-zephyr:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "zephyr-container",
+				"--push",
+				"--file", "embedded-zephyr/Dockerfile",
     			"."
 			],
 			"options": {
@@ -322,6 +347,13 @@
 			"args": ["pull", "swiftstream/embedded-stm32:noble"],
 			"type": "shell"
 		},
+		// MARK: Docker Pull Embedded ZEPHYR Dev Image
+		{
+			"label": "Docker Pull Embedded ZEPHYR Image (step 4)",
+			"command": "docker",
+			"args": ["pull", "swiftstream/embedded-zephyr:noble"],
+			"type": "shell"
+		},
 		// MARK: Docker Pull Embedded RASPBERRY Dev Image
 		{
 			"label": "Docker Pull Embedded RASPBERRY Image (step 4)",
@@ -405,6 +437,25 @@
 				"--builder", "stm32-container",
 				"--push",
 				"--file", "embedded-stm32/Dockerfile",
+    			"."
+			],
+			"options": {
+    			"cwd": "${workspaceFolder}/docker-images"
+  			},
+			"type": "shell"
+		},
+		// MARK: Docker ForcePush Embedded ZEPHYR Development Container Image
+		{
+			"label": "Docker Build & Push Multi Embedded ZEPHYR Image (no cache) (step 3)",
+			"command": "docker",
+			"args": [
+				"buildx", "build",
+				"--no-cache",
+				"--tag", "swiftstream/embedded-zephyr:noble",
+				"--platform", "linux/amd64,linux/arm64",
+				"--builder", "zephyr-container",
+				"--push",
+				"--file", "embedded-zephyr/Dockerfile",
     			"."
 			],
 			"options": {
