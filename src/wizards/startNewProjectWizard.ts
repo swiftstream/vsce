@@ -670,10 +670,234 @@ async function createNewProjectFiles(
 				await copySourceFile(`.gitignore`)
 				break
 			case 'embedded':
-				let embeddedType = selectedValues['embedded-type']
+				async function copyTools() {
+					// Tools/SVDs
+					for (const file of ['stm32f7x6.patched.svd']) {
+						await copySourceFile(osPath.join('Tools', 'SVDs', file), osPath.join('Tools', 'SVDs', file))
+					}
+					// Tools/Toolsets
+					for (const file of ['stm32f74x-lcd.json', 'stm32f74x.json']) {
+						await copySourceFile(osPath.join('Tools', 'Toolsets', file), osPath.join('Tools', 'Toolsets', file))
+					}
+					// Tools
+					for (const file of ['elf2hex.py', 'macho2bin.py', 'macho2uf2.py']) {
+						await copySourceFile(osPath.join('Tools', file), osPath.join('Tools', file))
+					}
+				}
+				const embeddedType = selectedValues['embedded-type']
+				const embeddedPackage = selectedValues['package-type']
+				switch (embeddedType) {
+					case 'esp32':
+						switch (embeddedPackage) {
+							case 'led-blink':
+								// main
+								for (const file of ['BridgingHeader.h', 'CMakeLists.txt', 'idf_component.yml', 'Led.swift', 'Main.swift', 'Neopixel.swift']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'main', file), osPath.join('main', file))
+								}
+								for (const file of ['.gitignore', 'CMakeLists.txt', 'diagram.json', 'README.md', 'wokwi.toml']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							case 'led-strip':
+								// main
+								for (const file of ['BridgingHeader.h', 'CMakeLists.txt', 'idf_component.yml', 'LedStrip.swift', 'Main.swift']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'main', file), osPath.join('main', file))
+								}
+								for (const file of ['.gitignore', 'CMakeLists.txt', 'diagram.json', 'README.md', 'wokwi.toml']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							default: break
+						}
+						break
+					case 'stm32':
+						switch (embeddedPackage) {
+							case 'led-blink':
+								await copyTools()
+								for (const file of ['.gitignore', 'Board.swift', 'BridgingHeader.h', 'build-elf.sh', 'diagram.json', 'elf-linkerscript.ld', 'Main.swift', 'README.md', 'Registers.swift', 'Startup.c', 'wokwi.toml']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							case 'led-strip':
+								await copyTools()
+								// Sources/Application/Neopixel
+								for (const file of ['HSV8Pixel', 'RGB8Pixel', 'SPINeoPixel', 'SPINeoPixelBit', 'SPINeoPixelGRB64Pixel']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Neopixel', `${file}.swift`), osPath.join('Sources', 'Application', 'Neopixel', `${file}.swift`))
+								}
+								// Sources/Application/Registers
+								for (const file of ['Device', 'DMA1', 'DMA2', 'GPIO', 'GPIOA', 'GPIOB', 'GPIOI', 'RCC', 'SPI1', 'SPI2', 'USART1']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Registers', `${file}.swift`), osPath.join('Sources', 'Application', 'Registers', `${file}.swift`))
+								}
+								// Sources/Application
+								await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Application.swift'), osPath.join('Sources', 'Application', 'Application.swift'))
+								// Sources/Support/include
+								for (const file of ['Support.h']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', 'include', file), osPath.join('Sources', 'Support', 'include', file))
+								}
+								// Sources/Support
+								for (const file of ['startup.S', 'Support.c']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
+								}
+								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md', 'schematic.png']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							case 'lcd-logo':
+								await copyTools()
+								// Sources/Application/Geometry
+								for (const file of ['Color', 'Point', 'Size']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Geometry', `${file}.swift`), osPath.join('Sources', 'Application', 'Geometry', `${file}.swift`))
+								}
+								// Sources/Application/HAL
+								for (const file of ['GPIOA+Helpers', 'LTDC+Helpers', 'RCC+Helpers']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'HAL', `${file}.swift`), osPath.join('Sources', 'Application', 'HAL', `${file}.swift`))
+								}
+								// Sources/Application/Registers
+								for (const file of ['Device', 'FLASH', 'GPIOA', 'GPIOB', 'GPIOC', 'GPIOD', 'GPIOE', 'GPIOF', 'GPIOG', 'GPIOH', 'GPIOI', 'GPIOJ', 'GPIOK', 'LTDC', 'RCC']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Registers', `${file}.swift`), osPath.join('Sources', 'Application', 'Registers', `${file}.swift`))
+								}
+								// Sources/Application
+								await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', `Main.swift`), osPath.join('Sources', 'Application', `Main.swift`))
+								// Sources/Support/include
+								for (const file of ['Support.h']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', 'include', file), osPath.join('Sources', 'Support', 'include', file))
+								}
+								// Sources/Support
+								for (const file of ['PixelData.c', 'Startup.c']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
+								}
+								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							case 'uart-echo':
+								await copyTools()
+								// Sources/Application/Registers
+								for (const file of ['Device', 'GPIO', 'GPIOA', 'GPIOB', 'RCC', 'USART1']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', 'Registers', `${file}.swift`), osPath.join('Sources', 'Application', 'Registers', `${file}.swift`))
+								}
+								// Sources/Application
+								await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Application', `Application.swift`), osPath.join('Sources', 'Application', `Application.swift`))
+								// Sources/Support/include
+								for (const file of ['Support.h']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', 'include', file), osPath.join('Sources', 'Support', 'include', file))
+								}
+								// Sources/Support
+								for (const file of ['Startup.S', 'Support.c']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
+								}
+								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							default: break
+						}
+						break
+					case 'raspberry':
+						const raspberryType = selectedValues['raspberry-type']
+						switch (raspberryType) {
+							case 'pico':
+								switch (embeddedPackage) {
+									case 'led-blink-spm':
+										await copyTools()
+										// Sources/Blinky
+										for (const file of ['Blinky']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Blinky', `${file}.swift`), osPath.join('Sources', 'Blinky', `${file}.swift`))
+										}
+										// Sources/RP2040/HAL
+										for (const file of ['Digital', 'Pins', 'RP2040', 'Time']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'RP2040', 'HAL', `${file}.swift`), osPath.join('Sources', 'RP2040', 'HAL', `${file}.swift`))
+										}
+										// Sources/RP2040/Hardware
+										for (const file of ['Clocks', 'IOBank', 'PadsBank', 'PLL', 'PPB', 'Resets', 'RP2040Hardware', 'SIO', 'Timer', 'Watchdog', 'XOSC']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'RP2040', 'Hardware', `${file}.swift`), osPath.join('Sources', 'RP2040', 'Hardware', `${file}.swift`))
+										}
+										// Sources/Support/include
+										for (const file of ['Support.h']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Support', 'include', file), osPath.join('Sources', 'Support', 'include', file))
+										}
+										// Sources/Support
+										for (const file of ['crt0.S', 'Support.c']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
+										}
+										for (const file of ['.gitignore', 'build.sh', 'diagram.json', 'Package.swift', 'README.md', 'wokwi.toml']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, file), osPath.join(file))
+										}
+										break
+									case 'led-blink':
+										for (const file of ['.gitignore', 'BridgingHeader.h', 'CMakeLists.txt', 'diagram.json', 'Main.swift', 'README.md', 'wokwi.toml']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, file), osPath.join(file))
+										}
+										break
+									default: break
+								}
+								break
+							case 'pico-w':
+								switch (embeddedPackage) {
+									case 'led-blink':
+										// include
+										for (const file of ['lwipopts.h']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'include', file), osPath.join('include', file))
+										}
+										for (const file of ['.gitignore', 'BridgingHeader.h', 'CMakeLists.txt', 'diagram.json', 'Main.swift', 'README.md', 'wokwi.toml']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, file), osPath.join(file))
+										}
+										break
+									default: break
+								}
+								break
+							case 'pico-2':
+								switch (embeddedPackage) {
+									case 'led-strip-spm':
+										// .sourcekit-lsp
+										for (const file of ['config.json']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, '.sourcekit-lsp', file), osPath.join('.sourcekit-lsp', file))
+										}
+										// assets/images
+										for (const file of ['example.jpg']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'assets', 'images', file), osPath.join('assets', 'images', file))
+										}
+										// Sources/Application
+										for (const file of ['Application', 'HSV8Pixel', 'RGB8Pixel', 'WS2812']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Application', `${file}.swift`), osPath.join('Sources', 'Application', `${file}.swift`))
+										}
+										// Sources/RP2350
+										for (const file of ['Empty.swift', 'rp235x.patched.svd', 'svd2swift.json']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'RP2350', file), osPath.join('Sources', 'RP2350', file))
+										}
+										// Sources/Support/include
+										for (const file of ['Support.h']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Support', 'include', file), osPath.join('Sources', 'Support', 'include', file))
+										}
+										// Sources/Support
+										for (const file of ['crt0.S', 'Support.c']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
+										}
+										for (const file of ['.gitignore', 'Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
+											await copySourceFile(osPath.join(embeddedType, raspberryType, embeddedPackage, file), osPath.join(file))
+										}
+										break
+									default: break
+								}
+								break
+							default: break
+						}
+						break
+					case 'zephyr':
+						switch (embeddedPackage) {
+							case 'led-blink':
+								for (const file of ['.gitignore', 'BridgingHeader.h', 'CMakeLists.txt', 'Main.swift', 'prj.conf', 'README.md', 'Stubs.c', 'west.yml']) {
+									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
+								}
+								break
+							default: break
+						}
+						break
+					default: break
+				}
 				// Copy devcontainer files
-				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer.json`)
+				await copyDevContainerFile(`Dockerfile-${embeddedType}`, `Dockerfile`)
+				await copyDevContainerFile(`devcontainer-${embeddedType}.json`, 'devcontainer.json')
 				await (async function () {
 					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 					if (devContainerContent) {

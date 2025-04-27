@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>echo-spm</title>
+    <g id="echo-spm" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="package-copy-3">
+            <rect id="Rectangle" x="0" y="0" width="200" height="200"></rect>
+        </g>
+        <g id="Group-3" transform="translate(30.000000, 8.000000)" stroke="#000000">
+            <g id="Group-2" transform="translate(77.580645, 32.150538)">
+                <path d="M0,97.8494624 C14.9103943,82.7350379 22.3655914,66.4267942 22.3655914,48.9247312 C22.3655914,31.4226682 14.9103943,15.1144245 0,0" id="Line-Copy" stroke-width="10" stroke-linecap="square" transform="translate(11.182796, 48.924731) scale(-1, 1) translate(-11.182796, -48.924731) "></path>
+                <path d="M25.1612903,82.4731183 C35.4121864,72.2169017 40.5376344,61.1505934 40.5376344,49.2741935 C40.5376344,37.3977937 35.4121864,26.3314854 25.1612903,16.0752688" id="Line-Copy-2" stroke-width="10" stroke-linecap="square" transform="translate(32.849462, 49.274194) scale(-1, 1) translate(-32.849462, -49.274194) "></path>
+                <ellipse id="Oval" stroke-width="6" cx="54.1666667" cy="48.9247312" rx="5.03763441" ry="4.68817204"></ellipse>
+            </g>
+            <g id="Group" transform="translate(31.102151, 48.924731) scale(-1, 1) translate(-31.102151, -48.924731) ">
+                <path d="M0,97.8494624 C14.9103943,82.7350379 22.3655914,66.4267942 22.3655914,48.9247312 C22.3655914,31.4226682 14.9103943,15.1144245 0,0" id="Line-Copy-4" stroke-width="10" stroke-linecap="square" transform="translate(11.182796, 48.924731) scale(-1, 1) translate(-11.182796, -48.924731) "></path>
+                <path d="M25.1612903,82.4731183 C35.4121864,72.2169017 40.5376344,61.1505934 40.5376344,49.2741935 C40.5376344,37.3977937 35.4121864,26.3314854 25.1612903,16.0752688" id="Line-Copy-3" stroke-width="10" stroke-linecap="square" transform="translate(32.849462, 49.274194) scale(-1, 1) translate(-32.849462, -49.274194) "></path>
+                <ellipse id="Oval-Copy" stroke-width="6" transform="translate(54.166667, 48.924731) scale(-1, 1) translate(-54.166667, -48.924731) " cx="54.1666667" cy="48.9247312" rx="5.03763441" ry="4.68817204"></ellipse>
+            </g>
+        </g>
+        <text id="SPM-Copy-3" font-family="SFCompact-Bold, SF Compact" font-size="64" font-weight="bold" fill="#000000">
+            <tspan x="38.21875" y="199">SPM</tspan>
+        </text>
+    </g>
+</svg>

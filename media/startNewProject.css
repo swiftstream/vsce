@@ -29,6 +29,16 @@ body.vscode-light .backLogo {
     height: 100px;
     cursor: pointer;
 }
+.radios .textradio {
+    width: 200px!important;
+    height: 40px!important;
+    color: var(--vscode-editor-foreground);
+    padding: 4px 8px;
+    font-size: var(--vscode-font-size);
+    font-weight: bold;
+    text-align: center;
+    align-content: center;
+}
 .radios input[type=radio] {
     display: none;
 }
@@ -76,7 +86,7 @@ body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios .hint {
     color: var(--vscode-editor-foreground);
     padding: 4px 8px;
     font-size: var(--vscode-font-size);
-    font-weight: lighter;
+    font-weight: bold;
     text-align: center;
     border-color: var(--vscode-editor-selectionBackground);
     border-width: 1px;
@@ -93,6 +103,95 @@ body.vscode-high-contrast:not(.vscode-high-contrast-light) .radios .hint span {
 .radios label.radio {
     position: relative;
     margin-top: 8px;
+}
+.radios label.radio div.previewContainer, .radios label.radio div.needHelpContainer, .radios label.radio div.needCheckContainer, .radios label.radio div.partiallyWorksContainer, .radios label.radio div.worksContainer {
+    display: block;
+    position: absolute;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    right: -3px;
+    top: -3px;
+}
+.radios label.radio div.previewContainer::after {
+    content: 'PREVIEW';
+    display: block;
+    position: absolute;
+    width: 80px;
+    height: 14px;
+    align-content: center;
+    right: -16px;
+    top: 10px;
+    font-size: xx-small;
+    font-weight: 600;
+    rotate: 35deg;
+    text-align: center;
+    color: darkgrey;
+    background-color: black;
+}
+.radios label.radio div.needHelpContainer::after {
+    content: 'NEED HELP';
+    display: block;
+    position: absolute;
+    width: 80px;
+    height: 14px;
+    align-content: center;
+    right: -16px;
+    top: 11px;
+    font-size: xx-small;
+    font-weight: 600;
+    rotate: 35deg;
+    text-align: center;
+    color: black;
+    background-color: rgb(152, 60, 99);
+}
+.radios label.radio div.needCheckContainer::after {
+    content: 'NEED CHECK';
+    display: block;
+    position: absolute;
+    width: 90px;
+    height: 14px;
+    align-content: center;
+    right: -17px;
+    top: 14px;
+    font-size: xx-small;
+    font-weight: 600;
+    rotate: 35deg;
+    text-align: center;
+    color: black;
+    background-color: rgb(217, 134, 0);
+}
+.radios label.radio div.partiallyWorksContainer::after {
+    content: 'PARTIALLY';
+    display: block;
+    position: absolute;
+    width: 80px;
+    height: 14px;
+    align-content: center;
+    right: -16px;
+    top: 11px;
+    font-size: xx-small;
+    font-weight: 600;
+    rotate: 35deg;
+    text-align: center;
+    color: black;
+    background-color: rgb(149, 87, 185);
+}
+.radios label.radio div.worksContainer::after {
+    content: 'WORKS';
+    display: block;
+    position: absolute;
+    width: 80px;
+    height: 14px;
+    align-content: center;
+    right: -20px;
+    top: 7px;
+    font-size: xx-small;
+    font-weight: 600;
+    rotate: 35deg;
+    text-align: center;
+    color: black;
+    background-color: rgb(0, 174, 49);
 }
 body.vscode-high-contrast:not(.vscode-high-contrast-light) .radio img {
     filter: invert(100%);

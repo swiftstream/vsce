@@ -222,15 +222,78 @@
                 { type: 'lib', title: 'Library', logo: 'logo-package' }
             ]
         }
-        const embeddedStreamLevel = {
-            id: 'embedded-type',
-            title: 'Microchip',
+        const esp32Level = {
+            id: 'package-type',
+            title: 'Template Project',
             required: true,
             items: [
-                { type: 'esp32', title: 'ESP32-C6', logo: 'embedded-esp32' },
-                { type: 'stm32', title: 'STM32F746G', logo: 'embedded-stm32' },
-                { type: 'raspberry', title: 'Raspberry Pi Pico', logo: 'embedded-raspberry' },
-                { type: 'zephyr', title: 'nRF52840-DK', logo: 'embedded-zephyr' }
+                { type: 'led-blink', title: 'LED Blink', logo: 'led-blink' },
+                { type: 'led-strip', title: 'LED Strip', logo: 'led-strip' }
+            ]
+        }
+        const stm32Level = {
+            id: 'package-type',
+            title: 'Template Project',
+            required: true,
+            items: [
+                { type: 'led-blink', title: 'LED Blink', works: true, logo: 'led-blink' },
+                { type: 'led-strip', title: 'LED Strip', needHelp: true, logo: 'led-strip-spm' },
+                { type: 'lcd-logo', title: 'LCD Logo', needHelp: true, logo: 'lcd-spm' },
+                { type: 'uart-echo', title: 'UART Echo', needHelp: true, logo: 'echo-spm' }
+            ]
+        }
+        const raspberryPicoTypes = {
+            id: 'package-type',
+            title: 'Template Project',
+            required: true,
+            items: [
+                { type: 'led-blink', title: 'LED Blink', works: true, logo: 'led-blink' },
+                { type: 'led-blink-spm', title: 'LED Blink SPM', needHelp: true, logo: 'led-blink-spm' }
+            ]
+        }
+        const raspberryPicoWTypes = {
+            id: 'package-type',
+            title: 'Template Project',
+            required: true,
+            items: [
+                { type: 'led-blink', title: 'LED Blink', needCheck: true, logo: 'led-blink' }
+            ]
+        }
+        const raspberryPico2Types = {
+            id: 'package-type',
+            title: 'Template Project',
+            required: true,
+            items: [
+                { type: 'led-strip-spm', title: 'LED Strip SPM', needHelp: true, logo: 'led-strip-spm' }
+            ]
+        }
+        const raspberryChipTypes = {
+            id: 'raspberry-type',
+            title: 'Board Type',
+            required: true,
+            items: [
+                { type: 'pico', title: 'Pico', logo: 'pico', partiallyWorks: true, sublevel: raspberryPicoTypes },
+                { type: 'pico-w', title: 'Pico W', logo: 'pico-w', needCheck: true, sublevel: raspberryPicoWTypes },
+                { type: 'pico-2', title: 'Pico 2', logo: 'pico-2', needHelp: true, sublevel: raspberryPico2Types }
+            ]
+        }
+        const zephyrTypes = {
+            id: 'package-type',
+            title: 'Template Project',
+            required: true,
+            items: [
+                { type: 'led-blink', title: 'LED Blink', logo: 'led-blink' }
+            ]
+        }
+        const embeddedStreamLevel = {
+            id: 'embedded-type',
+            title: 'Platform',
+            required: true,
+            items: [
+                { type: 'esp32', title: 'ESP32-C6', logo: 'embedded-esp32', sublevel: esp32Level },
+                { type: 'stm32', title: 'STM32', logo: 'embedded-stm32', preview: true, sublevel: stm32Level },
+                { type: 'raspberry', title: 'Raspberry Pi Pico', logo: 'embedded-raspberry', preview: true, sublevel: raspberryChipTypes },
+                { type: 'zephyr', title: 'Zephyr', logo: 'zephyr', sublevel: zephyrTypes }
             ]
         }
         const packageLevel = {
@@ -255,7 +318,7 @@
                 { type: 'web', title: 'Web', sublevel: webStreamLevel },
                 { type: 'server', title: 'Server', sublevel: serverStreamLevel },
                 //{ type: 'android', title: 'Android', sublevel: androidStreamLevel },
-                //{ type: 'embedded', title: 'Embedded', sublevel: embeddedStreamLevel },
+                { type: 'embedded', title: 'Embedded', sublevel: embeddedStreamLevel },
                 { type: 'pure', title: 'Package', logo: 'logo-package', sublevel: packageLevel }
             ]
         }
@@ -294,20 +357,46 @@
                 let label = document.createElement('label')
                 label.classList.add('radio')
                 label.setAttribute('for', level.id + i)
-                let img = document.createElement('img')
-                img.style.position = 'absolute'
-                img.style.top = `${data.top ?? 22}px`
-                img.style.left = `${data.left ?? 21}px`
-                img.style.width = `${data.width ?? 55}px`
-                img.style.height = `${data.height ?? 55}px`
-                img.setAttribute('src', `__LF__/${data.logo ?? level.id+'-'+data.type}.svg`)
-                label.appendChild(img)
-                let span = document.createElement('span')
-                span.classList.add('hint')
-                let innerSpan = document.createElement('span')
-                innerSpan.innerHTML = data.title
-                span.appendChild(innerSpan)
-                label.appendChild(span)
+                if (data.noLogo === true) {
+                    label.classList.add('textradio')
+                    label.innerHTML = data.title
+                } else {
+                    if (data.preview === true) {
+                        let previewContainer = document.createElement('div')
+                        previewContainer.classList.add('previewContainer')
+                        label.appendChild(previewContainer)
+                    } else if (data.needHelp === true) {
+                        let needHelpContainer = document.createElement('div')
+                        needHelpContainer.classList.add('needHelpContainer')
+                        label.appendChild(needHelpContainer)
+                    } else if (data.needCheck === true) {
+                        let needCheckContainer = document.createElement('div')
+                        needCheckContainer.classList.add('needCheckContainer')
+                        label.appendChild(needCheckContainer)
+                    } else if (data.partiallyWorks === true) {
+                        let partiallyWorksContainer = document.createElement('div')
+                        partiallyWorksContainer.classList.add('partiallyWorksContainer')
+                        label.appendChild(partiallyWorksContainer)
+                    } else if (data.works === true) {
+                        let worksContainer = document.createElement('div')
+                        worksContainer.classList.add('worksContainer')
+                        label.appendChild(worksContainer)
+                    }
+                    let img = document.createElement('img')
+                    img.style.position = 'absolute'
+                    img.style.top = `${data.top ?? 22}px`
+                    img.style.left = `${data.left ?? 21}px`
+                    img.style.width = `${data.width ?? 55}px`
+                    img.style.height = `${data.height ?? 55}px`
+                    img.setAttribute('src', `__LF__/${data.logo ?? level.id+'-'+data.type}.svg`)
+                    label.appendChild(img)
+                    let span = document.createElement('span')
+                    span.classList.add('hint')
+                    let innerSpan = document.createElement('span')
+                    innerSpan.innerHTML = data.title
+                    span.appendChild(innerSpan)
+                    label.appendChild(span)
+                }
                 radios.appendChild(label)
             }
             container.appendChild(radios)

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>pico</title>
+    <g id="pico" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" font-family="SFCompact-Bold, SF Compact" font-size="64" font-weight="bold">
+        <text id="PICO" fill="#000000">
+            <tspan x="32.1804688" y="123">PICO</tspan>
+        </text>
+    </g>
+</svg>

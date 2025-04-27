@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>echo</title>
+    <g id="echo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="package-copy-3">
+            <rect id="Rectangle" x="0" y="0" width="200" height="200"></rect>
+        </g>
+        <g id="Group-2" transform="translate(111.000000, 53.000000)" stroke="#000000">
+            <path d="M0,140 C21.3333333,118.374747 32,95.0414132 32,70 C32,44.9585868 21.3333333,21.6252535 0,0" id="Line-Copy" stroke-width="10" stroke-linecap="square" transform="translate(16.000000, 70.000000) scale(-1, 1) translate(-16.000000, -70.000000) "></path>
+            <path d="M36,118 C50.6666667,103.325721 58,87.4923875 58,70.5 C58,53.5076125 50.6666667,37.6742791 36,23" id="Line-Copy-2" stroke-width="10" stroke-linecap="square" transform="translate(47.000000, 70.500000) scale(-1, 1) translate(-47.000000, -70.500000) "></path>
+            <ellipse id="Oval" stroke-width="6" cx="77.5" cy="70" rx="8.5" ry="8"></ellipse>
+        </g>
+        <g id="Group" transform="translate(44.500000, 77.000000) scale(-1, 1) translate(-44.500000, -77.000000) translate(0.000000, 7.000000)" stroke="#000000">
+            <path d="M0,140 C21.3333333,118.374747 32,95.0414132 32,70 C32,44.9585868 21.3333333,21.6252535 0,0" id="Line-Copy-4" stroke-width="10" stroke-linecap="square" transform="translate(16.000000, 70.000000) scale(-1, 1) translate(-16.000000, -70.000000) "></path>
+            <path d="M36,118 C50.6666667,103.325721 58,87.4923875 58,70.5 C58,53.5076125 50.6666667,37.6742791 36,23" id="Line-Copy-3" stroke-width="10" stroke-linecap="square" transform="translate(47.000000, 70.500000) scale(-1, 1) translate(-47.000000, -70.500000) "></path>
+            <ellipse id="Oval-Copy" stroke-width="6" transform="translate(77.500000, 70.000000) scale(-1, 1) translate(-77.500000, -70.000000) " cx="77.5" cy="70" rx="8.5" ry="8"></ellipse>
+        </g>
+    </g>
+</svg>
