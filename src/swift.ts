@@ -703,9 +703,13 @@ export class Swift {
                     this.selectedDebugTarget = allTargets[0]
                 } else if (allTargets.length > 0) {
                     if (options.release) {
-                        await this.chooseReleaseTarget()
+                        if (!this.selectedReleaseTarget) {
+                            await this.chooseReleaseTarget()
+                        }
                     } else {
-                        await this.chooseDebugTarget()
+                        if (!this.selectedDebugTarget) {
+                            await this.chooseDebugTarget()
+                        }
                     }
                 }
                 if (options.release && this.selectedReleaseTarget) sidebarTreeView?.refresh()
