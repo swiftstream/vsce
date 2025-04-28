@@ -29,17 +29,17 @@ export class DevContainerConfig {
 
     public static checkIfStaticLinuxArtifactURLPresent(): boolean {
         const config = new DevContainerConfig()
-        return config.checkIfKeyExists('S_ARTIFACT_STATIC_LINUX_URL')
+        return config.checkIfContainerEnvKeyExists('S_ARTIFACT_STATIC_LINUX_URL')
     }
 
     public static checkIfAndroidArtifactURLPresent(): boolean {
         const config = new DevContainerConfig()
-        return config.checkIfKeyExists('S_ARTIFACT_ANDROID_URL')
+        return config.checkIfContainerEnvKeyExists('S_ARTIFACT_ANDROID_URL')
     }
 
     public static checkIfWasiThreadsArtifactURLPresent(): boolean {
         const config = new DevContainerConfig()
-        return config.checkIfKeyExists('S_ARTIFACT_WASIP1_THREADS_URL')
+        return config.checkIfContainerEnvKeyExists('S_ARTIFACT_WASIP1_THREADS_URL')
     }
 
     public setStaticLinuxArtifactURL(url: string) {
@@ -55,7 +55,15 @@ export class DevContainerConfig {
     }
     
     private checkIfKeyExists(key: string): boolean {
-        return false
+        if (!this.config.hasOwnProperty(key)) return false
+        return true
+    }
+    
+    private checkIfContainerEnvKeyExists(key: string): boolean {
+        if (!this.checkIfKeyExists('containerEnv')) return false
+        const containerEnv = this.config.containerEnv!
+        if (!containerEnv.hasOwnProperty('key')) return false
+        return true
     }
 
     // MARK: Ports
