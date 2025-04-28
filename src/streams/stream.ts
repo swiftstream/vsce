@@ -391,10 +391,11 @@ export class Stream {
 	async chooseTarget(options: {
 		release: boolean,
 		abortHandler?: AbortHandler,
-		alwaysShowList?: boolean
+		alwaysShowList?: boolean,
+		withProgress?: boolean,
 	}) {
 		commands.executeCommand('setContext', ContextKey.hasCachedTargets, this.swift.selectedDebugTarget !== undefined)
-        await this.swift.askToChooseTargetIfNeeded({ release: options.release, abortHandler: options.abortHandler, force: true, alwaysShowList: options.alwaysShowList })
+        await this.swift.askToChooseTargetIfNeeded({ release: options.release, abortHandler: options.abortHandler, forceFetch: true, forceChoose: options.alwaysShowList, withProgress: options.withProgress })
 	}
 
 	// MARK: Tests

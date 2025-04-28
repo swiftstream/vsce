@@ -668,11 +668,17 @@ export class Swift {
         }
     }
     
-    async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, force?: boolean, alwaysShowList?: boolean }) {
-        let selectedTarget = this.selectedTarget({ release: options.release })
-        if (options.force === true || !selectedTarget) {
-            try {
-                if (options.force === true || !this.cachedBuildTargets) {
+    async askToChooseTargetIfNeeded(options: { release: boolean, abortHandler?: AbortHandler, forceFetch?: boolean, forceChoose?: boolean, withProgress?: boolean }) {
+        try {
+            if (options.forceFetch === true || !this.cachedBuildTargets) {
+                async function retrieve(context: Swift) {
+                    const targetsDump = await context.getTargets({
+                        type: SwiftBuildType.Native,
+                        abortHandler: options.abortHandler
+                    })
+                    context.cachedBuildTargets = targetsDump
+                }
+                if (options.withProgress === true) {
                     await new Promise(async (resolve, reject) => {
                         window.withProgress({
                             location: ProgressLocation.Notification,
@@ -680,43 +686,48 @@ export class Swift {
                             cancellable: false
                         }, async (progress, token) => {
                             try {
-                                const targetsDump = await this.getTargets({
-                                    type: SwiftBuildType.Native,
-                                    abortHandler: options.abortHandler
-                                })
-                                this.cachedBuildTargets = targetsDump
+                                await retrieve(this)
                                 resolve(undefined)
                             } catch(error: any) {
                                 reject(error)
                             }
                         })
                     })
+                } else {
+                    await retrieve(this)
                 }
-                if (!this.cachedBuildTargets) {
-                    window.showErrorMessage('Unable to fetch targets')
-                    return
-                }
-                const allTargets = this.cachedBuildTargets.all({ excludeTests: true })
-                commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
-                if (allTargets.length == 1 && !options.alwaysShowList) {
-                    this.selectedReleaseTarget = allTargets[0]
-                    this.selectedDebugTarget = allTargets[0]
-                } else if (allTargets.length > 0) {
-                    if (options.release) {
-                        if (!this.selectedReleaseTarget) {
-                            await this.chooseReleaseTarget()
-                        }
-                    } else {
-                        if (!this.selectedDebugTarget) {
-                            await this.chooseDebugTarget()
-                        }
+            }
+            if (!this.cachedBuildTargets) {
+                window.showErrorMessage('Unable to fetch targets')
+                return
+            }
+            const allTargets = this.cachedBuildTargets.all({ excludeTests: true })
+            commands.executeCommand('setContext', ContextKey.hasCachedTargets, allTargets.length > 0)
+            async function chooseTarget(context: Swift) {
+                if (options.release) {
+                    if (!context.selectedReleaseTarget || options.forceChoose) {
+                        await context.chooseReleaseTarget()
+                    }
+                } else {
+                    if (!context.selectedDebugTarget || options.forceChoose) {
+                        await context.chooseDebugTarget()
                     }
                 }
-                if (options.release && this.selectedReleaseTarget) sidebarTreeView?.refresh()
-                else if (!options.release && this.selectedDebugTarget) sidebarTreeView?.refresh()
-            } catch (error) {
-                if (!this.cachedBuildTargets) throw error
             }
+            if (allTargets.length == 1) {
+                if (options.forceChoose === true) {
+                    await chooseTarget(this)
+                } else {
+                    this.selectedReleaseTarget = allTargets[0]
+                    this.selectedDebugTarget = allTargets[0]
+                }
+            } else if (allTargets.length > 0) {
+                await chooseTarget(this)
+            }
+            if (options.release && this.selectedReleaseTarget) sidebarTreeView?.refresh()
+            else if (!options.release && this.selectedDebugTarget) sidebarTreeView?.refresh()
+        } catch (error) {
+            if (!this.cachedBuildTargets) throw error
         }
     }
 
