@@ -46,9 +46,12 @@ export enum ContextKey {
 	isSwiftlangInstalled = 'isSwiftlangInstalled'
 }
 const _stream: string = process.env.S_MODE ?? ExtensionStream.Unknown
-export const extensionStream: ExtensionStream = Object.values(ExtensionStream).includes(_stream as ExtensionStream)
-	? _stream as ExtensionStream
-	: ExtensionStream.Unknown
+function stringToStream(v: string): ExtensionStream {
+	return Object.values(ExtensionStream).includes(v.toUpperCase() as ExtensionStream)
+		? v.toUpperCase() as ExtensionStream
+		: ExtensionStream.Unknown
+}
+export const extensionStream: ExtensionStream = stringToStream(_stream)
 
 export const defaultWebDevPort = 7700
 export const defaultWebProdPort = 8800
