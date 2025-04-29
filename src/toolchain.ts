@@ -58,4 +58,16 @@ export function getToolchainsList(): any {
     const stringData = fs.readFileSync(path.path, 'utf8')
     return JSON5.parse(stringData)
 }
+
+export function getToolchainTags(stream: ExtensionStream): any[] {
+    const json = getToolchainsList()
+    let key: string = `${stream}`.toLowerCase()
+    switch (stream) {
+        case ExtensionStream.Android: break
+        case ExtensionStream.Web: break
+        default: key = 'pure'
+    }
+    const filtered = json[key]
+    return filtered
+}
 }
