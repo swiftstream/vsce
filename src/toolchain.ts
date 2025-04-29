@@ -1,4 +1,7 @@
-import { isInContainer, sidebarTreeView } from './extension'
+import * as fs from 'fs'
+import JSON5 from 'json5'
+import { Uri } from 'vscode'
+import { extensionContext, ExtensionStream, isInContainer, sidebarTreeView } from './extension'
 import { Stream } from './streams/stream'
 
 export var currentToolchain: string = `${getToolchainNameFromURL()}`
@@ -49,4 +52,10 @@ export class Toolchain {
         components = right.split(' ')
         // const version = components[0]
     }
+
+export function getToolchainsList(): any {
+    const path = Uri.joinPath(extensionContext.extensionUri, 'toolchains.json')
+    const stringData = fs.readFileSync(path.path, 'utf8')
+    return JSON5.parse(stringData)
+}
 }
