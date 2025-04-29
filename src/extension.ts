@@ -25,6 +25,12 @@ enum SwiftVersion {
 	Five = 'Swift 5',
 	Six = 'Swift 6'
 }
+function _swiftVersionNumber(version: SwiftVersion): number {
+	switch (version) {
+		case SwiftVersion.Five: return 5
+		case SwiftVersion.Six: return 6
+	}
+}
 export enum ExtensionStream {
 	Android = "ANDROID",
 	Server = "SERVER",
