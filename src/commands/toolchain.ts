@@ -2,37 +2,20 @@ import * as fs from 'fs'
 import JSON5 from 'json5'
 import { ProgressLocation, window } from 'vscode'
 import { extensionStream, ExtensionStream, projectDirectory } from '../extension'
-import { currentToolchain, getToolchainNameFromURL, pendingNewToolchain, setPendingNewToolchain } from '../toolchain'
+import { currentToolchain, getToolchainNameFromURL, getToolchainTags, pendingNewToolchain, setPendingNewToolchain } from '../toolchain'
 import { env } from 'process'
 
-const toolchainsURL = `https://github.com/swiftstream/vsce/raw/refs/heads/main/toolchains.json`
-
-async function getTags(mode: ExtensionStream): Promise<any[]> {
-	const response = await fetch(`${toolchainsURL}`)
-	if (!response.ok) throw new Error('Toolchains response was not ok')
-	const text = await response.text()
-	const json = JSON5.parse(text)
-	let key: string = `${mode}`.toLowerCase()
-	switch (mode) {
-		case ExtensionStream.Android: break
-		case ExtensionStream.Web: break
-		default: key = 'pure'
-	}
-	const filtered = json[key]
-	return filtered
-}
-
 export async function getPureArtifactURLForToolchain(): Promise<string | undefined> {
-    const result = await fetchCurrentToolchainMetadata('pure')
+    const result = await fetchCurrentToolchainMetadata(ExtensionStream.Pure)
     return result.artifact_url
 }
 
 export async function getWebArtifactURLsForToolchain(): Promise<{ wasi: string, wasip1_threads?: string } | undefined> {
-    const result = await fetchCurrentToolchainMetadata('web')
+    const result = await fetchCurrentToolchainMetadata(ExtensionStream.Web)
     return result.artifact_urls
 }
 
-export async function fetchCurrentToolchainMetadata(stream: string): Promise<any | undefined> {
+export async function fetchCurrentToolchainMetadata(stream: ExtensionStream): Promise<any | undefined> {
     if (!env.S_TOOLCHAIN_URL_X86) return undefined
     return new Promise((resolve, reject) => {
         window.withProgress({
@@ -41,11 +24,7 @@ export async function fetchCurrentToolchainMetadata(stream: string): Promise<any
             cancellable: false
         }, async (progress, token) => {
             try {
-                const response = await fetch(`${toolchainsURL}`)
-                if (!response.ok) throw new Error('Toolchain response was not ok')
-                const text = await response.text()
-                const json = JSON5.parse(text)
-                const filtered = json[stream]
+				const filtered = getToolchainTags(stream)
                 if (!filtered) throw new Error(`Unable to find ${stream} stream in the list`)
                 resolve(filtered.find(x => x.toolchain_urls.x86_64 === env.S_TOOLCHAIN_URL_X86 ))
             } catch(error: any) {
@@ -86,7 +65,7 @@ export async function toolchainCommand(selectedType?: string) {
 		cancellable: false
 	}, async (progress, token) => {
 		try {
-			tags = await getTags(extensionStream)
+			tags = getToolchainTags(extensionStream)
 			if (selectedType && selectedType.length > 0)
 				afterLoadingClosure()
 		} catch(error: any) {
