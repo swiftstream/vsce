@@ -27,6 +27,20 @@ export class DevContainerConfig {
         fs.writeFileSync(this.path, devContainerContent, 'utf8')
     }
 
+    public static swiftVersion(): { major: number, minor: number, patch: number } {
+        const obj = new DevContainerConfig()
+        const fallbackVersion = { major: 6, minor: 0, patch: 0 }
+        if (!obj.config.containerEnv) return fallbackVersion
+        const majorString = obj.config.containerEnv.S_VERSION_MAJOR
+        const minorString = obj.config.containerEnv.S_VERSION_MINOR
+        const patchString = obj.config.containerEnv.S_VERSION_PATCH
+        if (!majorString) return fallbackVersion
+        const major = parseInt(majorString)
+        const minor = minorString ? parseInt(minorString) : 0
+        const patch = patchString ? parseInt(patchString) : 0
+        return { major: major, minor: minor, patch: patch }
+    }
+
     public static checkIfStaticLinuxArtifactURLPresent(): boolean {
         const config = new DevContainerConfig()
         return config.checkIfContainerEnvKeyExists('S_ARTIFACT_STATIC_LINUX_URL')

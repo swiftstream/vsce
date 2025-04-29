@@ -6,6 +6,7 @@ import { SwiftBuildType } from '../../swift'
 import { getLastModifiedDate, LastModifiedDateType, saveLastModifiedDateForKey, wasFileModified } from '../../helpers/filesHelper'
 import { TimeMeasure } from '../../helpers/timeMeasureHelper'
 import { AbortHandler } from '../../bash'
+import { DevContainerConfig } from '../../devContainerConfig'
 
 export async function resolveSwiftDependencies(options: {
     type?: SwiftBuildType,
@@ -13,7 +14,11 @@ export async function resolveSwiftDependencies(options: {
     substatus: (x: string) => void,
     abortHandler: AbortHandler
 }) {
-    await currentStream?.awaitForCompletionOfOtherSwiftProcessesIfNeeded('Resolving dependencies')
+    // In Swift 5 mode we possibly could have conflict with initial
+    // `swift package resolve` initiated by the official Swift extension
+    if (DevContainerConfig.swiftVersion().major == 5) {
+        await currentStream?.awaitForCompletionOfOtherSwiftProcessesIfNeeded('Resolving dependencies')
+    }
     const packageResolve = async () => {
         if (!currentStream) { throw `stream is null` }
         await currentStream.swift.packageResolve({
