@@ -10,7 +10,7 @@ export function getToolchainNameFromURL(url: string | undefined = undefined): st
     return value.split('/').pop()
         ?.replace(/^swift-/, '')
         .replace(/(\.tar\.gz|\.zip)$/, '')
-        .replace(/(-ubuntu20\.04|-aarch64|_x86_64|_aarch64|-a)/g, '')
+        .replace(/(-ubuntu\d+\.\d+|-aarch64|_x86_64|_aarch64|-a)/g, '')
 }
 
 export function setPendingNewToolchain(value: string | undefined) {
