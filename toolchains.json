@@ -1,7 +1,7 @@
 {
 	"android": [
 		{
-            "name": "6.1.0-RELEASE",
+            "name": "6.1-RELEASE",
             "version": { "major": 6, "minor": 1, "patch": 0 },
 			"android_version": "24-0.1",
 			"toolchain_urls": {
@@ -51,7 +51,7 @@
             "artifact_url": "https://download.swift.org/swift-6.1-branch/static-sdk/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-03-25-a/swift-6.1-DEVELOPMENT-SNAPSHOT-2025-03-25-a_static-linux-0.0.1.artifactbundle.tar.gz"
 		},
 		{
-            "name": "6.1.0-RELEASE",
+            "name": "6.1-RELEASE",
             "version": { "major": 6, "minor": 1, "patch": 0 },
 			"toolchain_urls": {
                 "aarch64": "https://download.swift.org/swift-6.1-release/ubuntu2404-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu24.04-aarch64.tar.gz",
@@ -99,7 +99,7 @@
             }
 		},
         {
-            "name": "6.1.0-RELEASE",
+            "name": "6.1-RELEASE",
             "version": { "major": 6, "minor": 1, "patch": 0 },
 			"toolchain_urls": {
                 "aarch64": "https://download.swift.org/swift-6.1-release/ubuntu2004-aarch64/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu20.04-aarch64.tar.gz",
@@ -121,31 +121,8 @@
                 "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0.3-RELEASE/swift-wasm-6.0.3-RELEASE-wasm32-unknown-wasi.artifactbundle.zip"
             }
 		},
-        {
-            "name": "6.0-DEVELOPMENT-SNAPSHOT-2024-10-12",
-            "version": { "major": 6, "minor": 0, "patch": 3 },
-			"toolchain_urls": {
-                "aarch64": "https://download.swift.org/swift-6.0-branch/ubuntu2004-aarch64/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04-aarch64.tar.gz",
-                "x86_64": "https://download.swift.org/swift-6.0-branch/ubuntu2004/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-10-12-a-ubuntu20.04.tar.gz"
-            },
-            "artifact_urls": {
-                "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.0-SNAPSHOT-2024-10-16-a/swift-wasm-6.0-SNAPSHOT-2024-10-16-a-wasm32-unknown-wasi.artifactbundle.zip"
-            }
-		},
-        {
-            "name": "DEVELOPMENT-SNAPSHOT-2024-10-08",
-            "version": { "major": 6, "minor": 1, "patch": 0 },
-			"toolchain_urls": {
-                "aarch64": "https://download.swift.org/development/ubuntu2004-aarch64/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a-ubuntu20.04-aarch64.tar.gz",
-                "x86_64": "https://download.swift.org/development/ubuntu2004/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a/swift-DEVELOPMENT-SNAPSHOT-2024-10-08-a-ubuntu20.04.tar.gz"
-            },
-            "artifact_urls": {
-                "wasi": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a-wasm32-unknown-wasi.artifactbundle.zip",
-                "wasip1_threads": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a/swift-wasm-DEVELOPMENT-SNAPSHOT-2024-10-15-a-wasm32-unknown-wasip1-threads.artifactbundle.zip"
-            }
-		},
 		{
-            "name": "5.10-RELEASE",
+            "name": "wasm-5.10.0-RELEASE",
             "version": { "major": 5, "minor": 10, "patch": 0 },
 			"toolchain_urls": {
                 "aarch64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu20.04_aarch64.tar.gz",
@@ -153,7 +130,7 @@
             }
 		},
         {
-            "name": "5.9.2-RELEASE",
+            "name": "wasm-5.9.2-RELEASE",
             "version": { "major": 5, "minor": 9, "patch": 2 },
 			"toolchain_urls": {
                 "aarch64": "https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.9.2-RELEASE/swift-wasm-5.9.2-RELEASE-ubuntu20.04_aarch64.tar.gz",
