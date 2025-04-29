@@ -203,7 +203,7 @@ export async function buildReleaseCommand(webStream: WebStream, mode: WebBuildMo
 		if (abortHandler.isCancelled) return
 		status('check', `Release Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Release Build Succeeded in ${measure.time}ms`)
-		print(`🌐 Test in browser at https://127.0.0.1:${currentProdPort}`)
+		print(`🌐 Test in browser at https://localhost:${currentProdPort}`)
 		console.log(`Release Build Succeeded in ${measure.time}ms`)
 		webStream.setBuildingRelease(false)
 		sidebarTreeView?.refresh()

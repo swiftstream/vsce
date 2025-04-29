@@ -236,7 +236,7 @@ export async function buildCommand(webStream: WebStream, mode: WebBuildMode) {
 		wsSendBuildProgress(100)
 		status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
 		print(`✅ Build Succeeded in ${measure.time}ms`)
-		print(`🌐 Test in browser at https://127.0.0.1:${currentDevPort}`)
+		print(`🌐 Test in browser at https://localhost:${currentDevPort}`)
 		console.log(`Build Succeeded in ${measure.time}ms`)
 		webStream.setBuildingDebug(false)
 		sidebarTreeView?.refresh()
