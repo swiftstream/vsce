@@ -52,6 +52,7 @@ export class Toolchain {
         components = right.split(' ')
         // const version = components[0]
     }
+}
 
 export function getToolchainsList(): any {
     const path = Uri.joinPath(extensionContext.extensionUri, 'toolchains.json')
@@ -70,4 +71,47 @@ export function getToolchainTags(stream: ExtensionStream): any[] {
     const filtered = json[key]
     return filtered
 }
+
+export function findTheRightToolchain(stream: ExtensionStream, swiftVersion: { major: number, minor: number }): {
+    name: string,
+    version: { major: number, minor: number, patch: number },
+    android_version?: string,
+    toolchain_urls: {
+        aarch64: string,
+        x86_64: string
+    },
+    artifact_url?: string,
+    artifact_urls?: {
+        wasi: string,
+        wasip1_threads: string
+    }
+} {
+    const tags = getToolchainTags(stream).map((x) => {
+        x.numberVersion = parseInt(`${x.version.major}${x.version.minor}${x.version.patch}`)
+        return x
+    })
+
+    const releaseTags = tags.filter((x) => x.name.includes('-RELEASE'))
+
+    // First, try to find matching major version tags
+    const matchingMajorTags = releaseTags.filter((x) => x.version.major === swiftVersion.major)
+
+    if (matchingMajorTags.length > 0) {
+        // Sort descending by version
+        matchingMajorTags.sort((a, b) => b.numberVersion - a.numberVersion)
+
+        // Find the highest minor that fits
+        for (const tag of matchingMajorTags) {
+            if (tag.version.minor <= swiftVersion.minor) {
+                return tag
+            }
+        }
+
+        // Otherwise fallback to the highest of that major
+        return matchingMajorTags[0]
+    } else {
+        // No matching major: fallback to newest available release tag
+        const sortedAllTags = releaseTags.sort((a, b) => b.numberVersion - a.numberVersion)
+        return sortedAllTags[0] ?? null
+    }
 }
