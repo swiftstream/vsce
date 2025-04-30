@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/swiftstream/vsce.git"
+    "url": "https://github.com/swiftstream/IDE.git"
   },
   "categories": [
     "Programming Languages",
