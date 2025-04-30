@@ -18,12 +18,14 @@ export class CloudFeature extends ServerFeature {
 
     requiresSetup(): boolean { return !this.isConfigPresent() }
 
-    deployMenuItem = () => new Dependency({
-        id: `Deploy||${this.name}`,
-        label: this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy',
-        version: this.stream.swift.selectedReleaseTarget ? this.stream.swift.selectedReleaseTarget : '',
-        icon: this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload'
-    })
+    deployMenuItem() {
+        return new Dependency({
+            id: `Deploy||${this.name}`,
+            label: this.isLoggingIn ? 'Logging in' : this.isDeploying ? 'Deploying' : 'Deploy',
+            version: this.stream.swift.selectedReleaseTarget ? this.stream.swift.selectedReleaseTarget : '',
+            icon: this.isLoggingIn || this.isDeploying ? 'sync~spin' : 'cloud-upload'
+        })
+    }
 
     async featureMenuItems(): Promise<Dependency[]> {
         let items = await super.featureMenuItems()
