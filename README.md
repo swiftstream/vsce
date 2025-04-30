@@ -1,4 +1,4 @@
-# Swift Stream
+# Swift Stream IDE
 
 **Swift Stream** is a powerful IDE for VS Code that enhances your ability to work with Swift projects beyond the traditional iOS/macOS ecosystem.
 
