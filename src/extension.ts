@@ -18,6 +18,7 @@ import { PureStream } from './streams/pure/pureStream'
 import { ServerStream } from './streams/server/serverStream'
 import { copyFile } from './helpers/filesHelper'
 import { handleIfKeybindingsEditor, keybindingsFileClosed } from './helpers/keybindingEditor'
+import { EmbeddedBranch, generateAndWriteDevcontainerJson } from './devContainerConfig'
 
 export const isArm64 = os.arch() === 'arm64'
 
@@ -271,7 +272,7 @@ function registerCommands() {
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('setupAlienProject', async () => {
 		if (!projectDirectory) return
-		await askProjectTypeAndCopyDevcontainerFiles(projectDirectory)
+		if (await askProjectTypeAndCopyDevcontainerFiles(projectDirectory) == false) return
 		if (isInContainer()) {
 			await commands.executeCommand('remote-containers.rebuildContainer')
 		} else {
@@ -280,7 +281,7 @@ function registerCommands() {
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('fixWrongProjectConfiguration', async () => {
 		if (!projectDirectory) return
-		await askProjectTypeAndCopyDevcontainerFiles(projectDirectory)
+		if (await askProjectTypeAndCopyDevcontainerFiles(projectDirectory) == false) return
 	}))
 	extensionContext.subscriptions.push(commands.registerCommand('initializeProjectInCurrentFolder', async () => {
 		if (!projectDirectory) return
@@ -288,7 +289,7 @@ function registerCommands() {
 	}))
 }
 
-const detectSwiftVersion = async (projectDirectory: string): Promise<SwiftVersion | undefined> => {
+const detectSwiftVersion = async (projectDirectory: string): Promise<{ major: SwiftVersion, minor: number } | undefined> => {
 	const packageFile = path.join(projectDirectory, 'Package.swift')
 	if (!fs.existsSync(packageFile)) return undefined
 	const lines = fs.readFileSync(packageFile, 'utf8').split('\n')
@@ -297,54 +298,107 @@ const detectSwiftVersion = async (projectDirectory: string): Promise<SwiftVersio
 	firstLine = firstLine.replaceAll(' ', '')
 	const parts = firstLine.split(':')
 	if (parts.length != 2) return undefined
-	return parts[1].startsWith('6') ? SwiftVersion.Six : SwiftVersion.Five
+	const versionPart = parts[1]
+	const splittedVersion = versionPart.split('.')
+	const minorString: string | undefined = splittedVersion.length > 0 ? splittedVersion[1] : undefined
+	const minor: number | undefined = minorString ? parseInt(minorString) : undefined
+	return {
+		major: parts[1].startsWith('6') ? SwiftVersion.Six : SwiftVersion.Five,
+		minor: minor ?? 0
+	}
 }
 
-const askSwiftVersionForStream = async (stream: ExtensionStream): Promise<SwiftVersion | undefined> => {
+const askSwiftVersionForStream = async (stream: ExtensionStream): Promise<{ major: SwiftVersion, minor: number } | undefined> => {
 	if ([ExtensionStream.Pure, ExtensionStream.Server, ExtensionStream.Web].includes(stream)) {
 		const selectedItem = await window.showQuickPick(Object.values(SwiftVersion), {
 			placeHolder: `Select Swift version`
 		})
 		if (!selectedItem) return undefined
-		return selectedItem as SwiftVersion
+		return { major: selectedItem as SwiftVersion, minor: 0 }
 	} else {
-		return SwiftVersion.Six
+		return { major: SwiftVersion.Six, minor: 0 }
 	}
 }
+const askForEmbeddedBranch = async (): Promise<EmbeddedBranch | undefined> => {
+	const selectedItem = await window.showQuickPick([
+		{ label: 'Espressif', detail: 'ESP32-C6' },
+		{ label: 'Raspberry Pi', detail: 'Pico, Pico W, Pico 2' },
+		{ label: 'STMicroelectronics', detail: 'STM32F746G, NUCLEO_F103RB' },
+		{ label: 'Nordic Semiconductor', detail: 'nRF52840-DK' }
+	], {
+		placeHolder: `Select Board Manufacturer`
+	})
+	if (!selectedItem) return undefined
+	if (selectedItem.label === 'Espressif') {
+		return EmbeddedBranch.ESP32
+	} else if (selectedItem.label === 'Raspberry Pi') {
+		return EmbeddedBranch.Raspberry
+	} else if (selectedItem.label === 'STMicroelectronics') {
+		return EmbeddedBranch.STM32
+	} else if (selectedItem.label === 'Nordic Semiconductor') {
+		return EmbeddedBranch.Zephyr
+	}
+	return undefined
+}
 
-const copyDevContainerFiles = async (projectDirectory: string, stream: ExtensionStream, swiftVersion: SwiftVersion) => {
+const copyDevContainerFiles = async (projectDirectory: string, stream: ExtensionStream, swiftVersion: { major: SwiftVersion, minor: number }): Promise<boolean> => {
 	const devcontainerFolder = path.join(projectDirectory, '.devcontainer')
-	const devcontainerFile = path.join(devcontainerFolder, 'devcontainer.json')
-	const dockerFile = path.join(devcontainerFolder, 'Dockerfile')
+	const devcontainerFilePath = path.join(devcontainerFolder, 'devcontainer.json')
+	const dockerFilePath = path.join(devcontainerFolder, 'Dockerfile')
 	if (!fs.existsSync(devcontainerFolder)) {
 		fs.mkdirSync(devcontainerFolder)
 	}
-	if (fs.existsSync(devcontainerFile)) {
-		fs.cpSync(devcontainerFile, `${devcontainerFile}.old`)
-		fs.rmSync(devcontainerFile, { force: true })
+	if (fs.existsSync(devcontainerFilePath)) {
+		fs.cpSync(devcontainerFilePath, `${devcontainerFilePath}.old`)
+		fs.rmSync(devcontainerFilePath, { force: true })
 	}
-	if (fs.existsSync(dockerFile)) {
-		fs.cpSync(dockerFile, `${dockerFile}.old`)
-		fs.rmSync(dockerFile, { force: true })
+	if (fs.existsSync(dockerFilePath)) {
+		fs.cpSync(dockerFilePath, `${dockerFilePath}.old`)
+		fs.rmSync(dockerFilePath, { force: true })
 	}
-	const swiftVersionNumber = swiftVersion == SwiftVersion.Six ? '6' : '5'
-	await copyFile(path.join('assets', 'Devcontainer', stream.toLowerCase(), `devcontainer${swiftVersionNumber}.json`), devcontainerFile)
-	await copyFile(path.join('assets', 'Devcontainer', stream.toLowerCase(), 'Dockerfile'), dockerFile)
+	const swiftMajorNumber = _swiftVersionNumber(swiftVersion.major)
+	let options: any | undefined
+	switch (stream) {
+		case ExtensionStream.Embedded:
+			const branch = await askForEmbeddedBranch()
+			if (!branch) return false
+			options['embedded'] = { branch: branch }
+			break
+		default: break
+	}
+	if (!generateAndWriteDevcontainerJson(
+		devcontainerFilePath,
+		stream,
+		{ major: swiftMajorNumber, minor: swiftVersion.minor },
+		options
+	)) return false
+	switch (stream) {
+		case ExtensionStream.Embedded:
+			await copyFile(path.join('assets', 'Devcontainer', stream.toLowerCase(), `Dockerfile-${options!.embedded!.branch}`), dockerFilePath)
+			break
+		case ExtensionStream.Web:
+			await copyFile(path.join('assets', 'Devcontainer', stream.toLowerCase(), `Dockerfile-${swiftMajorNumber}`), dockerFilePath)
+			break
+		default:
+			await copyFile(path.join('assets', 'Devcontainer', stream.toLowerCase(), 'Dockerfile'), dockerFilePath)
+			break
+	}
+	return true
 }
 
-const askProjectTypeAndCopyDevcontainerFiles = async (projectDirectory: string) => {
+const askProjectTypeAndCopyDevcontainerFiles = async (projectDirectory: string): Promise<boolean> => {
 	const items = Object.values(ExtensionStream).map((x) => {
 		const v = x.toLowerCase()
 		return v.charAt(0).toUpperCase() + v.slice(1)
 	})
-	.filter((x) => !['Android', 'Embedded', 'Unknown'].includes(x)) // TODO: edit to enable android and embedded
+	.filter((x) => !['Android', 'Unknown'].includes(x)) // TODO: edit to enable android
 	const selectedItem = await window.showQuickPick(items, {
 		placeHolder: `Select type of your project`
 	})
-	if (!selectedItem) return
-	const swiftVersion = await detectSwiftVersion(projectDirectory) ?? await askSwiftVersionForStream(selectedItem as ExtensionStream)
-	if (!swiftVersion) return
-	return await copyDevContainerFiles(projectDirectory, selectedItem as ExtensionStream, swiftVersion)
+	if (!selectedItem) return false
+	const swiftVersion = await detectSwiftVersion(projectDirectory) ?? await askSwiftVersionForStream(stringToStream(selectedItem))
+	if (!swiftVersion) return false
+	return await copyDevContainerFiles(projectDirectory, stringToStream(selectedItem), swiftVersion)
 }
 
 async function openProjectCommand() {
