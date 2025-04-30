@@ -78,9 +78,9 @@ export class PureStream extends Stream {
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningDebug', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand('stopRunningRelease', () => { this.stop() }))
         extensionContext.subscriptions.push(commands.registerCommand(this.debugBuildModeElement().id, async () => await this.changeBuildMode({ debug: true }) ))
-        extensionContext.subscriptions.push(commands.registerCommand(this.debugTargetElement().id, async () => await this.chooseTarget({ release: false, alwaysShowList: true }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.debugTargetElement().id, async () => await this.chooseTarget({ release: false, alwaysShowList: true, withProgress: true }) ))
         extensionContext.subscriptions.push(commands.registerCommand(this.releseBuildModeElement().id, async () => await this.changeBuildMode({ debug: false }) ))
-        extensionContext.subscriptions.push(commands.registerCommand(this.releaseTargetElement().id, async () => await this.chooseTarget({ release: true, alwaysShowList: true }) ))
+        extensionContext.subscriptions.push(commands.registerCommand(this.releaseTargetElement().id, async () => await this.chooseTarget({ release: true, alwaysShowList: true, withProgress: true }) ))
     }
 
     debugBuildModeElement = () => new Dependency({
