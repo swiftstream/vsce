@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { BashError } from '../../../bash'
-import { extensionContext, projectDirectory, sidebarTreeView } from '../../../extension'
+import { extensionContext, sidebarTreeView } from '../../../extension'
 import { commands, ShellExecution, Task, TaskDefinition, tasks, TaskScope, window } from 'vscode'
 import { Dependency } from '../../../sidebarTreeView'
 import { ServerFeature } from './serverFeature'
@@ -10,7 +10,6 @@ export class CloudFeature extends ServerFeature {
     isDeploying: boolean = false
 
     extensionFeatureSourcesPath = () => path.join(extensionContext.extensionPath, 'assets', 'Devcontainer', 'server', 'Features', this.name)
-    projectFeatureFolderPath = () => path.join(projectDirectory!, this.name)
 
     registerCommands() {
         super.registerCommands()
