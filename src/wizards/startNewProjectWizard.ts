@@ -4,14 +4,14 @@ import * as osPath from 'path'
 import Handlebars from 'handlebars'
 import { commands, Uri, ViewColumn, WebviewPanel, window } from 'vscode'
 import { selectFolder } from '../helpers/selectFolderHelper'
-import { defaultServerPort, defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, innerServerPort, isInContainer, projectDirectory } from '../extension'
+import { defaultServerPort, defaultWebCrawlerPort, defaultWebDevPort, defaultWebProdPort, extensionContext, ExtensionStream, innerServerPort, isInContainer, projectDirectory } from '../extension'
 import { sortLibraryFilePaths } from '../helpers/sortLibraryFilePaths'
 import { checkPortAndGetNextIfBusy } from '../helpers/checkPortAndGetNextIfBusy'
 import { webSourcesFolder } from '../streams/web/webStream'
 import { FileBuilder } from '../helpers/fileBuilder'
 import { copyFile, readFile } from '../helpers/filesHelper'
 import { openProject } from '../helpers/openProject'
-import { DevContainerConfig } from '../devContainerConfig'
+import { DevContainerConfig, EmbeddedBranch, generateAndWriteDevcontainerJson } from '../devContainerConfig'
 
 let webViewPanel: WebviewPanel | undefined
 const isWin = process.platform == 'win32'
@@ -137,15 +137,19 @@ async function createNewProjectFiles(
 		var dependencies: any[] = []
 		Handlebars.registerHelper('eq', (a, b) => a === b)
 		Handlebars.registerHelper('arrNotEmpty', (a) => a && a.length > 0)
+		const defaultSwiftVersion = { major: 6, minor: 1 }
 		switch (streamType) {
 			case 'web':
+				if (!generateAndWriteDevcontainerJson(
+					devContainerPath,
+					ExtensionStream.Web,
+					{ major: 5, minor: 10 } // TODO: Switch to Swift 6
+				)) return
 				const webType = selectedValues['web-type']
 				const webLibType = selectedValues['web-lib-type']
 				const webAppStyle = selectedValues['web-app-style']
 				// Copy devcontainer files
-				await copyDevContainerFile(`Dockerfile`)
-				// TODO: if swift 5
-				await copyDevContainerFile(`devcontainer5.json`, `devcontainer.json`) // TODO: swift version
+				await copyDevContainerFile(`Dockerfile-${5}`, `Dockerfile`) // TODO: Switch to Swift 6
 				// Copy .gitignore
 				await copySourceFile(`.gitignore`)
 				var devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
@@ -481,10 +485,14 @@ async function createNewProjectFiles(
 				)
 				break
 			case 'server':
+				if (!generateAndWriteDevcontainerJson(
+					devContainerPath,
+					ExtensionStream.Server,
+					defaultSwiftVersion
+				)) return
 				let serverType = selectedValues['server-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer6.json`, `devcontainer.json`)
 				await (async function () {
 					const availablePort = await checkPortAndGetNextIfBusy(defaultServerPort)
 					const config = new DevContainerConfig(osPath.join(path, '.devcontainer', 'devcontainer.json'))
@@ -662,10 +670,14 @@ async function createNewProjectFiles(
 				}
 				break
 			case 'android':
+				if (!generateAndWriteDevcontainerJson(
+					devContainerPath,
+					ExtensionStream.Android,
+					defaultSwiftVersion
+				)) return
 				let androidType = selectedValues['android-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer.json`)
 				// Copy .gitignore
 				await copySourceFile(`.gitignore`)
 				break
@@ -688,6 +700,12 @@ async function createNewProjectFiles(
 				const embeddedPackage = selectedValues['package-type']
 				switch (embeddedType) {
 					case 'esp32':
+						if (!generateAndWriteDevcontainerJson(
+							devContainerPath,
+							ExtensionStream.Embedded,
+							defaultSwiftVersion,
+							{ embedded: { branch: EmbeddedBranch.ESP32 } }
+						)) return
 						switch (embeddedPackage) {
 							case 'led-blink':
 								// main
@@ -711,6 +729,12 @@ async function createNewProjectFiles(
 						}
 						break
 					case 'stm32':
+						if (!generateAndWriteDevcontainerJson(
+							devContainerPath,
+							ExtensionStream.Embedded,
+							defaultSwiftVersion,
+							{ embedded: { branch: EmbeddedBranch.STM32 } }
+						)) return
 						switch (embeddedPackage) {
 							case 'led-blink':
 								await copyTools()
@@ -794,6 +818,12 @@ async function createNewProjectFiles(
 						}
 						break
 					case 'raspberry':
+						if (!generateAndWriteDevcontainerJson(
+							devContainerPath,
+							ExtensionStream.Embedded,
+							defaultSwiftVersion,
+							{ embedded: { branch: EmbeddedBranch.Raspberry } }
+						)) return
 						const raspberryType = selectedValues['raspberry-type']
 						switch (raspberryType) {
 							case 'pico':
@@ -884,6 +914,12 @@ async function createNewProjectFiles(
 						}
 						break
 					case 'zephyr':
+						if (!generateAndWriteDevcontainerJson(
+							devContainerPath,
+							ExtensionStream.Embedded,
+							defaultSwiftVersion,
+							{ embedded: { branch: EmbeddedBranch.Zephyr } }
+						)) return
 						switch (embeddedPackage) {
 							case 'led-blink':
 								for (const file of ['.gitignore', 'BridgingHeader.h', 'CMakeLists.txt', 'Main.swift', 'prj.conf', 'README.md', 'Stubs.c', 'west.yml']) {
@@ -897,7 +933,6 @@ async function createNewProjectFiles(
 				}
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile-${embeddedType}`, `Dockerfile`)
-				await copyDevContainerFile(`devcontainer-${embeddedType}.json`, 'devcontainer.json')
 				await (async function () {
 					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 					if (devContainerContent) {
@@ -907,10 +942,14 @@ async function createNewProjectFiles(
 				})()
 				break
 			case 'pure':
+				if (!generateAndWriteDevcontainerJson(
+					devContainerPath,
+					ExtensionStream.Pure,
+					{ major: 6, minor: 1 }
+				)) return
 				const packageType = selectedValues['package-type']
 				// Copy devcontainer files
 				await copyDevContainerFile(`Dockerfile`)
-				await copyDevContainerFile(`devcontainer6.json`, `devcontainer.json`)
 				await (async function () {
 					let devContainerContent: string = fs.readFileSync(devContainerPath, 'utf8')
 					if (devContainerContent) {
