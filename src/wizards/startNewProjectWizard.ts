@@ -762,7 +762,7 @@ async function createNewProjectFiles(
 								for (const file of ['startup.S', 'Support.c']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
 								}
-								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md', 'schematic.png']) {
+								for (const file of ['.gitignore', 'Makefile', 'Package.resolved', 'Package.swift', 'README.md', 'schematic.png']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
 								}
 								break
@@ -790,7 +790,7 @@ async function createNewProjectFiles(
 								for (const file of ['PixelData.c', 'Startup.c']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
 								}
-								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
+								for (const file of ['.gitignore', 'Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
 								}
 								break
@@ -810,7 +810,7 @@ async function createNewProjectFiles(
 								for (const file of ['Startup.S', 'Support.c']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, 'Sources', 'Support', file), osPath.join('Sources', 'Support', file))
 								}
-								for (const file of ['Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
+								for (const file of ['.gitignore', 'Makefile', 'Package.resolved', 'Package.swift', 'README.md']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
 								}
 								break
