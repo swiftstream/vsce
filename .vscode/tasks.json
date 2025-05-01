@@ -533,6 +533,18 @@
     			"cwd": "${workspaceFolder}/docker-images"
   			},
 			"type": "shell"
+		},
+		{
+			"label": "Clear VSCode Workspace Cache",
+			"type": "shell",
+			"command": "rm -rf \"$HOME/Library/Application Support/Code/User/workspaceStorage\" && echo \"Now restart VSCode\"",
+			"problemMatcher": [],
+			"presentation": {
+			  "reveal": "always",
+			  "echo": true,
+			  "focus": false,
+			  "panel": "shared"
+			}
 		}
 	]
 }
