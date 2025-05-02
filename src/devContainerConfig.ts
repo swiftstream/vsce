@@ -264,6 +264,7 @@ export const generateDevcontainerJson = (
 		},
 		capAdd: ['SYS_PTRACE'],
 		mounts: [
+            { source: "${localWorkspaceFolderBasename}-build", target: "${containerWorkspaceFolder}/.build", type: 'volume' },
 			{ source: 'swift-toolchains', target: '/swift/toolchains', type: 'volume' },
 			{ source: 'swift-sdks', target: '/swift/sdks', type: 'volume' }
 		]
