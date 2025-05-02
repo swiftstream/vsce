@@ -273,10 +273,9 @@ export const generateDevcontainerJson = (
 	switch (stream) {
 		case ExtensionStream.Android:
             if (toolchain.artifact_url) {
-                
 				devcontainerObject.containerEnv['S_ARTIFACT_ANDROID_URL'] = toolchain.artifact_url
-                devcontainerObject.containerEnv['S_ANDROID_VERSION'] = '24-0.1'
 			}
+            devcontainerObject.containerEnv['S_ANDROID_VERSION'] = '24-0.1'
 			break
 		case ExtensionStream.Embedded:
 			if (options?.embedded) {
