@@ -486,23 +486,23 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					label: 'Documentation',
 					icon: 'book::charts.green'
 				}))
-				if (![ExtensionStream.Pure, ExtensionStream.Unknown].includes(extensionStream)) {
+				if (![ExtensionStream.Pure, ExtensionStream.Embedded, ExtensionStream.Unknown].includes(extensionStream)) {
 					items.push(new Dependency({
 						id: SideTreeItem.Repository,
 						label: 'Repository',
 						icon: 'github-inverted'
 					}))
-					items.push(new Dependency({
-						id: SideTreeItem.Discussions,
-						label: 'Discussions',
-						icon: 'comment-discussion::charts.purple'
-					}))
-					items.push(new Dependency({
-						id: SideTreeItem.SubmitAnIssue,
-						label: 'Submit an issue',
-						icon: 'pencil::charts.orange'
-					}))
 				}
+				items.push(new Dependency({
+					id: SideTreeItem.Discussions,
+					label: 'Discussions',
+					icon: 'comment-discussion::charts.purple'
+				}))
+				items.push(new Dependency({
+					id: SideTreeItem.SubmitAnIssue,
+					label: 'Submit an issue',
+					icon: 'pencil::charts.orange'
+				}))
 				items.push(new Dependency({
 					id: SideTreeItem.OpenDiscord,
 					label: 'Discord',

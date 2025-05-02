@@ -1,6 +1,6 @@
 import { env, Uri } from 'vscode'
 import { currentToolchain } from '../toolchain'
-import { extensionStream } from '../extension'
+import { ExtensionStream, extensionStream } from '../extension'
 
 export function openWebDocumentation() {
 	env.openExternal(Uri.parse('https://swifweb.com'))
@@ -40,6 +40,16 @@ export function openVaporRepository() {
 
 export function openHummingbirdRepository() {
 	env.openExternal(Uri.parse('https://github.com/hummingbird-project'))
+}
+
+export function openIDEDiscussions(type: ExtensionStream) {
+	switch (type) {
+		case ExtensionStream.Unknown:
+			env.openExternal(Uri.parse('https://github.com/orgs/swiftstream/discussions'))
+			break
+		default:
+			env.openExternal(Uri.parse(`https://github.com/orgs/swiftstream/discussions/categories/${`${type}`.toLowerCase()}-stream`))
+	}
 }
 
 export function openWebDiscussions() {
@@ -90,6 +100,10 @@ export function openAndroidDiscord() {
 	env.openExternal(Uri.parse('https://discord.gg/pBC5uApg9m'))
 }
 
+export function openEmbeddedDiscord() {
+	env.openExternal(Uri.parse('https://discord.gg/pBC5uApg9m'))
+}
+
 export function openVaporDiscord() {
 	env.openExternal(Uri.parse('https://discord.com/invite/vapor'))
 }
@@ -98,16 +112,8 @@ export function openHummingbirdDiscord() {
 	env.openExternal(Uri.parse('https://discord.gg/4twfgYqdat'))
 }
 
-export function openWebTelegram() {
-	env.openExternal(Uri.parse('https://t.me/web_side_swift'))
-}
-
-export function openServerTelegram() {
-	env.openExternal(Uri.parse('https://t.me/server_side_swift'))
-}
-
-export function openAndroidTelegram() {
-	env.openExternal(Uri.parse('https://t.me/android_side_swift'))
+export function openIDETelegram() {
+	env.openExternal(Uri.parse('https://t.me/+t9zXkfjoKNNlY2Ri'))
 }
 
 export function openSwiftStreamServerDiscord() {
@@ -119,7 +125,11 @@ export function openWebForums() {
 }
 
 export function openServerForums() {
-	env.openExternal(Uri.parse('https://forums.swift.org/c/server/43'))
+	env.openExternal(Uri.parse('https://forums.swift.org/c/server'))
+}
+
+export function openEmbeddedForums() {
+	env.openExternal(Uri.parse('https://forums.swift.org/c/development/embedded'))
 }
 
 export function openAndroidForums() {

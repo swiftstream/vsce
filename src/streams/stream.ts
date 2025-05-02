@@ -8,7 +8,7 @@ import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
 import { loggingLevelCommand } from '../commands/loggingLevel'
-import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openWebTelegram, openAndroidTelegram, openServerTelegram, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums, submitSwiftStreamVSCEIssue, submitCrawlServerIssue, openSwiftGettingStarted, emailTheAuthor } from '../commands/support'
+import { openWebDiscussions, openWebRepository, submitWebIssue, openWebDocumentation, openVaporDocumentation, openHummingbirdDocumentation, openWebDiscord, openVaporDiscord, openHummingbirdDiscord, openSwiftStreamServerDiscord, openAndroidDiscord, openAndroidDocumentation, openAndroidRepository, openVaporRepository, openHummingbirdRepository, openAndroidDiscussions, openVaporDiscussions, openHummingbirdDiscussions, submitVaporIssue, submitHummingbirdIssue, submitAndroidIssue, openServerForums, openAndroidForums, openWebForums, openSwiftForums, submitSwiftStreamVSCEIssue, submitCrawlServerIssue, openSwiftGettingStarted, emailTheAuthor, openEmbeddedDiscord, openIDETelegram, openEmbeddedForums, openIDEDiscussions } from '../commands/support'
 import { hotRebuildCommand } from '../commands/hotRebuild'
 import { isPackagePresentInResolved, KnownPackage } from '../commands/build/helpers'
 import { generateChecksum } from '../helpers/filesHelper'
@@ -159,18 +159,72 @@ export class Stream {
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Discussions, async () => {
+			const swiftStream = "Swift Stream Discussions"
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
-				openWebDiscussions()
+				const web = "SwifWeb Discussions"
+				switch (await window.showQuickPick([web, swiftStream], {
+					placeHolder: `Select organization`
+				})) {
+					case web:
+						openWebDiscussions()
+						break
+					case swiftStream:
+						openIDEDiscussions(extensionStream)
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
-				openAndroidDiscussions()
+				const android = "SwifDroid Discussions"
+				switch (await window.showQuickPick([android, swiftStream], {
+					placeHolder: `Select organization`
+				})) {
+					case android:
+						openAndroidDiscussions()
+						break
+					case swiftStream:
+						openIDEDiscussions(extensionStream)
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
-				openVaporDiscussions()
+				const vapor = "Vapor Discussions"
+				switch (await window.showQuickPick([vapor, swiftStream], {
+					placeHolder: `Select organization`
+				})) {
+					case vapor:
+						openVaporDiscussions()
+						break
+					case swiftStream:
+						openIDEDiscussions(extensionStream)
+						break
+					default: return
+				}
 			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
-				openHummingbirdDiscussions()
+				const hummingbird = "Hummingbird Discussions"
+				switch (await window.showQuickPick([hummingbird, swiftStream], {
+					placeHolder: `Select organization`
+				})) {
+					case hummingbird:
+						openHummingbirdDiscussions()
+						break
+					case swiftStream:
+						openIDEDiscussions(extensionStream)
+						break
+					default: return
+				}
+			} else {
+				switch (await window.showQuickPick([swiftStream], {
+					placeHolder: `Select organization`
+				})) {
+					case swiftStream:
+						openIDEDiscussions(extensionStream)
+						break
+					default: return
+				}
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.SubmitAnIssue, async () => {
-			const swiftStream = "Swift Stream extension"
+			const swiftStream = "Swift Stream IDE"
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
 				const web = "Web framework"
 				const crawlServer = "Crawl Server"
@@ -227,12 +281,21 @@ export class Stream {
 						break
 					default: return
 				}
+			} else {
+				switch (await window.showQuickPick([swiftStream], {
+					placeHolder: `Select in which repository`
+				})) {
+					case swiftStream:
+						submitSwiftStreamVSCEIssue()
+						break
+					default: return
+				}
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenDiscord, async () => {
-			const openSwiftStream = 'Official Swift.Stream Community in Discord'
-			const openVapor = 'Official Vapor Community in Discord'
-			const openHummingbird = 'Official Hummingbird Community in Discord'
+			const openSwiftStream = 'Swift Stream Community in Discord'
+			const openVapor = 'Vapor Community in Discord'
+			const openHummingbird = 'Hummingbird Community in Discord'
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
 				openWebDiscord()
 			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
@@ -267,16 +330,14 @@ export class Stream {
 						break
 					default: break
 				}
+			} else if (extensionStream === ExtensionStream.Embedded) {
+				openEmbeddedDiscord()
+			} else if (extensionStream === ExtensionStream.Android) {
+				openEmbeddedDiscord()
 			}
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenTelegram, () => {
-			if (extensionStream == ExtensionStream.Web || isPackagePresentInResolved(KnownPackage.Web)) {
-				openWebTelegram()
-			} else if (extensionStream == ExtensionStream.Android || isPackagePresentInResolved(KnownPackage.Droid)) {
-				openAndroidTelegram()
-			} else {
-				openServerTelegram()
-			}
+			openIDETelegram()
 		}))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.OpenSwiftForums, () => {
 			if (extensionStream == ExtensionStream.Web || isPackagePresentInResolved(KnownPackage.Web)) {
@@ -285,6 +346,8 @@ export class Stream {
 				openAndroidForums()
 			} else if (extensionStream == ExtensionStream.Server || isPackagePresentInResolved(KnownPackage.Vapor) || isPackagePresentInResolved(KnownPackage.Hummingbird)) {
 				openServerForums()
+			} else if (extensionStream == ExtensionStream.Embedded) {
+				openEmbeddedForums()
 			} else {
 				openSwiftForums()
 			}
