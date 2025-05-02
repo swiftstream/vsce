@@ -1,6 +1,6 @@
 import * as fs from 'fs'
-import { currentStream, projectDirectory } from '../extension'
-import { buildDevFolder } from '../streams/web/webStream'
+import { currentStream, ExtensionStream, extensionStream, projectDirectory } from '../extension'
+import { buildDevFolder as buildDevWebFolder } from '../streams/web/webStream'
 import { isClearedCache, isClearingCache } from '../streams/stream'
 import { print, status, StatusType } from '../streams/stream'
 import { isBuildingDebug, LogLevel } from '../streams/stream'
@@ -29,16 +29,33 @@ export async function clearCachesCommand() {
 	await new Promise((x) => setTimeout(x, 100))
 	const swiftURLCache = `/root/.cache/org.swift.foundation.URLCache`
 	const swiftPMCache = `/root/.cache/org.swift.swiftpm`
-	const buildCacheFolder = `${projectDirectory}/.build`
-	const buildDevFolderPath = `${projectDirectory}/${buildDevFolder}`
 	print(`🧹 Clearing Cache`, LogLevel.Detailed)
+	function removeBuildCacheFolder() {
+		const buildCacheFolder = `${projectDirectory}/.build`
+		if (fs.existsSync(buildCacheFolder)) {
+			for (const entry of fs.readdirSync(buildCacheFolder)) {
+				const entryPath = `${buildCacheFolder}/${entry}`
+				fs.rmSync(entryPath, { recursive: true, force: true })
+			}
+		}
+		switch (extensionStream) {
+			case ExtensionStream.Embedded:
+				const buildDevEmbeddedFolderPath = `${projectDirectory}/build`
+				if (fs.existsSync(buildDevEmbeddedFolderPath))
+					fs.rmSync(buildDevEmbeddedFolderPath, { recursive: true, force: true })
+				break
+			case ExtensionStream.Web:
+				const buildDevWebFolderPath = `${projectDirectory}/${buildDevWebFolder}`
+				if (fs.existsSync(buildDevWebFolderPath))
+					fs.rmSync(buildDevWebFolderPath, { recursive: true, force: true })
+				break
+			default: break
+		}
+	}
 	const measure = new TimeMeasure()
 	switch (selectedItem) {
 		case ClearCacheOption.Build:
-			if (fs.existsSync(buildCacheFolder))
-				fs.rmSync(buildCacheFolder, { recursive: true, force: true })
-			if (fs.existsSync(buildDevFolderPath))
-				fs.rmSync(buildDevFolderPath, { recursive: true, force: true })
+			removeBuildCacheFolder()
 			break
 		case ClearCacheOption.SwiftPM:
 			if (fs.existsSync(swiftPMCache))
@@ -53,10 +70,7 @@ export async function clearCachesCommand() {
 				fs.rmSync(swiftURLCache, { recursive: true, force: true })
 			if (fs.existsSync(swiftPMCache))
 				fs.rmSync(swiftPMCache, { recursive: true, force: true })
-			if (fs.existsSync(buildCacheFolder))
-				fs.rmSync(buildCacheFolder, { recursive: true, force: true })
-			if (fs.existsSync(buildDevFolderPath))
-				fs.rmSync(buildDevFolderPath, { recursive: true, force: true })
+			removeBuildCacheFolder()
 			break
 		default: break
 	}
