@@ -201,7 +201,12 @@ const proceedProjectDirectory = async (projectDirectory: string): Promise<boolea
 		}
 		return false
 	}
-	if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
+	// Specific setup check for Embedded projects
+	if (extensionStream === ExtensionStream.Embedded) {
+		
+	}
+	// Classic Package.swift check for the rest
+	else if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
 		updateExtensionState(ExtensionState.MissingSwiftPackage)
 		return false
 	}
