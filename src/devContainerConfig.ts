@@ -77,7 +77,7 @@ export class DevContainerConfig {
     private checkIfContainerEnvKeyExists(key: string): boolean {
         if (!this.checkIfKeyExists('containerEnv')) return false
         const containerEnv = this.config.containerEnv!
-        if (!containerEnv.hasOwnProperty('key')) return false
+        if (!containerEnv.hasOwnProperty(key)) return false
         return true
     }
 
