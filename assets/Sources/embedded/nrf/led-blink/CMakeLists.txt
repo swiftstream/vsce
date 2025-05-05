@@ -8,8 +8,8 @@ set(CMAKE_Swift_COMPILATION_MODE wholemodule)
 # FIXME: Skip checking if the compiler works
 set(CMAKE_Swift_COMPILER_WORKS true)
 
-# Create a new project called "blinky" and enable "Swift" as a supported language
-project(blinky Swift)
+# Create a new project called "firmware" and enable "Swift" as a supported language
+project(firmware Swift)
 
 # Set global Swift compiler flags
 add_compile_options(

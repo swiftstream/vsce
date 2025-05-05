@@ -1,0 +1,1 @@
+FROM swiftstream/embedded-nrf:noble

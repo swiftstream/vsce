@@ -189,7 +189,7 @@ export enum EmbeddedBranch {
 	Raspberry = 'Raspberry',
 	ESP32 = 'ESP32',
 	STM32 = 'STM32',
-	Zephyr = 'Zephyr'
+	NRF = 'NRF',
 }
 
 export const generateAndWriteDevcontainerJson = (
@@ -296,7 +296,7 @@ export const generateDevcontainerJson = (
 						break
 					case EmbeddedBranch.STM32:
 						break
-					case EmbeddedBranch.Zephyr:
+					case EmbeddedBranch.NRF:
 						devcontainerObject.containerEnv['TOOLCHAINS'] = 'swift'
 						devcontainerObject.containerEnv['ZEPHYR_BASE'] = '/workspaces/zephyr'
 						devcontainerObject.mounts.push({ source: 'zephyr', target: '/workspaces/zephyr', type: 'volume' })

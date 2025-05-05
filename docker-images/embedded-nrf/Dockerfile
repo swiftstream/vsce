@@ -34,7 +34,7 @@ RUN ARCH=$(uname -m) && \
     rm /tmp/cmake-install.sh
 
 # copy required files
-COPY embedded-zephyr/cmd.sh /usr/local/bin/
+COPY embedded-nrf/cmd.sh /usr/local/bin/
 COPY dev-base.sh /usr/local/bin/
 
 RUN ["chmod", "+x", "/usr/local/bin/cmd.sh"]

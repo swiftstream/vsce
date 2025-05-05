@@ -23,13 +23,14 @@ This approach is fine in a containerized environment, but it breaks `west packag
 If you ever need to install or update required Python packages manually, run:
 ```bash
 find . -type f -name 'requirements.txt' -print0 | xargs -0 -n1 -I{} pip3 install --break-system-packages -r "{}"
+```
 
 ## Building
 
 **Build it simply via `Build` button.**
 
 Otherwise manually:
-``` console
+```bash
 rm -rf build
 cmake -B build -G Ninja -DBOARD=nrf52840dk/nrf52840 -DUSE_CCACHE=0 .
 cmake --build build
@@ -47,7 +48,7 @@ Connect the **nRF52840-DK** board to your host machine using a USB cable via the
 
 #### Debian/Ubuntu
 
-```
+```bash
 # x86_64 version
 wget https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb -O nrf-tools.deb
 # ARM64 version
@@ -60,7 +61,7 @@ nrfjprog --version
 
 #### macOS
 
-```
+```bash
 brew tap ArmMbed/homebrew-formulae
 brew install --cask nordic-nrf-command-line-tools
 nrfjprog --version
@@ -72,7 +73,7 @@ Open PowerShell
 
 > Press Win + X, then choose Windows PowerShell (Admin)
 
-```
+```bash
 $version = "10.24.2"
 $arch = "x64" # use "x86" for 32-bit systems (very rare)
 $url = "https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/$version/nRF-Command-Line-Tools_${version}_Windows_${arch}.exe"
@@ -90,7 +91,7 @@ nrfjprog --version
 ### Step 3: Flash the Firmware
 
 Once installed, use the following commands from your host terminal to flash the firmware:
-```
+```bash
 nrfjprog --recover --program build/zephyr/zephyr.hex --verify
 nrfjprog --run
 ```

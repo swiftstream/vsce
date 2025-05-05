@@ -913,12 +913,12 @@ async function createNewProjectFiles(
 							default: break
 						}
 						break
-					case 'zephyr':
+					case 'nrf':
 						if (!generateAndWriteDevcontainerJson(
 							devContainerPath,
 							ExtensionStream.Embedded,
 							defaultSwiftVersion,
-							{ embedded: { branch: EmbeddedBranch.Zephyr } }
+							{ embedded: { branch: EmbeddedBranch.NRF } }
 						)) return
 						switch (embeddedPackage) {
 							case 'led-blink':

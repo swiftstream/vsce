@@ -92,11 +92,11 @@
 			"args": ["buildx", "create", "--name", "stm32-container", "--driver=docker-container"],
 			"type": "shell"
 		},
-		// MARK: Docker Create Embedded ZEPHYR
+		// MARK: Docker Create Embedded NRF
 		{
-			"label": "Docker Create BuildX Container Embedded ZEPHYR (step 2)",
+			"label": "Docker Create BuildX Container Embedded NRF (step 2)",
 			"command": "docker",
-			"args": ["buildx", "create", "--name", "zephyr-container", "--driver=docker-container"],
+			"args": ["buildx", "create", "--name", "nrf-container", "--driver=docker-container"],
 			"type": "shell"
 		},
 		// MARK: Docker Create Embedded RASPBERRY
@@ -214,17 +214,17 @@
   			},
 			"type": "shell"
 		},
-		// MARK: Docker Push Embedded ZEPHYR Development Container Image
+		// MARK: Docker Push Embedded NRF Development Container Image
 		{
-			"label": "Docker Build & Push Multi Embedded ZEPHYR Image (step 3)",
+			"label": "Docker Build & Push Multi Embedded NRF Image (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
-				"--tag", "swiftstream/embedded-zephyr:noble",
+				"--tag", "swiftstream/embedded-nrf:noble",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "zephyr-container",
+				"--builder", "nrf-container",
 				"--push",
-				"--file", "embedded-zephyr/Dockerfile",
+				"--file", "embedded-nrf/Dockerfile",
     			"."
 			],
 			"options": {
@@ -347,11 +347,11 @@
 			"args": ["pull", "swiftstream/embedded-stm32:noble"],
 			"type": "shell"
 		},
-		// MARK: Docker Pull Embedded ZEPHYR Dev Image
+		// MARK: Docker Pull Embedded NRF Dev Image
 		{
-			"label": "Docker Pull Embedded ZEPHYR Image (step 4)",
+			"label": "Docker Pull Embedded NRF Image (step 4)",
 			"command": "docker",
-			"args": ["pull", "swiftstream/embedded-zephyr:noble"],
+			"args": ["pull", "swiftstream/embedded-nrf:noble"],
 			"type": "shell"
 		},
 		// MARK: Docker Pull Embedded RASPBERRY Dev Image
@@ -444,18 +444,18 @@
   			},
 			"type": "shell"
 		},
-		// MARK: Docker ForcePush Embedded ZEPHYR Development Container Image
+		// MARK: Docker ForcePush Embedded NRF Development Container Image
 		{
-			"label": "Docker Build & Push Multi Embedded ZEPHYR Image (no cache) (step 3)",
+			"label": "Docker Build & Push Multi Embedded NRF Image (no cache) (step 3)",
 			"command": "docker",
 			"args": [
 				"buildx", "build",
 				"--no-cache",
-				"--tag", "swiftstream/embedded-zephyr:noble",
+				"--tag", "swiftstream/embedded-nrf:noble",
 				"--platform", "linux/amd64,linux/arm64",
-				"--builder", "zephyr-container",
+				"--builder", "nrf-container",
 				"--push",
-				"--file", "embedded-zephyr/Dockerfile",
+				"--file", "embedded-nrf/Dockerfile",
     			"."
 			],
 			"options": {
