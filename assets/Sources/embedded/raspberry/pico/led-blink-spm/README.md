@@ -34,6 +34,6 @@ Make sure it's in the USB Mass Storage firmware upload mode (either hold the BOO
 
 ### Step 2: Copy the Firmware
 
-Copy the `build/blinky.uf2` file to the root of the Mass Storage device to trigger flashing the program into memory (after which the device will reboot and run the firmware).
+Copy the `.build/firmware.uf2` file to the root of the Mass Storage device to trigger flashing the program into memory (after which the device will reboot and run the firmware).
 
 The green LED should now be blinking in a pattern.

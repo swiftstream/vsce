@@ -17,7 +17,7 @@ Everything you need to build the firmware is already pre-installed in this conta
 Otherwise manually:
 ```console
 export STM_BOARD=NUCLEO_F103RB   # or STM32F746G_DISCOVERY
-./build-elf.sh
+./build.sh
 ```
 
 ## Running on Wokwi Simulator
@@ -77,7 +77,7 @@ choco install stlink -y
 Once installed, use the following commands from your host terminal to flash the firmware:
 
 ```
-st-flash --format ihex --reset write .build/blink.hex
+st-flash --format ihex --reset write .build/firmware.hex
 ```
 
 > Make sure you're running this from the project directory on your host machine.
@@ -91,7 +91,7 @@ The resulting size of the compiled and linked binary is very small (which should
 > The following commands works only on macOS and linux
 
 ```console
-size -m .build/blink
+size -m .build/firmware
 
 Segment __TEXT: 656
   Section __text: 142
@@ -106,7 +106,7 @@ total 1300
 The binary contains only 142 bytes of code! Additionally, the vector table needed by the CPU is actually dominating the size of the final firmware. Note that the `__LINKEDIT` segment is discarded when forming the final `.bin` file, which is 1168 bytes in size:
 
 ```console
-cat .build/blink.bin | wc -c
+cat .build/firmware.bin | wc -c
 
     1168
 ```

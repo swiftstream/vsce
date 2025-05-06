@@ -35,10 +35,10 @@ $SWIFT_EXEC build "$SWIFT_BUILD_FLAGS"
 BUILDROOT=$($SWIFT_EXEC build "$SWIFT_BUILD_FLAGS" --show-bin-path)
 
 # Link
-$CLANG .build/release/Support.build/Support.c.o .build/release/Support.build/crt0.S.o .build/release/Blinky.build/*.o -target armv6m-apple-none-macho -o "$BUILDROOT"/blinky "$LD_FLAGS"
+$CLANG .build/release/Support.build/Support.c.o .build/release/Support.build/crt0.S.o .build/release/Blinky.build/*.o -target armv6m-apple-none-macho -o "$BUILDROOT"/firmware "$LD_FLAGS"
 
 # Extract sections from executable into flashable binary
-$PYTHON_EXEC "$MACHO2UF2" --pico-family $PICO_FAMILY "$BUILDROOT"/blinky "$BUILDROOT"/blinky.uf2 --base-address 0x20000000 --segments '__TEXT,__DATA,__VECTORS,__RESET'
+$PYTHON_EXEC "$MACHO2UF2" --pico-family $PICO_FAMILY "$BUILDROOT"/firmware "$BUILDROOT"/firmware.uf2 --base-address 0x20000000 --segments '__TEXT,__DATA,__VECTORS,__RESET'
 
 # Echo final binary path
-ls -al "$BUILDROOT"/blinky.uf2
+ls -al "$BUILDROOT"/firmware.uf2

@@ -28,14 +28,14 @@ CLANG_EXEC=${CLANG_EXEC:-$(which clang)}
 CLANG_FLAGS="-target $TARGET -Oz"
 
 LD_EXEC=${LD_EXEC:-$CLANG_EXEC}
-LD_FLAGS="-target $TARGET -fuse-ld=lld -nostdlib -static -Wl,-e,vector_table -Wl,--gc-sections -Wl,-T,$SRCROOT/elf-linkerscript.ld"
+LD_FLAGS="-target $TARGET -fuse-ld=lld -nostdlib -static -Wl,-e,vector_table -Wl,--gc-sections -Wl,-T,$SRCROOT/linkerscript.ld"
 
 # Create build directory
 mkdir -p "$BUILDROOT"
 
 # Build Swift sources
 # shellcheck disable=SC2086 # intentional splitting
-"$SWIFT_EXEC" $SWIFT_FLAGS -c $SRCROOT/*.swift -o "$BUILDROOT/blink.o"
+"$SWIFT_EXEC" $SWIFT_FLAGS -c $SRCROOT/*.swift -o "$BUILDROOT/firmware.o"
 
 # Build C sources
 # shellcheck disable=SC2086 # intentional splitting
@@ -43,10 +43,10 @@ mkdir -p "$BUILDROOT"
 
 # Link objects into executable
 # shellcheck disable=SC2086 # intentional splitting
-"$LD_EXEC" $LD_FLAGS "$BUILDROOT/blink.o" "$BUILDROOT/Startup.o" -o "$BUILDROOT/blink.elf"
+"$LD_EXEC" $LD_FLAGS "$BUILDROOT/firmware.o" "$BUILDROOT/Startup.o" -o "$BUILDROOT/firmware.elf"
 
 # Convert to Intel HEX for flashing
-"$TOOLSROOT"/elf2hex.py "$BUILDROOT/blink.elf" "$BUILDROOT/blink.hex"
+"$TOOLSROOT"/elf2hex.py "$BUILDROOT/firmware.elf" "$BUILDROOT/firmware.hex"
 
 # Echo final binary path
-ls -al "$BUILDROOT/blink.hex"
+ls -al "$BUILDROOT/firmware.hex"

@@ -26,12 +26,12 @@ cmake --build build
 
 ### Step 1: Connect Your Board
 
-Connect the **Pico-W** board to your host machine using a USB cable.
+Connect the **Pico** board to your host machine using a USB cable.
 
 Make sure it's in the USB Mass Storage firmware upload mode (either hold the BOOTSEL button while plugging the board, or make sure your Flash memory doesn't contain any valid firmware).
 
 ### Step 2: Copy the Firmware
 
-Copy the `build/swift-blinky.uf2` file to the root of the Mass Storage device to trigger flashing the program into memory (after which the device will reboot and run the firmware).
+Copy the `build/firmware.uf2` file to the root of the Mass Storage device to trigger flashing the program into memory (after which the device will reboot and run the firmware).
 
 The green LED should now be blinking in a pattern.

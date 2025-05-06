@@ -4,7 +4,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 set(CMAKE_Swift_COMPILATION_MODE wholemodule)
 set(CMAKE_Swift_COMPILER_WORKS YES)
 
-project(swift-blinky)
+project(firmware)
 pico_sdk_init()
 enable_language(Swift)
 
@@ -23,14 +23,14 @@ elseif(PICO_PLATFORM STREQUAL "rp2350-riscv")
     list(APPEND CLANG_ARCH_ABI_FLAGS "-Xcc -march=rv32imac_zicsr_zifencei_zba_zbb_zbs_zbkb -Xcc -mabi=ilp32")
 endif()
 
-add_executable(swift-blinky
+add_executable(firmware
     # Source files:
     Main.swift
 )
 
-set_target_properties(swift-blinky PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(firmware PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(swift-blinky
+target_link_libraries(firmware
     pico_stdlib hardware_uart hardware_gpio
 )
 
@@ -74,14 +74,14 @@ function(gather_compile_definitions_recursive target)
     endif()
 endfunction()
 
-gather_compile_definitions_recursive(swift-blinky)
+gather_compile_definitions_recursive(firmware)
 get_property(COMPILE_DEFINITIONS GLOBAL PROPERTY compilerdefs_list)
 get_property(INCLUDES GLOBAL PROPERTY includes_list)
 
 # Convert compiler definitions into a format that swiftc can understand
 list(REMOVE_DUPLICATES COMPILE_DEFINITIONS)
 list(PREPEND COMPILE_DEFINITIONS "") # adds a semicolon at the beginning
-string(REPLACE "$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>" "$<TARGET_PROPERTY:swift-blinky,PICO_TARGET_BINARY_TYPE>" COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}")
+string(REPLACE "$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>" "$<TARGET_PROPERTY:firmware,PICO_TARGET_BINARY_TYPE>" COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}")
 string(REPLACE ";" " -Xcc -D" COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}")
 
 # Compute -Xcc flags to set up the C and C++ header search paths for Swift (for bridging header).
@@ -95,7 +95,7 @@ foreach(dir ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
     string(CONCAT IMPLICIT_INCLUDES ${IMPLICIT_INCLUDES} "-I${dir} ")
 endforeach()
 
-target_compile_options(swift-blinky PUBLIC
+target_compile_options(firmware PUBLIC
     "$<$<COMPILE_LANGUAGE:Swift>:SHELL:
         -target ${SWIFT_TARGET}
         -enable-experimental-feature Embedded
@@ -110,4 +110,4 @@ target_compile_options(swift-blinky PUBLIC
         ${IMPLICIT_INCLUDES}
     >")
 
-pico_add_extra_outputs(swift-blinky)
+pico_add_extra_outputs(firmware)

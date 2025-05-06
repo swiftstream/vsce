@@ -1,4 +1,4 @@
 [wokwi]
 version = 1
-firmware = "build/swift-blinky.hex"
-elf = 'build/swift-blinky.elf'
+firmware = "build/firmware.hex"
+elf = 'build/firmware.elf'
