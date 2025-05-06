@@ -1,3 +1,5 @@
+.flash
+.build
 build
 managed_components
 sdkconfig
