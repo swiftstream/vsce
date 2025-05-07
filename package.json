@@ -58,24 +58,19 @@
           "default": true,
           "description": "Show Run button at the top right corner"
         },
-        "swift.showTopBuildButton": {
+        "swift.showTopFlashButton": {
           "order": 3,
+          "type": "boolean",
+          "default": true,
+          "description": "Show Flash button at the top right corner (in embedded mode)"
+        },
+        "swift.showTopBuildButton": {
+          "order": 4,
           "type": "boolean",
           "default": true,
           "description": "Show Build button at the top right corner"
         },
         "swift.debugBuildMode": {
-          "order": 4,
-          "type": "string",
-          "enum": [
-            "Standard (glibc)",
-            "Static Linux (x86-musl)",
-            "Static Linux (arm-musl)"
-          ],
-          "default": "Standard (glibc)",
-          "uniqueItems": true
-        },
-        "swift.releaseBuildMode": {
           "order": 5,
           "type": "string",
           "enum": [
@@ -86,29 +81,30 @@
           "default": "Standard (glibc)",
           "uniqueItems": true
         },
-        "swift.clearLogBeforeBuild": {
+        "swift.releaseBuildMode": {
           "order": 6,
+          "type": "string",
+          "enum": [
+            "Standard (glibc)",
+            "Static Linux (x86-musl)",
+            "Static Linux (arm-musl)"
+          ],
+          "default": "Standard (glibc)",
+          "uniqueItems": true
+        },
+        "swift.clearLogBeforeBuild": {
+          "order": 7,
           "type": "boolean",
           "default": false,
           "description": "Clears the log before each build"
         },
         "swift.hotRebuild": {
-          "order": 7,
+          "order": 8,
           "type": "boolean",
           "default": true,
           "description": "Hot rebuild whenever any file saved"
         },
         "web.debugBuildMode": {
-          "order": 8,
-          "type": "string",
-          "enum": [
-            "Wasi",
-            "Wasi Preview 1 (threads)"
-          ],
-          "default": "Wasi",
-          "uniqueItems": true
-        },
-        "web.releaseBuildMode": {
           "order": 9,
           "type": "string",
           "enum": [
@@ -118,50 +114,60 @@
           "default": "Wasi",
           "uniqueItems": true
         },
-        "web.hotReload": {
+        "web.releaseBuildMode": {
           "order": 10,
+          "type": "string",
+          "enum": [
+            "Wasi",
+            "Wasi Preview 1 (threads)"
+          ],
+          "default": "Wasi",
+          "uniqueItems": true
+        },
+        "web.hotReload": {
+          "order": 11,
           "type": "boolean",
           "default": true,
           "description": "Hot reload in the browser whenever any file saved"
         },
         "web.debugGzip": {
-          "order": 11,
+          "order": 12,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Gzip during a debug build."
         },
         "web.debugBrotli": {
-          "order": 12,
+          "order": 13,
           "type": "boolean",
           "default": true,
           "description": "Compress WASM files with Brotli during a debug build."
         },
         "web.appTargetName": {
-          "order": 13,
+          "order": 14,
           "type": "string",
           "description": "Name of the app target in Package.swift",
           "default": "App"
         },
         "web.serviceWorkerTargetName": {
-          "order": 14,
+          "order": 15,
           "type": "string",
           "description": "Name of the service worker target in Package.swift",
           "default": "Service"
         },
         "web.webSourcesPath": {
-          "order": 15,
+          "order": 16,
           "type": "string",
           "description": "Relative path to folder with web source files and package.json",
           "default": "WebSources"
         },
         "xcode.trimEndOfLine": {
-          "order": 16,
+          "order": 17,
           "type": "boolean",
           "default": true,
           "description": "Automatically trim whitespaces at the end of the line when pressing Enter, just like in Xcode"
         },
         "menu.state": {
-          "order": 17,
+          "order": 18,
           "type": "object",
           "default": {},
           "description": "Expanded/Collapsed flags for menu items"
