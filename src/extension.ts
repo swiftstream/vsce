@@ -329,7 +329,7 @@ const askForEmbeddedBranch = async (): Promise<EmbeddedBranch | undefined> => {
 		{ label: 'Espressif', detail: 'ESP32-C6' },
 		{ label: 'Raspberry Pi', detail: 'Pico, Pico W, Pico 2' },
 		{ label: 'STMicroelectronics', detail: 'STM32F746G, NUCLEO_F103RB' },
-		{ label: 'Nordic Semiconductor', detail: 'nRF52840-DK' }
+		{ label: 'Nordic Semiconductor', detail: 'NRF52840-DK' }
 	], {
 		placeHolder: `Select Board Manufacturer`
 	})
