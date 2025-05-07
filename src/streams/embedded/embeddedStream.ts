@@ -169,6 +169,22 @@ export class EmbeddedStream extends Stream {
         icon: 'device-mobile'
     })
 
+    async flash() {
+        const scheme = await this.getSelectedSchemeOrChoose({ release: false })
+        if (!scheme) return
+        if (!this.isDebugBuilt(scheme)) {
+            switch (await window.showInformationMessage(
+                `Please build the firmware first, and then hit "Flash" again.`,
+                'Build'
+            )) {
+                case 'Build':
+                    await buildCommand(this, scheme)
+                    break
+                default: break
+            }
+        } else {
+        }
+    }
     selectedScheme(): Scheme | undefined {
         return EmbeddedStreamConfig.selectedScheme()
     }
