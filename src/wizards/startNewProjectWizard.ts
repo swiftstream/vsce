@@ -496,8 +496,7 @@ async function createNewProjectFiles(
 				await (async function () {
 					const availablePort = await checkPortAndGetNextIfBusy(defaultServerPort)
 					const config = new DevContainerConfig(osPath.join(path, '.devcontainer', 'devcontainer.json'))
-					config
-					.transaction((c) => c.addOrChangePort(`${availablePort}`, `${innerServerPort}`))
+					config.transaction((c) => c.addOrChangePort(`${availablePort}`, `${innerServerPort}`))
 				})()
 				// Copy .gitignore
 				await copySourceFile(osPath.join(serverType, '.gitignore'), '.gitignore')
