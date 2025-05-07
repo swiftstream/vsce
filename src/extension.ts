@@ -42,11 +42,14 @@ export enum ExtensionStream {
 }
 export enum ContextKey {
 	state = 'swiftstream.state',
+	isEmbeddedStream = 'isEmbeddedStream',
 	isNavigationRunButtonEnabled = 'isNavigationRunButtonEnabled',
+	isNavigationFlashButtonEnabled = 'isNavigationFlashButtonEnabled',
 	isNavigationBuildButtonEnabled = 'isNavigationBuildButtonEnabled',
 	hasCachedTargets = 'hasCachedTargets',
 	isDebugging = 'isDebugging',
 	isBuildingDebug = 'isBuildingDebug',
+	isFlashing = 'isFlashing',
 	isBuildingRelease = 'isBuildingRelease',
 	isRunningDebugTarget = 'isRunningDebugTarget',
 	isRunningReleaseTarget = 'isRunningReleaseTarget',
