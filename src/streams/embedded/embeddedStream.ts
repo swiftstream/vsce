@@ -134,6 +134,8 @@ export class EmbeddedStream extends Stream {
     registerCommands() {
         super.registerCommands()
         extensionContext.subscriptions.push(commands.registerCommand(this.debugSchemeElement().id, async () => await this.chooseScheme({ release: false }) ))
+        extensionContext.subscriptions.push(commands.registerCommand('FlashFirmware', async () => { await this.flash() }))
+        extensionContext.subscriptions.push(commands.registerCommand(this.flashElement().id, async () => await this.flash() ))
         extensionContext.subscriptions.push(commands.registerCommand(this.simulatorElement().id, async () => this.openSimulator() ))
 
     debugSchemeElement() {
@@ -150,6 +152,13 @@ export class EmbeddedStream extends Stream {
             icon: scheme ? scheme.buildConfiguration == SchemeBuildConfiguration.Debug ? 'target::charts.orange' : 'target::charts.green' : 'target'
         })
     }
+    flashElement = () => new Dependency({
+        id: SideTreeItem.DeviceFlash,
+        label: 'Flash',
+        version: ``,
+        tooltip: 'Flash the firmware',
+        icon: isFlashing ? 'sync~spin::charts.yellow' : 'symbol-event'
+    })
     simulatorElement = () => new Dependency({
         id: SideTreeItem.DeviceSimulator,
         label: 'Simulator',
@@ -248,6 +257,7 @@ export class EmbeddedStream extends Stream {
     async debugOptionItems(): Promise<Dependency[]> { return [] }
     async deviceItems(): Promise<Dependency[]> {
         let items: Dependency[] = []
+        items.push(this.flashElement())
         if (this.hasWokwiFile()) {
             items.push(this.simulatorElement())
         }
