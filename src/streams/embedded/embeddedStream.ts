@@ -3,6 +3,19 @@ import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
 import { isInContainer } from '../../extension'
 
+export enum EmbeddedBuildSystem {
+    SwiftPM = 'SwiftPM',
+    Makefile = 'Makefile',
+    CMake = 'CMake',
+    ShellScript = 'ShellScript',
+    Unknown = 'Unknown'
+}
+export function stringToBuildSystem(v: string): EmbeddedBuildSystem {
+    return Object.values(EmbeddedBuildSystem).includes(v.toUpperCase() as EmbeddedBuildSystem)
+        ? v.toUpperCase() as EmbeddedBuildSystem
+        : EmbeddedBuildSystem.Unknown
+}
+
 export class EmbeddedStream extends Stream {
     constructor(overrideConfigure: boolean = false) {
         super(true)
