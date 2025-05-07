@@ -53,6 +53,9 @@ export class EmbeddedStream extends Stream {
     hasSwiftPackage(): boolean {
         return fs.existsSync(path.join(projectDirectory!, 'Package.swift'))
     }
+    hasWokwiFile(): boolean {
+        return fs.existsSync(path.join(projectDirectory!, 'diagram.json'))
+    }
 
     private _detectBuildSystem() {
         if (this.hasSwiftPackage()) {
@@ -103,7 +106,17 @@ export class EmbeddedStream extends Stream {
     }
     registerCommands() {
         super.registerCommands()
+        extensionContext.subscriptions.push(commands.registerCommand(this.simulatorElement().id, async () => this.openSimulator() ))
 
+    simulatorElement = () => new Dependency({
+        id: SideTreeItem.DeviceSimulator,
+        label: 'Simulator',
+        version: ``,
+        tooltip: 'Open simulator',
+        icon: 'device-mobile'
+    })
+    openSimulator() {
+        commands.executeCommand(`wokwi-vscode.start`)
     }
 
     onDidRenameFiles(event: FileRenameEvent) {
@@ -145,11 +158,22 @@ export class EmbeddedStream extends Stream {
 
     async debugActionItems(): Promise<Dependency[]> { return [] }
     async debugOptionItems(): Promise<Dependency[]> { return [] }
+    async deviceItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (this.hasWokwiFile()) {
+            items.push(this.simulatorElement())
+        }
+        return items
+    }
     async releaseItems(): Promise<Dependency[]> { return [] }
     async projectItems(): Promise<Dependency[]> { return [] }
     async maintenanceItems(): Promise<Dependency[]> { return [] }
     async settingsItems(): Promise<Dependency[]> { return [] }
     async isThereAnyRecommendation(): Promise<boolean> { return false }
     async recommendationsItems(): Promise<Dependency[]> { return [] }
-    async customItems(element: Dependency): Promise<Dependency[]> { return await super.customItems(element) }
-}
+    async customItems(element: Dependency): Promise<Dependency[]> {
+        if (element.id === SideTreeItem.Device) {
+            return this.deviceItems()
+        }
+        return await super.customItems(element)
+    }
