@@ -17,6 +17,7 @@ export function stringToBuildSystem(v: string): EmbeddedBuildSystem {
 }
 
 export class EmbeddedStream extends Stream {
+    detectedBuildSystem: EmbeddedBuildSystem = EmbeddedBuildSystem.Unknown
     constructor(overrideConfigure: boolean = false) {
         super(true)
 
@@ -25,9 +26,32 @@ export class EmbeddedStream extends Stream {
 
     configure() {
         super.configure()
+        this._detectBuildSystem()
         if (this.branch !== EmbeddedBranch.RASPBERRY) {
             const isFlashButtonEnabled = workspace.getConfiguration().get('swift.showTopFlashButton') as boolean
             this.setContext(ContextKey.isNavigationFlashButtonEnabled, isFlashButtonEnabled ?? true)
+        }
+    }
+
+    buildSystemHasCMake = false
+
+    hasSwiftPackage(): boolean {
+        return fs.existsSync(path.join(projectDirectory!, 'Package.swift'))
+    }
+
+    private _detectBuildSystem() {
+        if (this.hasSwiftPackage()) {
+            this.detectedBuildSystem = EmbeddedBuildSystem.SwiftPM
+        }
+        if (fs.existsSync(path.join(projectDirectory!, 'CMakeLists.txt'))) {
+            this.detectedBuildSystem = EmbeddedBuildSystem.CMake
+            this.buildSystemHasCMake = true
+        }
+        if (fs.existsSync(path.join(projectDirectory!, 'Makefile'))) {
+            this.detectedBuildSystem = EmbeddedBuildSystem.Makefile
+        }
+        if (fs.readdirSync(projectDirectory!).some(x => x.endsWith('.sh'))) {
+            this.detectedBuildSystem = EmbeddedBuildSystem.ShellScript
         }
     }
 
