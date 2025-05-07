@@ -39,6 +39,13 @@ export class EmbeddedStream extends Stream {
             this.setContext(ContextKey.isNavigationFlashButtonEnabled, isFlashButtonEnabled ?? true)
         }
         this.buildTaskRunner = new EmbeddedBuildTaskRunner()
+        let autoselected = false
+        EmbeddedStreamConfig.transaction(x => {
+            autoselected = x.autoselectScheme()
+            const s = x.autoselectScheme()
+            if (!autoselected) autoselected = s
+        })
+        if (autoselected) sidebarTreeView?.refresh()
     }
 
     buildSystemHasCMake = false
