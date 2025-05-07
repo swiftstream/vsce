@@ -294,6 +294,7 @@ export const generateDevcontainerJson = (
 						devcontainerObject.containerEnv['IDF_TARGET'] = 'esp32c6'
 						devcontainerObject.containerEnv['IDF_PATH'] = '/embedded/esp'
 						devcontainerObject.containerEnv['IDF_TOOLS_PATH'] = '/embedded/esp/.espressif'
+                        devcontainerObject.mounts.push({ source: "${localWorkspaceFolderBasename}-espbuild", target: "${containerWorkspaceFolder}/build", type: 'volume' },)
 						devcontainerObject.mounts.push({ source: 'esp-idf', target: '/embedded/esp', type: 'volume' })
 						break
 					case EmbeddedBranch.RASPBERRY:
