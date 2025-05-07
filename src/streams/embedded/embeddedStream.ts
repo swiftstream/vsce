@@ -10,6 +10,7 @@ import { buildFolderBySystem, chooseScheme, EmbeddedStreamConfig, Scheme, Scheme
 import { EmbeddedBuildTaskRunner } from '../../embeddedBuildTaskRunner'
 import { buildCommand } from './commands/build'
 import { pathToCompiledBinary, SwiftBuildMode } from '../../swift'
+import { flashCommand } from './commands/flash'
 
 export enum EmbeddedBuildSystem {
     SwiftPM = 'SwiftPM',
@@ -31,7 +32,6 @@ export class EmbeddedStream extends Stream {
 
     constructor(overrideConfigure: boolean = false) {
         super(true)
-
         if (!overrideConfigure) this.configure()
     }
 
@@ -139,6 +139,7 @@ export class EmbeddedStream extends Stream {
         }
         return undefined
     }
+
     registerCommands() {
         super.registerCommands()
         extensionContext.subscriptions.push(commands.registerCommand('BuildFirmware', async () => { await this.buildDebug() }))
@@ -191,11 +192,14 @@ export class EmbeddedStream extends Stream {
                 default: break
             }
         } else {
+            await flashCommand(this, scheme)
         }
     }
+
     selectedScheme(): Scheme | undefined {
         return EmbeddedStreamConfig.selectedScheme()
     }
+
     openSimulator() {
         commands.executeCommand(`wokwi-vscode.start`)
     }
@@ -220,7 +224,9 @@ export class EmbeddedStream extends Stream {
     // MARK: Global Keybinding
 
     async globalKeyRun() {
-        window.showErrorMessage(`Run key binding not assigned`)
+        await this.flash()
+    }
+    
     // MARK: Scheme
 
     async chooseScheme(options: {
@@ -265,7 +271,7 @@ export class EmbeddedStream extends Stream {
         await super.buildRelease()
         print('stream.buildRelease not implemented', LogLevel.Detailed)
     }
-
+    
     // MARK: Side Bar Tree View Items
     
     async defaultDebugActionItems(): Promise<Dependency[]> {
@@ -314,3 +320,4 @@ export class EmbeddedStream extends Stream {
         }
         return await super.customItems(element)
     }
+}
