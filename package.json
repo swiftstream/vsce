@@ -241,6 +241,15 @@
         }
       },
       {
+        "command": "BuildFirmware",
+        "title": "Build the firmware (Ctrl/Cmd+B)",
+        "shortTitle": "Build the firmware",
+        "icon": {
+          "dark": "assets/icons/hammer.svg",
+          "light": "assets/icons/hammer.svg"
+        }
+      },
+      {
         "command": "runDebugAttached",
         "title": "Run and attach Debugger (Ctrl/Cmd+R)",
         "icon": {
@@ -255,6 +264,11 @@
           "dark": "assets/icons/run.svg",
           "light": "assets/icons/run.svg"
         }
+      },
+      {
+        "command": "FlashFirmware",
+        "title": "Flash the firmware (Ctrl/Cmd+R)",
+        "icon": "$(symbol-event)"
       },
       {
         "command": "stopBuildingRelease",
@@ -272,13 +286,23 @@
         },
         {
           "group": "navigation@0",
+          "command": "FlashFirmware",
+          "when": "isNavigationFlashButtonEnabled"
+        },
+        {
+          "group": "navigation@0",
           "command": "stopDebugging",
           "when": "isNavigationRunButtonEnabled && isDebugging"
         },
         {
           "group": "navigation@1",
           "command": "BuildDebug",
-          "when": "isNavigationBuildButtonEnabled && !isBuildingDebug"
+          "when": "isNavigationBuildButtonEnabled && !isEmbeddedStream && !isBuildingDebug"
+        },
+        {
+          "group": "navigation@1",
+          "command": "BuildFirmware",
+          "when": "isNavigationBuildButtonEnabled && isEmbeddedStream && !isBuildingDebug"
         },
         {
           "group": "navigation@1",
