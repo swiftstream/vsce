@@ -289,7 +289,7 @@ export const generateDevcontainerJson = (
 				devcontainerObject.containerEnv['S_EMBEDDED_BRANCH'] = options.embedded.branch.toUpperCase()
 				switch (options.embedded.branch) {
 					case EmbeddedBranch.ESP32:
-						devcontainerObject.containerEnv['IDF_VERSION'] = '5.3'
+                        devcontainerObject.containerEnv['IDF_VERSION'] = '5.3'
 						devcontainerObject.containerEnv['IDF_CHIP_TARGETS'] = 'esp32c6'
 						devcontainerObject.containerEnv['IDF_TARGET'] = 'esp32c6'
 						devcontainerObject.containerEnv['IDF_PATH'] = '/embedded/esp'
