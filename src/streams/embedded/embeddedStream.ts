@@ -60,6 +60,32 @@ export class EmbeddedStream extends Stream {
 
     }
 
+    defaultFirmwareFile(scheme: Scheme): string | undefined {
+        switch (this.branch) {
+        case EmbeddedBranch.ESP32:
+            return path.join(
+                scheme.buildFolder ?? buildFolderBySystem(scheme.build.system),
+                `${scheme.binaryName}.bin`
+            )
+        case EmbeddedBranch.NRF:
+            return path.join(
+                scheme.buildFolder ?? buildFolderBySystem(scheme.build.system),
+                'zephyr',
+                `${scheme.binaryName}.hex`
+            )
+        case EmbeddedBranch.RASPBERRY:
+            return path.join(
+                scheme.buildFolder ?? buildFolderBySystem(scheme.build.system),
+                `${scheme.binaryName}.uf2`
+            )
+        case EmbeddedBranch.STM32:
+            return path.join(
+                scheme.buildFolder ?? buildFolderBySystem(scheme.build.system),
+                `${scheme.binaryName}.hex`
+            )
+        }
+        return undefined
+    }
     registerCommands() {
         super.registerCommands()
 
