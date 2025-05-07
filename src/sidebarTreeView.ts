@@ -2,7 +2,7 @@ import path from 'node:path'
 import { env } from 'process'
 import { TreeDataProvider, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, ThemeIcon, ThemeColor, Command, Disposable, Uri, workspace, commands, TreeViewExpansionEvent, window } from 'vscode'
 import { isBuildingDebug, isBuildingRelease, isHotRebuildEnabled, isClearingCache, isClearedCache, currentLoggingLevel, isTesting, isTestable, isRestartingLSP, isRestartedLSP, isClearLogBeforeBuildEnabled, isResolvingPackages } from './streams/stream'
-import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream } from './extension'
+import { extensionContext, ExtensionStream, extensionStream, isInContainer, currentStream, embeddedStream } from './extension'
 import { openDocumentInEditorOnLine } from './helpers/openDocumentInEditor'
 import { isCIS } from './helpers/language'
 import { currentToolchain, pendingNewToolchain } from './toolchain'
@@ -195,19 +195,29 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 			if (currentStream) {
 				items.push(new Dependency({
 					id: SideTreeItem.Debug,
-					label: 'Debug',
+					label: extensionStream === ExtensionStream.Embedded ? 'Build' : 'Debug',
 					version: `${workspace.name?.split('[Dev')[0] ?? ''}`,
 					state: this.expandState(SideTreeItem.Debug),
 					icon: 'coffee',
 					skipCommand: true
 				}))
-				items.push(new Dependency({
-					id: SideTreeItem.Release,
-					label: 'Release',
-					state: this.expandState(SideTreeItem.Release),
-					icon: 'cloud-upload',
-					skipCommand: true
-				}))
+				if (extensionStream !== ExtensionStream.Embedded) {
+					items.push(new Dependency({
+						id: SideTreeItem.Release,
+						label: 'Release',
+						state: this.expandState(SideTreeItem.Release),
+						icon: 'cloud-upload',
+						skipCommand: true
+					}))
+				} else {
+					items.push(new Dependency({
+						id: SideTreeItem.Device,
+						label: 'Device',
+						state: this.expandState(SideTreeItem.Device),
+						icon: 'chip',
+						skipCommand: true
+					}))
+				}
 				const projectItems = await currentStream!.projectItems()
 				if (projectItems.length > 0) {
 					items.push(new Dependency({
@@ -336,12 +346,14 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					}))
 				}
 				// Options
-				items.push(new Dependency({
-					id: SideTreeItem.HotRebuild,
-					label: 'Hot rebuild',
-					version: isHotRebuildEnabled ? 'Enabled' : 'Disabled',
-					icon: isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'
-				}))
+				if (extensionStream !== ExtensionStream.Embedded) {
+					items.push(new Dependency({
+						id: SideTreeItem.HotRebuild,
+						label: 'Hot rebuild',
+						version: isHotRebuildEnabled ? 'Enabled' : 'Disabled',
+						icon: isHotRebuildEnabled ? 'pass::charts.green' : 'circle-large-outline'
+					}))
+				}
 				items.push(...(await currentStream.debugOptionItems()))
 				break
 			case SideTreeItem.Release:
@@ -441,11 +453,13 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 					label: isRestartingLSP ? 'Restarting LSP' : isRestartedLSP ? 'Restarted LSP' : 'Restart LSP',
 					icon: isRestartingLSP ? 'sync~spin::charts.yellow' : isRestartedLSP ? 'check::charts.green' : 'debug-restart::charts.yellow'
 				}))
-				items.push(new Dependency({
-					id: SideTreeItem.ResolvePackages,
-					label: isResolvingPackages ? 'Resolving Packages' : isResolvingPackages ? 'Resolved Packages' : 'Resolve Packages',
-					icon: isResolvingPackages ? 'sync~spin::charts.yellow' : isResolvingPackages ? 'check::charts.green' : 'clone::charts.yellow'
-				}))
+				if (extensionStream !== ExtensionStream.Embedded) {
+					items.push(new Dependency({
+						id: SideTreeItem.ResolvePackages,
+						label: isResolvingPackages ? 'Resolving Packages' : isResolvingPackages ? 'Resolved Packages' : 'Resolve Packages',
+						icon: isResolvingPackages ? 'sync~spin::charts.yellow' : isResolvingPackages ? 'check::charts.green' : 'clone::charts.yellow'
+					}))
+				}
 				items.push(...(await currentStream.maintenanceItems()))
 				break
 			case SideTreeItem.Settings:
