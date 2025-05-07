@@ -133,10 +133,12 @@ export class EmbeddedStream extends Stream {
     }
     registerCommands() {
         super.registerCommands()
+        extensionContext.subscriptions.push(commands.registerCommand('BuildFirmware', async () => { await this.buildDebug() }))
         extensionContext.subscriptions.push(commands.registerCommand(this.debugSchemeElement().id, async () => await this.chooseScheme({ release: false }) ))
         extensionContext.subscriptions.push(commands.registerCommand('FlashFirmware', async () => { await this.flash() }))
         extensionContext.subscriptions.push(commands.registerCommand(this.flashElement().id, async () => await this.flash() ))
         extensionContext.subscriptions.push(commands.registerCommand(this.simulatorElement().id, async () => this.openSimulator() ))
+    }
 
     debugSchemeElement() {
         const scheme = EmbeddedStreamConfig.selectedScheme()
