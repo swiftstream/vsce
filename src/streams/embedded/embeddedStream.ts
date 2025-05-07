@@ -31,6 +31,7 @@ export class EmbeddedStream extends Stream {
         super.configure()
         this.branch = DevContainerConfig.getEmbeddedBranch()
         this._detectBuildSystem()
+        this.setContext(ContextKey.isEmbeddedStream, true)
         if (this.branch !== EmbeddedBranch.RASPBERRY) {
             const isFlashButtonEnabled = workspace.getConfiguration().get('swift.showTopFlashButton') as boolean
             this.setContext(ContextKey.isNavigationFlashButtonEnabled, isFlashButtonEnabled ?? true)
