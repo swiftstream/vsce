@@ -2,7 +2,8 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { TimeMeasure } from './helpers/timeMeasureHelper'
-import { window } from 'vscode'
+import { TaskProvider, window } from 'vscode'
+import { CancellableTaskRunner } from './embeddedBuildTaskRunner'
 
 export class Bash {
     whichCache: {} = {}
@@ -184,6 +185,7 @@ export class BashError {
 
 export class AbortHandler {
 	private processes: ChildProcessWithoutNullStreams[] = []
+    private taskRunners: CancellableTaskRunner[] = []
     isCancelled = false
 
     constructor (
@@ -194,11 +196,17 @@ export class AbortHandler {
         if (this.isCancelled) return
         this.isCancelled = true
         this.processes.forEach((p) => p.kill('SIGKILL'))
+        this.taskRunners.forEach((p) => p.cancel())
         this.onCancel()
     }
 
     addProcess(instance: ChildProcessWithoutNullStreams) {
         if (this.isCancelled) return
         this.processes.push(instance)
+    }
+
+    addTaskRunner(runner: CancellableTaskRunner) {
+        if (this.isCancelled) return
+        this.taskRunners.push(runner)
     }
 }
