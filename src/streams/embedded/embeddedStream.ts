@@ -19,6 +19,8 @@ export function stringToBuildSystem(v: string): EmbeddedBuildSystem {
 export class EmbeddedStream extends Stream {
     branch: EmbeddedBranch = EmbeddedBranch.Unknown
     detectedBuildSystem: EmbeddedBuildSystem = EmbeddedBuildSystem.Unknown
+    buildTaskRunner!: EmbeddedBuildTaskRunner
+
     constructor(overrideConfigure: boolean = false) {
         super(true)
 
