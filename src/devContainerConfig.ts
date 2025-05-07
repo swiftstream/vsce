@@ -193,6 +193,12 @@ export enum EmbeddedBranch {
     Unknown = 'Unknown'
 }
 
+function stringToBranch(v: string): EmbeddedBranch {
+	return Object.values(EmbeddedBranch).includes(v.toUpperCase() as EmbeddedBranch)
+		? v.toUpperCase() as EmbeddedBranch
+		: EmbeddedBranch.Unknown
+}
+
 export const generateAndWriteDevcontainerJson = (
 	pathTo: string,
     stream: ExtensionStream,
