@@ -17,6 +17,7 @@ export function stringToBuildSystem(v: string): EmbeddedBuildSystem {
 }
 
 export class EmbeddedStream extends Stream {
+    branch: EmbeddedBranch = EmbeddedBranch.Unknown
     detectedBuildSystem: EmbeddedBuildSystem = EmbeddedBuildSystem.Unknown
     constructor(overrideConfigure: boolean = false) {
         super(true)
@@ -26,6 +27,7 @@ export class EmbeddedStream extends Stream {
 
     configure() {
         super.configure()
+        this.branch = DevContainerConfig.getEmbeddedBranch()
         this._detectBuildSystem()
         if (this.branch !== EmbeddedBranch.RASPBERRY) {
             const isFlashButtonEnabled = workspace.getConfiguration().get('swift.showTopFlashButton') as boolean
