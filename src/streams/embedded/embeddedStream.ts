@@ -144,6 +144,22 @@ export class EmbeddedStream extends Stream {
 
     async globalKeyRun() {
         window.showErrorMessage(`Run key binding not assigned`)
+    // MARK: Scheme
+
+    async chooseScheme(options: {
+        release: boolean,
+        abortHandler?: AbortHandler
+    }): Promise<Scheme | undefined> {
+        const scheme = await chooseScheme(this, {
+            release: options.release,
+            abortHandler: options.abortHandler
+        })
+        if (!scheme) return undefined
+        EmbeddedStreamConfig.transaction(x => {
+            x.setSelectedScheme(scheme)
+        })
+        sidebarTreeView?.refresh()
+    }
     }
 
     // MARK: Building
