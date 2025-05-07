@@ -201,7 +201,7 @@
       },
       {
         "command": "stopRunningDebug",
-        "title": "Stop (Cmd+. or Ctrl+.)",
+        "title": "Stop (Ctrl/Cmd+.)",
         "shortTitle": "Stop",
         "icon": {
           "dark": "assets/icons/stop.svg",
@@ -210,7 +210,7 @@
       },
       {
         "command": "stopRunningRelease",
-        "title": "Stop (Cmd+. or Ctrl+.)",
+        "title": "Stop (Ctrl/Cmd+.)",
         "shortTitle": "Stop",
         "icon": {
           "dark": "assets/icons/stop.svg",
@@ -227,13 +227,13 @@
       },
       {
         "command": "stopBuildingDebug",
-        "title": "Stop Building (Cmd+. or Ctrl+.)",
+        "title": "Stop Building (Ctrl/Cmd+.)",
         "shortTitle": "Stop Building",
         "icon": "$(debug-stop)"
       },
       {
         "command": "BuildDebug",
-        "title": "Build in Debug (Cmd+B or Ctrl+B)",
+        "title": "Build in Debug (Ctrl/Cmd+B)",
         "shortTitle": "Build in Debug",
         "icon": {
           "dark": "assets/icons/hammer.svg",
@@ -242,7 +242,7 @@
       },
       {
         "command": "runDebugAttached",
-        "title": "Run and attach Debugger (Cmd+R or Ctrl+R)",
+        "title": "Run and attach Debugger (Ctrl/Cmd+R)",
         "icon": {
           "dark": "assets/icons/bug-white.svg",
           "light": "assets/icons/bug.svg"
@@ -250,7 +250,7 @@
       },
       {
         "command": "runDebugAttachedTopBar",
-        "title": "Run and attach Debugger (Cmd+R or Ctrl+R)",
+        "title": "Run and attach Debugger (Ctrl/Cmd+R)",
         "icon": {
           "dark": "assets/icons/run.svg",
           "light": "assets/icons/run.svg"
@@ -258,7 +258,7 @@
       },
       {
         "command": "stopBuildingRelease",
-        "title": "Stop Building (Cmd+. or Ctrl+.)",
+        "title": "Stop Building (Ctrl/Cmd+.)",
         "shortTitle": "Stop Building",
         "icon": "$(debug-stop)"
       }
