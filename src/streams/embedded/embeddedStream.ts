@@ -160,13 +160,25 @@ export class EmbeddedStream extends Stream {
         })
         sidebarTreeView?.refresh()
     }
+    
+    async getSelectedSchemeOrChoose(options: {
+        release: boolean,
+        abortHandler?: AbortHandler
+    }): Promise<Scheme | undefined> {
+        const selectedScheme = EmbeddedStreamConfig.selectedScheme()
+        if (selectedScheme) return selectedScheme
+        return await chooseScheme(this, {
+            release: options.release,
+            abortHandler: options.abortHandler
+        })
     }
 
     // MARK: Building
 
     async buildDebug() {
 		await super.buildDebug()
-        print('stream.build not implemented', LogLevel.Detailed)
+        const scheme = await this.getSelectedSchemeOrChoose({ release: false })
+        if (!scheme) return
     }
 
     async buildRelease(successCallback?: any) {
