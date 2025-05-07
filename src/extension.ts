@@ -337,7 +337,7 @@ const askForEmbeddedBranch = async (): Promise<EmbeddedBranch | undefined> => {
 	if (selectedItem.label === 'Espressif') {
 		return EmbeddedBranch.ESP32
 	} else if (selectedItem.label === 'Raspberry Pi') {
-		return EmbeddedBranch.Raspberry
+		return EmbeddedBranch.RASPBERRY
 	} else if (selectedItem.label === 'STMicroelectronics') {
 		return EmbeddedBranch.STM32
 	} else if (selectedItem.label === 'Nordic Semiconductor') {

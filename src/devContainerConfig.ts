@@ -186,7 +186,7 @@ export class DevContainerConfig {
 // MARK: Generator
 
 export enum EmbeddedBranch {
-	Raspberry = 'Raspberry',
+	RASPBERRY = 'RASPBERRY',
 	ESP32 = 'ESP32',
 	STM32 = 'STM32',
 	NRF = 'NRF',
@@ -289,7 +289,7 @@ export const generateDevcontainerJson = (
 						devcontainerObject.containerEnv['IDF_TOOLS_PATH'] = '/embedded/esp/.espressif'
 						devcontainerObject.mounts.push({ source: 'esp-idf', target: '/embedded/esp', type: 'volume' })
 						break
-					case EmbeddedBranch.Raspberry:
+					case EmbeddedBranch.RASPBERRY:
 						devcontainerObject.containerEnv['PICO_SDK_VERSION'] = '2.1.1'
 						devcontainerObject.containerEnv['PICO_TOOLCHAIN_PATH'] = '/usr'
 						devcontainerObject.mounts.push({ source: 'raspberry', target: '/embedded/raspberry', type: 'volume' })
