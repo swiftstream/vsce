@@ -821,7 +821,7 @@ async function createNewProjectFiles(
 							devContainerPath,
 							ExtensionStream.Embedded,
 							defaultSwiftVersion,
-							{ embedded: { branch: EmbeddedBranch.Raspberry } }
+							{ embedded: { branch: EmbeddedBranch.RASPBERRY } }
 						)) return
 						const raspberryType = selectedValues['raspberry-type']
 						switch (raspberryType) {
