@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Embedded Stream Config",
+  "type": "object",
+  "required": ["schemes"],
+  "properties": {
+    "buildFolder": {
+      "type": "string",
+      "description": "Default folder to place build artifacts (optional, .build by default)",
+      "default": ".build"
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables passed to all schemes (optional)"
+    },
+    "schemes": {
+      "type": "array",
+      "description": "List of schemes",
+      "items": {
+        "type": "object",
+        "required": ["title", "binaryName", "buildConfiguration", "build"],
+        "properties": {
+          "title": {
+              "type": "string",
+              "description": "Name of this scheme",
+              "default": "My Device"
+          },
+          "binaryName": {
+              "type": "string",
+              "description": "Binary name produced by the build",
+              "default": "firmware"
+          },
+          "buildFolder": {
+              "type": "string",
+              "description": "Overrides the default build folder for this scheme (optional)",
+              "default": ".build"
+          },
+          "buildConfiguration": {
+            "type": "string",
+            "enum": ["Debug", "Release"],
+            "description": "Build configuration (Debug / Release)",
+            "default": "Release"
+          },
+          "chip": {
+              "type": "string",
+              "description": "Target board/chip identifier"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables passed to all actions in scheme (optional)"
+          },
+          "build": {
+            "type": "object",
+            "description": "Action which builds the firmware",
+            "required": ["system"],
+            "properties": {
+              "system": {
+                "type": "string",
+                "enum": ["SwiftPM", "CMake", "Makefile", "ShellScript"],
+                "description": "Build system to use",
+                "default": "ShellScript"
+              },
+              "args": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Arguments passed to the build system"
+              },
+              "env": {
+                "type": "object",
+                "description": "Environment variables passed to all build commands (optional, it uses scheme env by default)"
+              },
+              "commands": {
+                "type": "array",
+                "description": "Commands to execute in order to make a build",
+                "items": {
+                  "type": "object",
+                  "required": ["command"],
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "Shell command to execute"
+                    },
+                    "args": {
+                      "type": "array",
+                      "description": "Arguments passed to shell command (optional)",
+                      "items": { "type": "string" }
+                    },
+                    "env": {
+                      "type": "object",
+                      "description": "Environment variables passed to shell command (optional, it uses scheme env by default)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "preBuild": {
+            "type": "object",
+            "description": "Action which will be executed right before the build action",
+            "properties": {
+              "env": {
+                "type": "object",
+                "description": "Environment variables passed to all pre-build commands (optional, it uses scheme env by default)"
+              },
+              "commands": {
+                "type": "array",
+                "description": "Commands to execute in order to prepare to build",
+                "items": {
+                  "type": "object",
+                  "required": ["type", "command"],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["Always", "BeforeFreshBuild"],
+                      "description": "How pre-build command should be executed",
+                      "default": "BeforeFreshBuild"
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "Shell command to execute"
+                    },
+                    "args": {
+                      "type": "array",
+                      "description": "Arguments passed to shell command (optional)",
+                      "items": { "type": "string" }
+                    },
+                    "env": {
+                      "type": "object",
+                      "description": "Environment variables passed to shell command (optional, it uses scheme env by default)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "flash": {
+            "type": "object",
+            "description": "Flash the firmware action",
+            "required": ["terminal", "filesToCopy", "commands"],
+            "properties": {
+              "terminal": {
+                "type": "string",
+                "enum": ["Host", "Container"],
+                "description": "Where to run the command: on the host OS, or inside the container",
+                "default": "Host"
+              },
+              "filesToCopy": {
+                "type": "array",
+                "description": "Array of files (relative paths) to copy into `.flash` folder to access these files from the host machine by the flash tool.",
+                "items": { "type": "string" }
+              },
+              "commands": {
+                "type": "array",
+                "description": "Commands to execute in order to flash",
+                "items": {
+                  "type": "object",
+                  "required": ["command"],
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "Shell command to execute"
+                    },
+                    "args": {
+                      "type": "array",
+                      "description": "Arguments passed to shell command (optional)",
+                      "items": { "type": "string" }
+                    },
+                    "env": {
+                      "type": "object",
+                      "description": "Environment variables passed to shell command (optional, it uses scheme env by default)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "clean": {
+            "type": "object",
+            "description": "Clean build folder action",
+            "required": ["command"],
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "Shell command to execute"
+              },
+              "args": {
+                "type": "array",
+                "description": "Arguments passed to shell command (optional)",
+                "items": { "type": "string" }
+              },
+              "env": {
+                "type": "object",
+                "description": "Environment variables passed to shell command (optional, it uses scheme env by default)"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}  

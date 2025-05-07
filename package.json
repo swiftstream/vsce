@@ -36,6 +36,14 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "/.vscode/embedded-stream.json"
+        ],
+        "url": "./schemas/embedded-stream.schema.json"
+      }
+    ],
     "configuration": {
       "title": "Swift Stream IDE",
       "properties": {
