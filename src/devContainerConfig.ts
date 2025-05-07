@@ -190,6 +190,7 @@ export enum EmbeddedBranch {
 	ESP32 = 'ESP32',
 	STM32 = 'STM32',
 	NRF = 'NRF',
+    Unknown = 'Unknown'
 }
 
 export const generateAndWriteDevcontainerJson = (
