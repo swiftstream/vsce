@@ -341,7 +341,7 @@ const askForEmbeddedBranch = async (): Promise<EmbeddedBranch | undefined> => {
 	} else if (selectedItem.label === 'STMicroelectronics') {
 		return EmbeddedBranch.STM32
 	} else if (selectedItem.label === 'Nordic Semiconductor') {
-		return EmbeddedBranch.Zephyr
+		return EmbeddedBranch.NRF
 	}
 	return undefined
 }
