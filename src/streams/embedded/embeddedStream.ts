@@ -133,8 +133,23 @@ export class EmbeddedStream extends Stream {
     }
     registerCommands() {
         super.registerCommands()
+        extensionContext.subscriptions.push(commands.registerCommand(this.debugSchemeElement().id, async () => await this.chooseScheme({ release: false }) ))
         extensionContext.subscriptions.push(commands.registerCommand(this.simulatorElement().id, async () => this.openSimulator() ))
 
+    debugSchemeElement() {
+        const scheme = EmbeddedStreamConfig.selectedScheme()
+        let details = ''
+        if (scheme) {
+            details = `${scheme.chip}`
+        }
+        return new Dependency({
+            id: SideTreeItem.DebugTarget,
+            label: scheme?.title ?? 'Scheme',
+            version: details,
+            tooltip: `${scheme ? scheme.buildConfiguration == SchemeBuildConfiguration.Debug ? 'Debug ' : 'Release ' : ''}Scheme for Build and Flash actions`,
+            icon: scheme ? scheme.buildConfiguration == SchemeBuildConfiguration.Debug ? 'target::charts.orange' : 'target::charts.green' : 'target'
+        })
+    }
     simulatorElement = () => new Dependency({
         id: SideTreeItem.DeviceSimulator,
         label: 'Simulator',
@@ -214,6 +229,20 @@ export class EmbeddedStream extends Stream {
     }
 
     // MARK: Side Bar Tree View Items
+    
+    async defaultDebugActionItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        items.push(this.debugSchemeElement())
+        return [
+            ...items,
+            new Dependency({
+                id: SideTreeItem.BuildDebug,
+                tooltip: 'Cmd+B or Ctrl+B',
+                label: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'Hot Rebuilding' : 'Building' : 'Build',
+                icon: isBuildingDebug || this.isAnyHotBuilding() ? this.isAnyHotBuilding() ? 'sync~spin::charts.orange' : 'sync~spin::charts.green' : sidebarTreeView!.fileIcon('hammer')
+            })
+        ]
+    }
 
     async debugActionItems(): Promise<Dependency[]> { return [] }
     async debugOptionItems(): Promise<Dependency[]> { return [] }
