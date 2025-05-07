@@ -1,9 +1,11 @@
-import { window, debug, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, DebugSession, TreeItemCollapsibleState } from 'vscode'
+import * as fs from 'fs'
+import * as path from 'path'
+import { window, debug, StatusBarAlignment, commands, ThemeColor, workspace, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, DebugSession, TreeItemCollapsibleState, Uri } from 'vscode'
 import { AbortHandler, Bash } from '../bash'
 import { Pgrep } from '../pgrep'
 import { Swift } from '../swift'
 import { Toolchain } from '../toolchain'
-import { ContextKey, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, sidebarTreeView } from '../extension'
+import { androidStream, ContextKey, embeddedStream, extensionContext, ExtensionStream, extensionStream, isInContainer, projectDirectory, pureStream, sidebarTreeView } from '../extension'
 import { Dependency, SideTreeItem } from '../sidebarTreeView'
 import { clearCachesCommand } from '../commands/clearCaches'
 import { toolchainCommand } from '../commands/toolchain'
@@ -19,6 +21,7 @@ import { resolvePackagesCommand } from '../commands/resolvePackages'
 import { mountNewItemCommand } from '../commands/mountNewItem'
 import { sshHostInstructions } from '../commands/sshHostInstructions'
 import { rebuildContainer } from '../commands/rebuildContainer'
+import { EmbeddedBranch } from '../devContainerConfig'
 
 export var isTestable = false
 export var isBuildingDebug = false
@@ -135,14 +138,48 @@ export class Stream {
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.LoggingLevel, loggingLevelCommand))
 		extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.ClearLogOnRebuild, clearLogOnRebuildCommand))
         extensionContext.subscriptions.push(commands.registerCommand(SideTreeItem.Documentation, () => {
+			function openFromRepo(file: string) {
+				const readmeUri = Uri.parse(`https://raw.githubusercontent.com/swiftstream/IDE/refs/heads/main/${file}`)
+				commands.executeCommand('markdown.showPreview', readmeUri)
+			}
 			if (isPackagePresentInResolved(KnownPackage.Web)) {
-				openWebDocumentation()
+				// openWebDocumentation()
+				openFromRepo(`assets/Docs/Web/Web.md`)
 			} else if (isPackagePresentInResolved(KnownPackage.Droid)) {
-				openAndroidDocumentation()
+				// openAndroidDocumentation()
+				openFromRepo(`assets/Docs/Android/Android.md`)
 			} else if (isPackagePresentInResolved(KnownPackage.Vapor)) {
 				openVaporDocumentation()
 			} else if (isPackagePresentInResolved(KnownPackage.Hummingbird)) {
 				openHummingbirdDocumentation()
+			} else if (extensionStream === ExtensionStream.Android && androidStream) {
+				openFromRepo(`assets/Docs/Android/Android.md`)
+			} else if (extensionStream === ExtensionStream.Web && androidStream) {
+				openFromRepo(`assets/Docs/Web/Web.md`)
+			} else if (extensionStream === ExtensionStream.Pure && pureStream) {
+				openFromRepo(`assets/Docs/Pure/Pure.md`)
+			} else if (extensionStream === ExtensionStream.Embedded && embeddedStream) {
+				const readmeFile = path.join(projectDirectory!, 'README.md')
+				if (fs.existsSync(readmeFile)) {
+					switch (embeddedStream.branch) {
+						case EmbeddedBranch.ESP32:
+							openFromRepo(`assets/Docs/Embedded/ESP32.md`)
+							break
+						case EmbeddedBranch.NRF:
+							openFromRepo(`assets/Docs/Embedded/NRF.md`)
+							break
+						case EmbeddedBranch.RASPBERRY:
+							openFromRepo(`assets/Docs/Embedded/Raspberry.md`)
+							break
+						case EmbeddedBranch.STM32:
+							openFromRepo(`assets/Docs/Embedded/STM32.md`)
+							break
+						default:
+							commands.executeCommand('markdown.showPreview', Uri.file(readmeFile))
+					}
+				} else {
+					openSwiftGettingStarted()
+				}
 			} else {
 				openSwiftGettingStarted()
 			}
