@@ -78,6 +78,33 @@ export class EmbeddedStream extends Stream {
 
     }
 
+    isDebugBuilt(scheme: Scheme): boolean {
+        if (scheme.build.system === EmbeddedBuildSystem.SwiftPM) {
+            return fs.existsSync(pathToCompiledBinary({
+                target: scheme.binaryName,
+                mode: SwiftBuildMode.Standard,
+                release: scheme.buildConfiguration == SchemeBuildConfiguration.Release
+            }))
+        } else if (scheme.flash) {
+            for (let i = 0; i < scheme.flash.filesToCopy.length; i++) {
+                const file = scheme.flash.filesToCopy[i]
+                if (fs.existsSync(path.join(projectDirectory!, file)) === false)
+                    return false
+            }
+            return true
+        } else {
+            const defaultFirmwareFile = this.defaultFirmwareFile(scheme)
+            if (defaultFirmwareFile) {
+                const fullPath = path.join(
+                    projectDirectory!,
+                    defaultFirmwareFile
+                )
+                return fs.existsSync(fullPath)
+            }
+        }
+        return false
+    }
+
     defaultFirmwareFile(scheme: Scheme): string | undefined {
         switch (this.branch) {
         case EmbeddedBranch.ESP32:
