@@ -42,6 +42,28 @@ export class DevContainerConfig {
         return { major: major, minor: minor, patch: patch }
     }
 
+    public static getEmbeddedBranch(): EmbeddedBranch {
+        const config = new DevContainerConfig()
+        if (!config.checkIfContainerEnvKeyExists('S_EMBEDDED_BRANCH')) return EmbeddedBranch.Unknown
+        const branchString = config.config.containerEnv.S_EMBEDDED_BRANCH
+        return stringToBranch(branchString)
+    }
+
+    public static getEmbeddedIdfChipTargets(): string[] {
+        const config = new DevContainerConfig()
+        if (!config.checkIfContainerEnvKeyExists('IDF_CHIP_TARGETS')) return [DevContainerConfig.getEmbeddedIdfTarget()]
+        const value = `${config.config.containerEnv.IDF_CHIP_TARGETS}`
+        if (value.length == 0) return [DevContainerConfig.getEmbeddedIdfTarget()]
+        return value.split(',')
+    }
+
+    public static getEmbeddedIdfTarget(): string {
+        const config = new DevContainerConfig()
+        if (!config.checkIfContainerEnvKeyExists('IDF_TARGET')) return 'esp32c6'
+        const value = config.config.containerEnv.IDF_TARGET
+        return value.length > 0 ? value : 'esp32c6'
+    }
+
     public static checkIfStaticLinuxArtifactURLPresent(): boolean {
         const config = new DevContainerConfig()
         return config.checkIfContainerEnvKeyExists('S_ARTIFACT_STATIC_LINUX_URL')
