@@ -555,6 +555,7 @@ export class SidebarTreeView implements TreeDataProvider<Dependency> {
 	private expandableItems: SideTreeItem[] = [
 		SideTreeItem.Debug,
 		SideTreeItem.Release,
+		SideTreeItem.Device,
 		SideTreeItem.Project,
 		SideTreeItem.Maintenance,
 		SideTreeItem.Settings,
@@ -686,6 +687,9 @@ export enum SideTreeItem {
 		RunRelease = 'RunRelease',
 		ReleaseBuildMode = 'ReleaseBuildMode',
 		ReleaseTarget = 'ReleaseTarget',
+	Device = 'Device',
+		DeviceFlash = 'DeviceFlash',
+		DeviceSimulator = 'DeviceSimulator',
 	Project = 'Project',
 		NewFilePage = 'NewFilePage',
 		NewFileClass = 'NewFileClass',
