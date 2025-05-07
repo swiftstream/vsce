@@ -737,7 +737,7 @@ async function createNewProjectFiles(
 						switch (embeddedPackage) {
 							case 'led-blink':
 								await copyTools()
-								for (const file of ['.gitignore', 'Board.swift', 'BridgingHeader.h', 'build-elf.sh', 'diagram.json', 'elf-linkerscript.ld', 'Main.swift', 'README.md', 'Registers.swift', 'Startup.c', 'wokwi.toml']) {
+								for (const file of ['.gitignore', 'Board.swift', 'BridgingHeader.h', 'build.sh', 'diagram.json', 'linkerscript.ld', 'Main.swift', 'README.md', 'Registers.swift', 'Startup.c', 'wokwi.toml']) {
 									await copySourceFile(osPath.join(embeddedType, embeddedPackage, file), file)
 								}
 								break
