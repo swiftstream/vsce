@@ -28,6 +28,7 @@ export var isBuildingDebug = false
 export var isBuildingRelease = false
 export var isHotBuildingSwift = false
 export var isHotRebuildEnabled = false
+export var isFlashing = false
 export var isClearLogBeforeBuildEnabled = false
 export var isTesting = false
 export var isClearingCache = false
@@ -721,6 +722,13 @@ export class Stream {
 	setHotRebuild(value?: boolean) {
 		isHotRebuildEnabled = value ?? workspace.getConfiguration().get('swift.hotRebuild') as boolean
 		if (value === true || value === false) workspace.getConfiguration().update('swift.hotRebuild', value)
+		sidebarTreeView?.refresh()
+	}
+
+	setFlashing(active: boolean) {
+		if (!active) this.abortBuildingDebugHandler = undefined
+		isFlashing = active
+		this.setContext(ContextKey.isFlashing, active)
 		sidebarTreeView?.refresh()
 	}
 
