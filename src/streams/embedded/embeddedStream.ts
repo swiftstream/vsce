@@ -1,7 +1,15 @@
-import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window } from 'vscode'
-import { LogLevel, print, Stream } from '../stream'
-import { Dependency } from '../../sidebarTreeView'
-import { isInContainer } from '../../extension'
+import * as fs from 'fs'
+import * as path from 'path'
+import { commands, ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window, workspace } from 'vscode'
+import { isBuildingDebug, isFlashing, isHotRebuildEnabled, isResolvingPackages, LogLevel, print, Stream } from '../stream'
+import { Dependency, SideTreeItem } from '../../sidebarTreeView'
+import { ContextKey, extensionContext, isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
+import { DevContainerConfig, EmbeddedBranch } from '../../devContainerConfig'
+import { AbortHandler } from '../../bash'
+import { buildFolderBySystem, chooseScheme, EmbeddedStreamConfig, Scheme, SchemeBuildConfiguration } from '../../embeddedStreamConfig'
+import { EmbeddedBuildTaskRunner } from '../../embeddedBuildTaskRunner'
+import { buildCommand } from './commands/build'
+import { pathToCompiledBinary, SwiftBuildMode } from '../../swift'
 
 export enum EmbeddedBuildSystem {
     SwiftPM = 'SwiftPM',
@@ -244,10 +252,13 @@ export class EmbeddedStream extends Stream {
 
     // MARK: Building
 
+    private isAwaitingBuild: boolean = false
+
     async buildDebug() {
 		await super.buildDebug()
         const scheme = await this.getSelectedSchemeOrChoose({ release: false })
         if (!scheme) return
+        await buildCommand(this, scheme)
     }
 
     async buildRelease(successCallback?: any) {
