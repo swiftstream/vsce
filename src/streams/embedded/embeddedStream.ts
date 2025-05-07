@@ -115,6 +115,10 @@ export class EmbeddedStream extends Stream {
         tooltip: 'Open simulator',
         icon: 'device-mobile'
     })
+
+    selectedScheme(): Scheme | undefined {
+        return EmbeddedStreamConfig.selectedScheme()
+    }
     openSimulator() {
         commands.executeCommand(`wokwi-vscode.start`)
     }
