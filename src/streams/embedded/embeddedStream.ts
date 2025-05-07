@@ -36,6 +36,7 @@ export class EmbeddedStream extends Stream {
             const isFlashButtonEnabled = workspace.getConfiguration().get('swift.showTopFlashButton') as boolean
             this.setContext(ContextKey.isNavigationFlashButtonEnabled, isFlashButtonEnabled ?? true)
         }
+        this.buildTaskRunner = new EmbeddedBuildTaskRunner()
     }
 
     buildSystemHasCMake = false
