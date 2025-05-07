@@ -1,4 +1,4 @@
-import { commands, env, window } from "vscode"
+import { commands, env, window } from 'vscode'
 
 export async function sshHostInstructions() {
     const existingTerminals = new Set(window.terminals.map(t => t.name))
