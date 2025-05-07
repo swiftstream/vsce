@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { currentStream, ExtensionStream, extensionStream, projectDirectory } from '../extension'
+import { currentStream, embeddedStream, ExtensionStream, extensionStream, projectDirectory } from '../extension'
 import { buildDevFolder as buildDevWebFolder } from '../streams/web/webStream'
 import { isClearedCache, isClearingCache } from '../streams/stream'
 import { print, status, StatusType } from '../streams/stream'
@@ -7,6 +7,7 @@ import { isBuildingDebug, LogLevel } from '../streams/stream'
 import { TimeMeasure } from '../helpers/timeMeasureHelper'
 import { createSymlinkFoldersIfNeeded } from '../swift'
 import { window } from 'vscode'
+import { EmbeddedStreamConfig } from '../embeddedStreamConfig'
 
 enum ClearCacheOption {
 	Build = `Project Build Cache`,
@@ -31,19 +32,21 @@ export async function clearCachesCommand() {
 	const swiftPMCache = `/root/.cache/org.swift.swiftpm`
 	print(`🧹 Clearing Cache`, LogLevel.Detailed)
 	function removeBuildCacheFolder() {
-		const buildCacheFolder = `${projectDirectory}/.build`
-		if (fs.existsSync(buildCacheFolder)) {
-			for (const entry of fs.readdirSync(buildCacheFolder)) {
-				const entryPath = `${buildCacheFolder}/${entry}`
-				fs.rmSync(entryPath, { recursive: true, force: true })
+		let buildCacheFolders = [`${projectDirectory}/.build`]
+		if (extensionStream === ExtensionStream.Embedded && embeddedStream) {
+			const bf = embeddedStream.selectedScheme()?.buildFolder ?? 'build'
+			buildCacheFolders.push(`${projectDirectory}/${bf}`)
+		}
+		for (let i = 0; i < buildCacheFolders.length; i++) {
+			const folder = buildCacheFolders[i];
+			if (fs.existsSync(folder)) {
+				for (const entry of fs.readdirSync(folder)) {
+					const entryPath = `${folder}/${entry}`
+					fs.rmSync(entryPath, { recursive: true, force: true })
+				}
 			}
 		}
 		switch (extensionStream) {
-			case ExtensionStream.Embedded:
-				const buildDevEmbeddedFolderPath = `${projectDirectory}/build`
-				if (fs.existsSync(buildDevEmbeddedFolderPath))
-					fs.rmSync(buildDevEmbeddedFolderPath, { recursive: true, force: true })
-				break
 			case ExtensionStream.Web:
 				const buildDevWebFolderPath = `${projectDirectory}/${buildDevWebFolder}`
 				if (fs.existsSync(buildDevWebFolderPath))
