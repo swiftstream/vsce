@@ -226,7 +226,17 @@ export class EmbeddedStream extends Stream {
     }
     async releaseItems(): Promise<Dependency[]> { return [] }
     async projectItems(): Promise<Dependency[]> { return [] }
-    async maintenanceItems(): Promise<Dependency[]> { return [] }
+    async maintenanceItems(): Promise<Dependency[]> {
+        let items: Dependency[] = []
+        if (this.hasSwiftPackage()) {
+            items.push(new Dependency({
+                id: SideTreeItem.ResolvePackages,
+                label: isResolvingPackages ? 'Resolving Packages' : isResolvingPackages ? 'Resolved Packages' : 'Resolve Packages',
+                icon: isResolvingPackages ? 'sync~spin::charts.yellow' : isResolvingPackages ? 'check::charts.green' : 'clone::charts.yellow'
+            }))
+        }
+        return items
+    }
     async settingsItems(): Promise<Dependency[]> { return [] }
     async isThereAnyRecommendation(): Promise<boolean> { return false }
     async recommendationsItems(): Promise<Dependency[]> { return [] }
