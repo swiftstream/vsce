@@ -1,6 +1,8 @@
+import * as fs from 'fs'
+import * as os from 'os'
+import * as path from 'path'
 import { ShellExecution, Task, TaskExecution, TaskProvider, tasks, TaskScope } from 'vscode'
 import { extensionContext } from './extension'
-
 
 export type BuildCommand = {
     label: string
@@ -75,7 +77,10 @@ export class EmbeddedBuildTaskRunner implements TaskProvider, CancellableTaskRun
             new ShellExecution(
                 command.command,
                 command.args ?? [],
-                { env: command.env }
+                { env: {
+                    ...getEnvFromBashrc(),
+                    ...(command.env ?? {})
+                } }
             ),
             []
         )
@@ -112,4 +117,26 @@ export class EmbeddedBuildTaskRunner implements TaskProvider, CancellableTaskRun
             this.currentExecution.terminate()
         }
     }
+}
+
+export function getEnvFromBashrc(bashrcPath?: string): Record<string, string> {
+    const filePath = bashrcPath || path.join(os.homedir(), '.bashrc')
+    if (!fs.existsSync(filePath)) {
+        console.warn(`No .bashrc found at: ${filePath}`)
+        return {}
+    }
+    const content = fs.readFileSync(filePath, 'utf-8')
+    const env: Record<string, string> = {}
+    for (const line of content.split('\n')) {
+        const trimmed = line.trim()
+        // Match lines like: export KEY=VALUE (ignores comments and malformed lines)
+        const match = trimmed.match(/^export\s+([A-Za-z_][A-Za-z0-9_]*)=(.*)$/)
+        if (match) {
+            const [, key, rawValue] = match;
+            // Remove surrounding quotes if any
+            const value = rawValue.replace(/^['"]|['"]$/g, '')
+            env[key] = value
+        }
+    }
+    return env
 }
