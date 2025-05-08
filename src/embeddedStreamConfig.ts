@@ -418,6 +418,10 @@ export async function generateEmbeddedStreamScheme(
                 commands: [{
                     type: PreBuildCommandType.BeforeFreshBuild,
                     command: esp32BuildToolCommand,
+                    args: ['get_idf']
+                }, {
+                    type: PreBuildCommandType.BeforeFreshBuild,
+                    command: esp32BuildToolCommand,
                     args: ['set-target', esp32TargetChip]
                 }]
             }
