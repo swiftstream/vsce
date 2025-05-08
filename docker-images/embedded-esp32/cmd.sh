@@ -55,7 +55,7 @@ GDB_VERSION=$(basename "$(find ${IDF_TOOLS_PATH}/tools/riscv32-esp-elf-gdb/ -min
 GCC_VERSION=$(basename "$(find ${IDF_TOOLS_PATH}/tools/riscv32-esp-elf/ -mindepth 1 -maxdepth 1 -type d | head -n 1)")
 OPENOCD_VERSION=$(basename "$(find ${IDF_TOOLS_PATH}/tools/openocd-esp32/ -mindepth 1 -maxdepth 1 -type d | head -n 1)")
 PYTHON_ENV_VERSION=$(basename "$(find ${IDF_TOOLS_PATH}/python_env/ -mindepth 1 -maxdepth 1 -type d | head -n 1)")
-ESP_ROM_ELF=$(basename "$(find ${IDF_TOOLS_PATH}/esp-rom-elfs/ -mindepth 1 -maxdepth 1 -type d | head -n 1)")
+ESP_ROM_ELF=$(basename "$(find ${IDF_TOOLS_PATH}/tools/esp-rom-elfs/ -mindepth 1 -maxdepth 1 -type d | head -n 1)")
 
 # Static esp-idf path components
 PATH_ESPCOREDUMP="${IDF_PATH}/components/espcoredump"
