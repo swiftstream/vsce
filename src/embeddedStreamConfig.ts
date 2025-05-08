@@ -125,7 +125,7 @@ export async function chooseScheme(
         case EmbeddedBranch.ESP32:
             title = await window.showInputBox({
                 title: 'Scheme Name',
-                value: 'ESP32-C6',
+                value: 'ESP32',
                 placeHolder: 'How would you name it?',
                 prompt: 'Choose the name for your scheme'
             })
