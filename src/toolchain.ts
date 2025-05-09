@@ -3,6 +3,7 @@ import JSON5 from 'json5'
 import { Uri } from 'vscode'
 import { extensionContext, ExtensionStream, isInContainer, sidebarTreeView } from './extension'
 import { Stream } from './streams/stream'
+import { isWin } from './helpers/filesHelper'
 
 export var currentToolchain: string = `${getToolchainNameFromURL()}`
 export var pendingNewToolchain: string | undefined
@@ -56,7 +57,7 @@ export class Toolchain {
 
 export function getToolchainsList(): any {
     const path = Uri.joinPath(extensionContext.extensionUri, 'toolchains.json')
-    const stringData = fs.readFileSync(path.path, 'utf8')
+    const stringData = fs.readFileSync(isWin ? path.fsPath : path.path, 'utf8')
     return JSON5.parse(stringData)
 }
 

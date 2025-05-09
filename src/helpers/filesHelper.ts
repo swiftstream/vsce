@@ -4,7 +4,7 @@ import path from 'path'
 import { Uri, window } from 'vscode'
 import { projectDirectory, extensionContext } from '../extension'
 
-const isWin = process.platform == 'win32'
+export const isWin = process.platform == 'win32'
 
 export async function copyFile(
     sourcePath: string,
