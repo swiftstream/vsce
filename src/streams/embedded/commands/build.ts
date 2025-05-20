@@ -118,7 +118,11 @@ export async function buildCommand(stream: EmbeddedStream, scheme: Scheme) {
                         ...buildEnv,
                         ...(item.env ?? {})
                     }
-                }) === false) { stream.setBuildingDebug(false);return }
+                }) === false) {
+                    stream.setBuildingDebug(false)
+                    sidebarTreeView?.refresh()
+                    return
+                }
             }
         } else {
             print('🔳 Phase 2: Executing build commands', LogLevel.Verbose)
@@ -129,21 +133,33 @@ export async function buildCommand(stream: EmbeddedStream, scheme: Scheme) {
                         command: 'cmake',
                         args: [ '--build', buildFolderBySystem(scheme.build.system) ],
                         env: buildEnv
-                    }) === false) { stream.setBuildingDebug(false);return }
+                    }) === false) {
+                        stream.setBuildingDebug(false)
+                        sidebarTreeView?.refresh()
+                        return
+                    }
                     break
                 case EmbeddedBuildSystem.Makefile:
                     if (await stream.buildTaskRunner.enqueue({
                         label: 'Building',
                         command: 'make',
                         env: buildEnv
-                    }) === false) { stream.setBuildingDebug(false);return }
+                    }) === false) {
+                        stream.setBuildingDebug(false)
+                        sidebarTreeView?.refresh()
+                        return
+                    }
                     break
                 case EmbeddedBuildSystem.ShellScript, EmbeddedBuildSystem.Unknown:
                     if (await stream.buildTaskRunner.enqueue({
                         label: 'Building',
                         command: path.join(projectDirectory!, defaultBuildShellScript),
                         env: buildEnv
-                    }) === false) { stream.setBuildingDebug(false);return }
+                    }) === false) {
+                        stream.setBuildingDebug(false)
+                        sidebarTreeView?.refresh()
+                        return
+                    }
                     break
                 default:
                     throw '💁‍♂️ Unknown build system'
