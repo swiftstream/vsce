@@ -40,3 +40,46 @@ if ! grep -q "GRADLE_HOME=${GRADLE_HOME}" ~/.bashrc 2>/dev/null; then
     echo "export PATH=\$GRADLE_HOME/bin:\$PATH" >> ~/.bashrc
     echo -e "${BLUE}→ Environment variables added to .bashrc${NC}"
 fi
+
+# MARK: Android NDK setup
+NDK_VERSION="${S_NDK_VERSION:-r27c}"
+NDK_BASE_DIR="/opt/android/ndk"
+NDK_DIR="${NDK_BASE_DIR}/${NDK_VERSION}"
+NDK_DIST="android-ndk-${NDK_VERSION}-linux.zip"
+NDK_URL="https://dl.google.com/android/repository/${NDK_DIST}"
+NDK_TMP_EXTRACT="/tmp/android-ndk-${NDK_VERSION}"
+NDK_TARGET_BIN="${NDK_DIR}/ndk-build"
+
+echo -e "${BLUE}${BOLD}➤ Setting up Android NDK ${NDK_VERSION}${NC}"
+
+# Show license disclaimer
+echo -e "${YELLOW}→ By using NDK, you agree to the terms of the Android Software Development Kit License Agreement:${NC}"
+echo -e "${BLUE}https://developer.android.com/studio/terms.html${NC}"
+
+if [ ! -f "${NDK_TARGET_BIN}" ]; then
+    echo -e "${YELLOW}→ Downloading Android NDK...${NC}"
+    rm -rf "${NDK_DIR}"
+    mkdir -p "${NDK_BASE_DIR}"
+    wget -q "${NDK_URL}" -O "/tmp/${NDK_DIST}"
+    echo -e "${YELLOW}→ Extracting Android NDK...${NC}"
+    unzip -q "/tmp/${NDK_DIST}" -d "/tmp"
+    
+    # Move entire extracted folder into versioned location
+    mv "${NDK_TMP_EXTRACT}" "${NDK_DIR}"
+    rm -f "/tmp/${NDK_DIST}"
+
+    echo -e "${GREEN}✓ Android NDK ${NDK_VERSION} installed at ${NDK_DIR}${NC}"
+else
+    echo -e "${GREEN}✓ Android NDK ${NDK_VERSION} already present at ${NDK_DIR}${NC}"
+fi
+
+# Export for current shell
+export ANDROID_NDK_HOME="${NDK_DIR}"
+export PATH="${ANDROID_NDK_HOME}:$PATH"
+
+# Add to .bashrc if not already there
+if ! grep -q "ANDROID_NDK_HOME=${NDK_DIR}" ~/.bashrc 2>/dev/null; then
+    echo "export ANDROID_NDK_HOME=${NDK_DIR}" >> ~/.bashrc
+    echo "export PATH=\$ANDROID_NDK_HOME:\$PATH" >> ~/.bashrc
+    echo -e "${BLUE}→ ANDROID_NDK_HOME added to .bashrc${NC}"
+fi
