@@ -83,3 +83,59 @@ if ! grep -q "ANDROID_NDK_HOME=${NDK_DIR}" ~/.bashrc 2>/dev/null; then
     echo "export PATH=\$ANDROID_NDK_HOME:\$PATH" >> ~/.bashrc
     echo -e "${BLUE}→ ANDROID_NDK_HOME added to .bashrc${NC}"
 fi
+
+# MARK: Android SDK setup
+SDK_VERSION="${S_SDK_VERSION:-35}"
+SDK_CMDTOOLS_REV="${S_SDK_CMDTOOLS_REV:-11076708}"
+SDK_BASE_DIR="/opt/android/sdk"
+SDK_DIR="${SDK_BASE_DIR}/${SDK_VERSION}"
+CMDLINE_TOOLS_DIR="${SDK_DIR}/cmdline-tools/latest"
+SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-${SDK_CMDTOOLS_REV}_latest.zip"
+SDK_DIST="/tmp/cmdline-tools.zip"
+
+echo -e "${BLUE}${BOLD}➤ Setting up Android SDK ${SDK_VERSION}${NC}"
+
+# Show license disclaimer
+echo -e "${YELLOW}→ By using SDK, you agree to the terms of the Android Software Development Kit License Agreement:${NC}"
+echo -e "${BLUE}https://developer.android.com/studio/terms.html${NC}"
+
+if [ ! -d "${CMDLINE_TOOLS_DIR}/bin" ]; then
+    echo -e "${YELLOW}→ Android SDK not found. Installing...${NC}"
+    rm -rf "${SDK_DIR}"
+    mkdir -p "${CMDLINE_TOOLS_DIR}"
+    wget -q "${SDK_URL}" -O "${SDK_DIST}"
+    echo -e "${YELLOW}→ Extracting Android SDK command-line tools...${NC}"
+    unzip -q "${SDK_DIST}" -d "/tmp/cmdline-tools"
+    mv /tmp/cmdline-tools/cmdline-tools/* "${CMDLINE_TOOLS_DIR}/"
+    rm -rf /tmp/cmdline-tools "${SDK_DIST}"
+
+    echo -e "${YELLOW}→ Installing platform tools, platform ${SDK_VERSION}, and build-tools...${NC}"
+    yes | "${CMDLINE_TOOLS_DIR}/bin/sdkmanager" --sdk_root="${SDK_DIR}" \
+        "platform-tools" \
+        "platforms;android-${SDK_VERSION}" \
+        "build-tools;${SDK_VERSION}.0.0"
+
+    # Accept all SDK licenses after installing packages
+    echo -e "${YELLOW}→ Accepting Android SDK licenses...${NC}"
+    yes | "${CMDLINE_TOOLS_DIR}/bin/sdkmanager" --sdk_root="${SDK_DIR}" --licenses > /dev/null
+    echo -e "${GREEN}✓ Android SDK licenses accepted${NC}"
+
+    echo -e "${GREEN}✓ Android SDK ${SDK_VERSION} installed at ${SDK_DIR}${NC}"
+else
+    echo -e "${GREEN}✓ Android SDK ${SDK_VERSION} already present at ${SDK_DIR}${NC}"
+fi
+
+# Export for current shell
+export ANDROID_HOME="${SDK_DIR}"
+export ANDROID_SDK_HOME="${SDK_DIR}"
+export ANDROID_SDK_ROOT="${SDK_DIR}"
+export PATH="${CMDLINE_TOOLS_DIR}/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:$PATH"
+
+# Add to .bashrc if not already there
+if ! grep -q "ANDROID_HOME=${SDK_DIR}" ~/.bashrc 2>/dev/null; then
+    echo "export ANDROID_HOME=${SDK_DIR}" >> ~/.bashrc
+    echo "export ANDROID_SDK_HOME=${SDK_DIR}" >> ~/.bashrc
+    echo "export ANDROID_SDK_ROOT=${SDK_DIR}" >> ~/.bashrc
+    echo "export PATH=${CMDLINE_TOOLS_DIR}/bin:\$ANDROID_HOME/platform-tools:\$ANDROID_HOME/emulator:\$PATH" >> ~/.bashrc
+    echo -e "${BLUE}→ ANDROID_HOME and related vars added to .bashrc${NC}"
+fi
