@@ -139,3 +139,31 @@ if ! grep -q "ANDROID_HOME=${SDK_DIR}" ~/.bashrc 2>/dev/null; then
     echo "export PATH=${CMDLINE_TOOLS_DIR}/bin:\$ANDROID_HOME/platform-tools:\$ANDROID_HOME/emulator:\$PATH" >> ~/.bashrc
     echo -e "${BLUE}→ ANDROID_HOME and related vars added to .bashrc${NC}"
 fi
+
+# Symlink x86 dynamic loader for AAPT2 (only on ARM64)
+if [ "$(uname -m)" = "aarch64" ]; then
+    echo -e "${YELLOW}→ ARM64 architecture detected. Preparing x86_64 support for AAPT2...${NC}"
+
+    LOADER_PATH=$(find /lib/x86_64-linux-gnu -name "ld-*.so" | head -n 1)
+    if [ -n "$LOADER_PATH" ]; then
+        mkdir -p /lib64
+        ln -sf "$LOADER_PATH" /lib64/ld-linux-x86-64.so.2
+        echo -e "${GREEN}✓ x86_64 dynamic linker configured successfully.${NC}"
+    fi
+
+    AAPT2_BIN="$ANDROID_HOME/build-tools/${SDK_VERSION}.0.0/aapt2"
+    if [ -x "$AAPT2_BIN" ]; then
+        # Check if binfmt emulator for x86_64 is available
+        if "$AAPT2_BIN" --help 2>&1 | grep -q 'compile'; then
+            echo -e "${GREEN}✓ AAPT2 executed. QEMU and amd64 support confirmed.${NC}"
+        else
+            echo -e "${RED}⚠️  x86_64 emulator (binfmt) is not installed on the host.${NC}"
+            echo -e "${YELLOW}   x86_64 support is ${BOLD}required for AAPT2${NC}${YELLOW}, pelase run this on the host machine:${NC}"
+            echo -e "${BLUE}    ${BOLD}docker run --privileged --rm tonistiigi/binfmt --install amd64${NC}"
+            echo -e "${YELLOW}   Then restart or rebuild this container.${NC}"
+            echo -e "${YELLOW}   After that, Gradle will build your library and app projects normally.${NC}"
+        fi
+    else
+        echo -e "${RED}✗ AAPT2 binary not found at: $AAPT2_BIN${NC}"
+    fi
+fi
