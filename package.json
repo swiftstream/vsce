@@ -2,7 +2,7 @@
   "name": "swiftstream",
   "displayName": "Swift Stream IDE",
   "description": "🔋 Swift IDE with batteries included",
-  "version": "1.10.5",
+  "version": "1.10.6",
   "publisher": "swiftstream",
   "icon": "media/icon.png",
   "engines": {
