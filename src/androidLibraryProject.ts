@@ -4,8 +4,7 @@ import Handlebars from 'handlebars'
 import { copyFile, readFile } from './helpers/filesHelper'
 import { projectDirectory } from './extension'
 import { LogLevel, print } from './streams/stream'
-import { DroidBuildArch, droidBuildArchToSwiftBuildFolder } from './streams/pure/pureStream'
-import { AndroidStream } from './streams/android/androidStream'
+import { AndroidStream, DroidBuildArch, droidBuildArchToSwiftBuildFolder } from './streams/android/androidStream'
 
 export class AndroidLibraryProject {
     static generateIfNeeded(options: {
