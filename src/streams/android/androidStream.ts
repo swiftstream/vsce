@@ -2,11 +2,14 @@ import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocumen
 import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
 import { isInContainer } from '../../extension'
+import { ReadElf } from '../../readelf'
 
 export class AndroidStream extends Stream {
+    readelf: ReadElf
+
     constructor(overrideConfigure: boolean = false) {
         super(true)
-
+        this.readelf = new ReadElf(this)
         if (!overrideConfigure) this.configure()
     }
 
