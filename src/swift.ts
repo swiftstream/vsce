@@ -15,6 +15,7 @@ export class Swift {
 
     static v5Mode = process.env.S_VERSION_MAJOR === '5'
     static v6Mode = process.env.S_VERSION_MAJOR === '6'
+    static defaultAndroidSDK = 33
 
     private runTaskProvider?: SwiftRunTaskProvider
 
