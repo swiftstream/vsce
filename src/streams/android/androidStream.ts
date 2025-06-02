@@ -1,10 +1,11 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { env } from 'process'
 import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window } from 'vscode'
 import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
 import { isInContainer, projectDirectory } from '../../extension'
-import { pathToCompiledBinary, SwiftBuildMode } from '../../swift'
+import { pathToCompiledBinary, Swift, SwiftBuildMode } from '../../swift'
 import { ReadElf } from '../../readelf'
 
 export class AndroidStream extends Stream {
