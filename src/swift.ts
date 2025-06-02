@@ -61,6 +61,26 @@ export class Swift {
         return result.stdout
     }
 
+    async getLibraryProducts(options: {
+        abortHandler: AbortHandler | undefined
+    }): Promise<string[]> {
+        print(`Going to retrieve swift products with type == library`, LogLevel.Unbearable)
+        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
+            throw `No Package.swift file in the project directory`
+        }
+        try {
+            const dump = await this.execute(['package', 'dump-package'], {
+                type: SwiftBuildType.Native,
+                abortHandler: options.abortHandler
+            })
+            const json = JSON.parse(dump)
+            return json.products.filter(x => x.type?.library !== undefined).map(x => x.name)
+        } catch (error: any) {
+            console.dir({getTargetsError: error})
+            throw `Unable to get products with type == library from the package dump`
+        }
+    }
+
     async getTargets(options: {
         type: SwiftBuildType,
         abortHandler: AbortHandler | undefined
