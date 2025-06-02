@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { env } from 'process'
 import { print } from './streams/stream'
 import { LogLevel } from './streams/stream'
 import { currentLoggingLevel } from './streams/stream'
@@ -445,6 +446,15 @@ export class Swift {
                     args.push(...['-Xlinker', '--export-if-defined=__main_argc_argv'])
                 }
                 break
+            case SwiftBuildMode.AndroidArm64:
+                args.push(...['--swift-sdk', `aarch64-unknown-linux-android${process.env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`])
+                break
+            case SwiftBuildMode.AndroidArmEabi:
+                args.push(...['--swift-sdk', `armv7-unknown-linux-androideabi${process.env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`])
+                break
+            case SwiftBuildMode.Androidx86_64:
+                args.push(...['--swift-sdk', `x86_64-unknown-linux-android${process.env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`])
+                break
         }
         if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
             throw `Missing Package.swift file`
@@ -854,18 +864,26 @@ export interface PackageContent {
 }
 export enum SwiftBuildType {
     Native = 'native',
-    Wasi = 'wasi'
+    Wasi = 'wasi',
+    Droid = 'droid'
 }
 export enum SwiftBuildMode {
     Standard = 'Standard (glibc)',
 	StaticLinuxX86 = 'Static Linux (x86-musl)',
 	StaticLinuxArm = 'Static Linux (arm-musl)',
     Wasi = 'Wasi',
-	Wasip1Threads = 'Wasi Preview 1 (threads)'
+	Wasip1Threads = 'Wasi Preview 1 (threads)',
+    AndroidArm64 = 'Android (arm64-v8a)',
+	AndroidArmEabi = 'Android (armeabi-v7a)',
+	Androidx86_64 = 'Android (x86_64)'
 }
 export function allSwiftWebBuildTypes(): SwiftBuildType[] {
     /// Really important to have Native first!
     return [SwiftBuildType.Native, SwiftBuildType.Wasi]
+}
+export function allSwiftDroidBuildTypes(): SwiftBuildType[] {
+    /// Really important to have Native first!
+    return [SwiftBuildType.Native, SwiftBuildType.Droid]
 }
 export function pathToCompiledBinary(params: {
     target: string | undefined,
@@ -886,6 +904,12 @@ export function pathToCompiledBinary(params: {
             return path.join(projectDirectory!, '.build', '.wasi', `wasm32-unknown-wasi`, type, ...target)
         case SwiftBuildMode.Wasip1Threads:
             return path.join(projectDirectory!, '.build', '.wasi', `wasm32-unknown-wasip1-threads`, type, ...target)
+        case SwiftBuildMode.AndroidArm64:
+            return path.join(projectDirectory!, '.build', '.droid', `aarch64-unknown-linux-android${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`, type, ...target)
+        case SwiftBuildMode.AndroidArmEabi:
+            return path.join(projectDirectory!, '.build', '.droid', `armv7-unknown-linux-androideabi${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`, type, ...target)
+        case SwiftBuildMode.Androidx86_64:
+            return path.join(projectDirectory!, '.build', '.droid', `x86_64-unknown-linux-android${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`, type, ...target)
     }
 }
 export function compilationFolder(params: {
