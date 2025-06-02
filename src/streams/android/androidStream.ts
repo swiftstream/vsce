@@ -28,6 +28,14 @@ export class AndroidStream extends Stream {
 
     }
 
+    isDebugBuilt(target: string, arch: DroidBuildArch): boolean {
+        return fs.existsSync(pathToCompiledBinary({
+            target: target,
+            mode: droidBuildArchToSwiftBuildMode(arch),
+            release: false
+        }))
+    }
+    
     registerCommands() {
         super.registerCommands()
 
