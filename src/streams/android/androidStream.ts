@@ -1,7 +1,10 @@
+import * as fs from 'fs'
+import * as path from 'path'
 import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window } from 'vscode'
 import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
-import { isInContainer } from '../../extension'
+import { isInContainer, projectDirectory } from '../../extension'
+import { pathToCompiledBinary, SwiftBuildMode } from '../../swift'
 import { ReadElf } from '../../readelf'
 
 export class AndroidStream extends Stream {
@@ -12,6 +15,8 @@ export class AndroidStream extends Stream {
         this.readelf = new ReadElf(this)
         if (!overrideConfigure) this.configure()
     }
+
+    currentBuildArch?: DroidBuildArch
 
     configure() {
         super.configure()
@@ -73,4 +78,32 @@ export class AndroidStream extends Stream {
     async isThereAnyRecommendation(): Promise<boolean> { return false }
     async recommendationsItems(): Promise<Dependency[]> { return [] }
     async customItems(element: Dependency): Promise<Dependency[]> { return await super.customItems(element) }
+}
+
+export enum DroidBuildArch {
+    Arm64 = 'arm64-v8a',
+    ArmEabi = 'armeabi-v7a',
+    x86_64 = 'x86_64'
+}
+export function droidBuildArchToSwiftBuildMode(mode: DroidBuildArch): SwiftBuildMode {
+    switch (mode) {
+        case DroidBuildArch.Arm64:
+            return SwiftBuildMode.AndroidArm64
+        case DroidBuildArch.ArmEabi:
+            return SwiftBuildMode.AndroidArmEabi
+        case DroidBuildArch.x86_64:
+            return SwiftBuildMode.Androidx86_64
+        default:
+            return SwiftBuildMode.Standard
+    }
+}
+export function droidBuildArchToSwiftBuildFolder(mode: DroidBuildArch): string {
+    switch (mode) {
+        case DroidBuildArch.Arm64:
+            return path.join(projectDirectory!, '.build', '.droid', `aarch64-unknown-linux-android${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`)
+        case DroidBuildArch.ArmEabi:
+            return path.join(projectDirectory!, '.build', '.droid', `armv7-unknown-linux-androideabi${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`)
+        case DroidBuildArch.x86_64:
+            return path.join(projectDirectory!, '.build', '.droid', `x86_64-unknown-linux-android${env.S_SDK_VERSION ?? Swift.defaultAndroidSDK}`)
+    }
 }
