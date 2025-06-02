@@ -36,6 +36,14 @@ export class AndroidStream extends Stream {
         }))
     }
     
+    isReleaseBuilt(target: string, arch: DroidBuildArch): boolean {
+        return fs.existsSync(pathToCompiledBinary({
+            target: target,
+            mode: droidBuildArchToSwiftBuildMode(arch),
+            release: true
+        }))
+    }
+
     registerCommands() {
         super.registerCommands()
 
