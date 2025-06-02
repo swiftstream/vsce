@@ -862,7 +862,7 @@ export enum SwiftBuildMode {
     Wasi = 'Wasi',
 	Wasip1Threads = 'Wasi Preview 1 (threads)'
 }
-export function allSwiftBuildTypes(): SwiftBuildType[] {
+export function allSwiftWebBuildTypes(): SwiftBuildType[] {
     /// Really important to have Native first!
     return [SwiftBuildType.Native, SwiftBuildType.Wasi]
 }
@@ -903,7 +903,7 @@ export function createSymlinkFoldersIfNeeded() {
     createFolderIfNeeded(buildPath)
     createFolderIfNeeded(`${buildPath}/checkouts`)
     createFolderIfNeeded(`${buildPath}/repositories`)
-    const buildTypes = allSwiftBuildTypes().filter((x) => x != SwiftBuildType.Native)
+    const buildTypes = allSwiftWebBuildTypes().filter((x) => x != SwiftBuildType.Native)
     for (let i = 0; i < buildTypes.length; i++) {
         const type = buildTypes[i]
         const typeBuildPath = `${buildPath}/.${type}`

@@ -6,7 +6,7 @@ import { window } from 'vscode'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
-import { allSwiftBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftWebTargets } from '../../../swift'
+import { allSwiftWebBuildTypes, createSymlinkFoldersIfNeeded, SwiftBuildType, SwiftWebTargets } from '../../../swift'
 import { checkRequiredDependencies } from './build/requiredDependencies'
 import { buildExecutableTarget } from './build/buildExecutableTargets'
 import { buildJavaScriptKit } from './build/buildJavaScriptKit'
@@ -52,7 +52,7 @@ export async function buildCommand(webStream: WebStream, mode: WebBuildMode) {
 		wsSendBuildProgress(1)
 		// Phase 1: Resolve Swift dependencies for each build type
 		print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
-		const buildTypes = allSwiftBuildTypes()
+		const buildTypes = allSwiftWebBuildTypes()
 		createSymlinkFoldersIfNeeded()
 		for (let i = 0; i < buildTypes.length; i++) {
 			const type = buildTypes[i]
@@ -328,7 +328,7 @@ export async function hotRebuildSwift(webStream: WebStream, params: HotRebuildSw
 		let gzippedExecutableTargets: string[] = []
 		let brotledExecutableTargets: string[] = []
 		const targetsToRebuild = params.target ? [params.target] : targetsDump.executables
-		const buildTypes = allSwiftBuildTypes()
+		const buildTypes = allSwiftWebBuildTypes()
 		createSymlinkFoldersIfNeeded()
 		// Check that all executable targets have already been built
 		for (let n = 0; n < buildTypes.length; n++) {
