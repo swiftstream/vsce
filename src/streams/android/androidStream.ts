@@ -6,6 +6,7 @@ import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
 import { isInContainer, projectDirectory } from '../../extension'
 import { pathToCompiledBinary, Swift, SwiftBuildMode } from '../../swift'
+import { buildCommand } from './commands/build'
 import { ReadElf } from '../../readelf'
 
 export class AndroidStream extends Stream {
@@ -76,7 +77,7 @@ export class AndroidStream extends Stream {
 
     async buildDebug() {
 		await super.buildDebug()
-        print('stream.build not implemented', LogLevel.Detailed)
+        await buildCommand(this)
     }
 
     async buildRelease(successCallback?: any) {
