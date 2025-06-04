@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Android Stream Config",
+  "type": "object",
+  "required": ["packageName", "packageMode", "name", "minSDK", "compileSdk", "javaVersion", "soMode", "schemes"],
+  "properties": {
+    "packageName": {
+      "type": "string",
+      "description": "The Java package name for your Android library or application (e.g., 'com.my.lib')",
+      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)+$"
+    },
+    "packageMode": {
+      "type": "string",
+      "description": "Determines whether the project builds a standalone library or an Android application alongside the library",
+      "oneOf": [
+        {
+          "const": "App",
+          "description": "Generates an Android application along with a Java library containing submodules for each Swift target. Produces both 'Application' and 'Library' folders."
+        },
+        {
+          "const": "Library",
+          "description": "Generates only a standalone Java library with submodules for each Swift target, without creating an Android application."
+        }
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the project"
+    },
+    "minSDK": {
+      "type": "integer",
+      "description": "Minimum Android SDK version",
+      "minimum": 24,
+      "maximum": 35
+    },
+    "compileSdk": {
+      "type": "integer",
+      "description": "Target Android SDK version",
+      "minimum": 24,
+      "maximum": 35
+    },
+    "javaVersion": {
+      "type": "integer",
+      "description": "Java version",
+      "minimum": 11,
+      "maximum": 11
+    },
+    "soMode": {
+      "type": "string",
+      "description": "Controls how required .so runtime libraries are provided to the project",
+      "oneOf": [
+        {
+          "const": "Packed",
+          "description": "Automatically includes pre-packaged .so libraries from JitPack based on your imports."
+        },
+        {
+          "const": "PickedManually",
+          "description": "Requires you to manually specify which .so files to include in each scheme."
+        }
+      ]
+    },
+    "selectedScheme": {
+      "type": "string",
+      "description": "Title of the selected scheme (optional)"
+    },
+    "schemes": {
+      "type": "array",
+      "description": "List of schemes",
+      "items": {
+        "type": "object",
+        "required": ["title", "swiftTargets", "buildConfiguration"],
+        "properties": {
+          "title": {
+              "type": "string",
+              "description": "Name of this scheme",
+              "default": "My Lib"
+          },
+          "swiftTargets": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Swift targets list for this scheme, all these targets will be built"
+          },
+          "buildConfiguration": {
+            "type": "string",
+            "enum": ["Debug", "Release"],
+            "description": "Build configuration (Debug / Release)",
+            "default": "Release"
+          },
+          "soFiles": {
+            "description": "Optional .so files, either a global list or per-target mapping",
+            "oneOf": [
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            ]
+          },
+          "swiftArgs": {
+            "description": "Optional Swift compiler arguments, either a global list or per-target mapping",
+            "oneOf": [
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
