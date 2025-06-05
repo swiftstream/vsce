@@ -10,16 +10,21 @@ import { FileWithError } from './sidebarTreeView'
 import { Stream } from './streams/stream'
 import { commands, ProgressLocation, ShellExecution, Task, TaskExecution, TaskProvider, tasks, TaskScope, Terminal, window } from 'vscode'
 import { AbortHandler } from './bash'
+import { SwiftPackageDump } from './swiftPackageDump'
 
 export class Swift {
-    constructor(private stream: Stream) {}
+    private packageDump: SwiftPackageDump
+
+    constructor(private stream: Stream) {
+        this.packageDump = new SwiftPackageDump(stream)
+    }
 
     static v5Mode = process.env.S_VERSION_MAJOR === '5'
     static v6Mode = process.env.S_VERSION_MAJOR === '6'
     static defaultAndroidSDK = 33
 
     private runTaskProvider?: SwiftRunTaskProvider
-
+    
     async startRunTask(options: {
         release: boolean,
         target: string,
@@ -63,7 +68,21 @@ export class Swift {
         return result.stdout
     }
 
+    async getPackageName(options: { fresh: boolean }): Promise<string> {
+        try {
+            await this.packageDump.dump({
+                fresh: options.fresh,
+                type: SwiftBuildType.Native
+            })
+            return this.packageDump.content.name
+        } catch (error: any) {
+            console.dir({ getTargetsError: error })
+            throw `Unable to get Swift Package name`
+        }
+    }
+
     async getLibraryProducts(options: {
+        fresh: boolean,
         abortHandler: AbortHandler | undefined
     }): Promise<string[]> {
         print(`Going to retrieve swift products with type == library`, LogLevel.Unbearable)
@@ -71,34 +90,30 @@ export class Swift {
             throw `No Package.swift file in the project directory`
         }
         try {
-            const dump = await this.execute(['package', 'dump-package'], {
-                type: SwiftBuildType.Native,
-                abortHandler: options.abortHandler
+            await this.packageDump.dump({
+                fresh: options.fresh,
+                type: SwiftBuildType.Native
             })
-            const json = JSON.parse(dump)
-            return json.products.filter(x => x.type?.library !== undefined).map(x => x.name)
+            return this.packageDump.content.products.filter(x => x.isLibrary).map(x => x.name)
         } catch (error: any) {
-            console.dir({getTargetsError: error})
+            console.dir({ getTargetsError: error })
             throw `Unable to get products with type == library from the package dump`
         }
     }
 
     async getTargets(options: {
         type: SwiftBuildType,
+        fresh: boolean,
         abortHandler: AbortHandler | undefined
     }, attempt: number = 0): Promise<SwiftTargets> {
         print(`Going to retrieve swift targets`, LogLevel.Unbearable)
-        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
-            throw `No Package.swift file in the project directory`
-        }
         try {
-            let result = new SwiftTargets()
-            const dump = await this.execute(['package', 'dump-package'], {
-                type: options.type,
-                abortHandler: options.abortHandler
+            await this.packageDump.dump({
+                fresh: options.fresh,
+                type: SwiftBuildType.Native
             })
-            const json = JSON.parse(dump)
-            for (let target of json.targets) {
+            let result = new SwiftTargets()
+            for (let target of this.packageDump.content.targets) {
                 switch (target.type) {
                     case 'regular':
                         result.regular.push(target.name)
@@ -187,37 +202,6 @@ export class Swift {
         if (!fs.existsSync(p)) return false
         const content = fs.readFileSync(p, 'utf8')
         return content.includes('.testTarget')
-    }
-
-    async packageDump(options: {
-        type: SwiftBuildType,
-        abortHandler: AbortHandler
-    }): Promise<PackageContent | undefined> {
-        const args: string[] = ['package', 'dump-package']
-        if (!fs.existsSync(`${projectDirectory}/Package.swift`)) {
-            throw `No Package.swift file in the project directory`
-        }
-        try {
-            const result = await this.execute(args, {
-                type: options.type,
-                abortHandler: options.abortHandler
-            })
-            const json = JSON.parse(result)
-            const dependencies: Dependency[] = json.dependencies
-            const products: Product[] = json.products.map((x:any) => {
-                var p: Product = x
-                p.executable = x.type.hasOwnProperty('executable')
-                return p
-            })
-            const targets: Target[] = json.targets
-            return {
-                dependencies: dependencies,
-                products: products,
-                targets: targets
-            }
-        } catch (error: any) {
-            return undefined
-        }
     }
 
     async grabPWAManifest(options: {
@@ -704,6 +688,7 @@ export class Swift {
             if (options.forceFetch === true || !this.cachedBuildTargets) {
                 async function retrieve(context: Swift) {
                     const targetsDump = await context.getTargets({
+                        fresh: true,
                         type: SwiftBuildType.Native,
                         abortHandler: options.abortHandler
                     })
@@ -838,29 +823,6 @@ export interface Preview {
     module: string
     class: string
     html: string
-}
-interface SourceControl {
-    identity: string
-    location: any
-    requirement: any
-}
-interface Dependency {
-    sourceControl?: SourceControl
-}
-interface Product {
-    name: string
-    targets: string[]
-    executable: boolean
-}
-interface Target {
-    name: string
-    type: string
-    dependencies: any[]
-}
-export interface PackageContent {
-    dependencies: Dependency[]
-    products: Product[]
-    targets: Target[]
 }
 export enum SwiftBuildType {
     Native = 'native',
