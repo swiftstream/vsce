@@ -1,0 +1,54 @@
+plugins {
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "{{namespace}}"
+    compileSdk = {{compileSdk}}
+
+    defaultConfig {
+        minSdk = {{minSdk}}
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    packaging {
+        jniLibs {
+            keepDebugSymbols.add("*/arm64-v8a/lib{{targetName}}.so")
+            keepDebugSymbols.add("*/armeabi-v7a/lib{{targetName}}.so")
+            keepDebugSymbols.add("*/x86_64/lib{{targetName}}.so")
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+
+    sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs")
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_{{javaVersion}}
+        targetCompatibility = JavaVersion.VERSION_{{javaVersion}}
+    }
+
+    kotlinOptions {
+        jvmTarget = "{{javaVersion}}"
+    }
+}
+
+dependencies {
+    implementation("com.github.swifdroid.runtime-libs:core:{{swiftVersion}}")
+    // managed by swiftstreamide: dependencies-begin
+    
+    // managed by swiftstreamide: dependencies-end
+}
+
+allprojects {}
