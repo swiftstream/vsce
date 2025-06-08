@@ -368,6 +368,7 @@ export class Swift {
         mode: SwiftBuildMode,
         targetName: string,
         release: boolean,
+        swiftArgs?: string[],
         abortHandler: AbortHandler,
         progressHandler?: (p: string) => void
     }) {
@@ -376,7 +377,8 @@ export class Swift {
             'build',
             '-c', options.release ? 'release' : 'debug',
             '--product', options.targetName,
-            '--build-path', options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`
+            '--build-path', options.type == SwiftBuildType.Native ? './.build' : `./.build/.${options.type}`,
+            ...(options.swiftArgs ?? [])
         ]
         switch (options.mode) {
             case SwiftBuildMode.Standard:

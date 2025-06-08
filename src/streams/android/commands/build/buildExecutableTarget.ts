@@ -13,11 +13,18 @@ export async function buildExecutableTarget(options: {
     target: string,
     release: boolean,
     force: boolean,
+    swiftArgs?: string[] | Record<string, string[]>,
     abortHandler: AbortHandler
 }) {
     if (!options.force && !doesModifiedAnySwiftFile(options.type ?? SwiftBuildType.Native)) {
         print(`💨 Skipping building \`${options.target}\` swift target ${options.type ? `for \`.${options.type}\` ` : ''}in ${options.release ? 'release' : 'debug'} mode because \`force == false\` and not modified any swift file`, LogLevel.Verbose)
         return
+    }
+    let swiftArgs: string[] = []
+    if (Array.isArray(options.swiftArgs)) {
+        swiftArgs = options.swiftArgs
+    } else if (typeof options.swiftArgs === 'object' && options.swiftArgs !== null) {
+        swiftArgs = options.swiftArgs[options.target]
     }
     const measure = new TimeMeasure()
     let forLabel: string | undefined = undefined
@@ -37,6 +44,7 @@ export async function buildExecutableTarget(options: {
             mode: droidBuildArchToSwiftBuildMode(options.arch),
             targetName: options.target,
             release: options.release,
+            swiftArgs: swiftArgs,
             abortHandler: options.abortHandler,
             progressHandler: (p) => {
                 buildStatus(`\`${options.target}\` swift target: building ${p}`)
