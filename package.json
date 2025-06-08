@@ -42,6 +42,12 @@
           "/.vscode/embedded-stream.json"
         ],
         "url": "./schemas/embedded-stream.schema.json"
+      },
+      {
+        "fileMatch": [
+          "/.vscode/android-stream.json"
+        ],
+        "url": "./schemas/android-stream.schema.json"
       }
     ],
     "configuration": {
