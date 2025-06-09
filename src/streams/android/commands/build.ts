@@ -1,18 +1,21 @@
+import { window } from 'vscode'
 import { AndroidLibraryProject } from '../../../androidLibraryProject'
+import { AndroidStreamConfig, PackageMode, Scheme, SoMode } from '../../../androidStreamConfig'
 import { resolveSwiftDependencies } from '../../../commands/build/resolveSwiftDependencies'
 import { restartLSPCommand } from '../../../commands/restartLSP'
 import { DevContainerConfig } from '../../../devContainerConfig'
-import { sidebarTreeView } from '../../../extension'
+import { projectDirectory, sidebarTreeView } from '../../../extension'
 import { isString } from '../../../helpers/isString'
 import { TimeMeasure } from '../../../helpers/timeMeasureHelper'
 import { allSwiftDroidBuildTypes, SwiftBuildType } from '../../../swift'
-import { buildStatus, isBuildingDebug, LogLevel, print, status, StatusType } from '../../stream'
+import { buildStatus, isBuildingDebug, isHotBuildingSwift, LogLevel, print, status, StatusType } from '../../stream'
 import { AndroidStream, DroidBuildArch } from '../androidStream'
 import { buildExecutableTarget } from './build/buildExecutableTarget'
+import path from 'path'
 
 let hasRestartedLSP = false
 
-export async function buildCommand(stream: AndroidStream) {
+export async function buildCommand(stream: AndroidStream, scheme: Scheme) {
     if (isBuildingDebug || stream.isAnyHotBuilding()) { return }
     const measure = new TimeMeasure()
     const abortHandler = stream.setAbortBuildingDebugHandler(() => {
@@ -29,7 +32,14 @@ export async function buildCommand(stream: AndroidStream) {
     try {
         print(`🏗️ Started building debug`, LogLevel.Normal, true)
 		print(`💁‍♂️ it will try to build each phase`, LogLevel.Detailed)
-        const targets = ['App']
+        const targets = await stream.swift.getLibraryProducts({
+            fresh: true,
+            abortHandler: abortHandler
+        })
+        if (targets.length === 0) {
+            window.showErrorMessage(`Unable to find products with type == library in the Package.swift`)
+            return abortHandler.abort()
+        }
         // Phase 1: Resolve Swift dependencies for each build type
         print('🔳 Phase 1: Resolve Swift dependencies for each build type', LogLevel.Verbose)
         const buildTypes = allSwiftDroidBuildTypes()
@@ -45,18 +55,15 @@ export async function buildCommand(stream: AndroidStream) {
 				abortHandler: abortHandler
 			})
 		}
+        const streamConfig = new AndroidStreamConfig()
         // Phase 2: Retrieve Swift targets
         print('🔳 Phase 2: Retrieve Swift targets', LogLevel.Verbose)
-        const allTargets = await stream.swift.getLibraryProducts({ abortHandler: abortHandler })
         await stream.chooseTarget({ release: false, abortHandler: abortHandler })
         if (!stream.swift.selectedDebugTarget) 
             throw `Please select Swift target to build`
-        // Phase 3: Proceed Swift targets
-        print('🔳 Phase 3: Proceed Swift targets', LogLevel.Verbose)
-        AndroidLibraryProject.proceedTargets({ targets: allTargets })
-        // Phase 4: Build executable targets
+        // Phase 3: Build executable targets
         const shouldRestartLSP = !hasRestartedLSP || !stream.isDebugBuilt(stream.swift.selectedDebugTarget, DroidBuildArch.Arm64)
-        print('🔳 Phase 4: Build executable targets', LogLevel.Verbose)
+        print('🔳 Phase 3: Build executable targets', LogLevel.Verbose)
         // Only one for current device, or all without device
         const archs = stream.currentBuildArch ? [stream.currentBuildArch] : [DroidBuildArch.Arm64, DroidBuildArch.ArmEabi, DroidBuildArch.x86_64]
         for (let i = 0; i < archs.length; i++) {
@@ -66,37 +73,58 @@ export async function buildCommand(stream: AndroidStream) {
                 target: stream.swift.selectedDebugTarget,
                 arch: arch,
                 release: false,
+                swiftArgs: scheme.swiftArgs,
                 force: true,
                 abortHandler: abortHandler
             })
         }
-        // Phase 5: Create or repair Library project
+        // Phase 4: Create or repair Library project
         const swiftVersion = DevContainerConfig.swiftVersion()
-        const swiftVersionString = `${swiftVersion.major}.${swiftVersion.minor}.0`
-        print('🔳 Phase 5: Create or repair Library project', LogLevel.Verbose)
+        const swiftVersionString = `${swiftVersion.major}.${swiftVersion.minor}.${swiftVersion.patch}`
+        print('🔳 Phase 4: Create or repair Library project', LogLevel.Verbose)
         AndroidLibraryProject.generateIfNeeded({
-            package: 'com.my.lib',
-            name: 'MyLib',
+            package: streamConfig.config.packageName,
+            name: streamConfig.config.name,
             targets: targets,
-            compileSdk: 35,
-            minSdk: 21,
-            javaVersion: 11,
+            compileSdk: streamConfig.config.compileSDK,
+            minSdk: streamConfig.config.minSDK,
+            javaVersion: streamConfig.config.javaVersion,
             swiftVersion: swiftVersionString
         })
+        // Phase 5: Proceed Gradle targets
+        print('🔳 Phase 5: Proceed Gradle targets', LogLevel.Verbose)
+        AndroidLibraryProject.proceedTargets({
+            targets: targets
+        })
+        for (let t = 0; t < targets.length; t++) {
+            const target = targets[t]
+            AndroidLibraryProject.updateSubmodule({
+                config: streamConfig,
+                swiftVersion: swiftVersionString,
+                target: target
+            })
+        }
         // Phase 6: Copy .so files into Library project
         print('🔳 Phase 6: Copy .so files', LogLevel.Verbose)
         AndroidLibraryProject.copySoFiles({
             release: false,
             targets: targets,
-            archs: archs
+            archs: archs,
+            scheme: scheme,
+            streamConfig: streamConfig
         })
         // Phase 7: Proceed .so files
         print('🔳 Phase 7: Proceed .so files', LogLevel.Verbose)
-        await AndroidLibraryProject.proceedSoDependencies(stream, {
-            targets: targets,
-            arch: archs[0],
-            swiftVersion: swiftVersionString
-        })
+        for (let a = 0; a < archs.length; a++) {
+            const arch = archs[a]
+            await AndroidLibraryProject.proceedSoDependencies(stream, {
+                targets: targets,
+                arch: arch,
+                swiftVersion: swiftVersionString,
+                streamConfig: streamConfig,
+            })
+        }
+        AndroidLibraryProject.removeObsoleteSubmodules(targets)
         measure.finish()
         if (abortHandler.isCancelled) return
         status('check', `Build Succeeded in ${measure.time}ms`, StatusType.Success)
@@ -112,6 +140,72 @@ export async function buildCommand(stream: AndroidStream) {
         stream.setBuildingDebug(false)
         sidebarTreeView?.refresh()
         const text = `Debug Build Failed`
+        if (isString(error)) {
+            print(`🧯 ${error}`)
+        } else {
+            const json = JSON.stringify(error)
+            const errorText = `${json === '{}' ? error : json}`
+            print(`🧯 ${text}: ${errorText}`)
+            console.error(error)
+        }
+        status('error', `${text} (${measure.time}ms)`, StatusType.Error)
+    }
+}
+
+// MARK: Hot Reload
+
+interface HotRebuildSwiftParams {
+    target?: string
+}
+
+let awaitingHotRebuildSwift: HotRebuildSwiftParams[] = []
+
+export async function hotRebuildSwift(stream: AndroidStream, params: HotRebuildSwiftParams) {
+    if (isBuildingDebug || isHotBuildingSwift) {
+        if (!isBuildingDebug) {
+            if (awaitingHotRebuildSwift.filter((x) => x.target == params.target).length == 0) {
+                print(`👉 Delay Swift hot rebuild call`, LogLevel.Verbose)
+                awaitingHotRebuildSwift.push(params)
+            }
+        }
+        return
+    }
+    const measure = new TimeMeasure()
+    const abortHandler = stream.setAbortBuildingDebugHandler(() => {
+        measure.finish()
+        status('circle-slash', `Aborted Hot Rebuilt Swift after ${measure.time}ms`, StatusType.Success)
+        print(`🚫 Aborted Hot Rebuilt Swift after ${measure.time}ms`)
+        console.log(`Aborted Hot Rebuilt Swift after ${measure.time}ms`)
+        stream.setBuildingDebug(false)
+        stream.setHotBuildingSwift(false)
+        sidebarTreeView?.refresh()
+    })
+    stream.setBuildingDebug(true)
+    stream.setHotBuildingSwift(true)
+    sidebarTreeView?.cleanupErrors()
+    sidebarTreeView?.refresh()
+    print('🔥 Hot Rebuilding Swift', LogLevel.Detailed)
+    try {
+        
+        measure.finish()
+        if (abortHandler.isCancelled) return
+        status('flame', `Hot Rebuilt Swift in ${measure.time}ms`, StatusType.Success)
+        print(`🔥 Hot Rebuilt Swift in ${measure.time}ms`)
+        console.log(`Hot Rebuilt Swift in ${measure.time}ms`)
+        stream.setBuildingDebug(false)
+        stream.setHotBuildingSwift(false)
+        sidebarTreeView?.refresh()
+        const awaitingParams = awaitingHotRebuildSwift.pop()
+        if (awaitingParams) {
+            print(`👉 Passing to delayed Swift hot rebuild call`, LogLevel.Verbose)
+            hotRebuildSwift(stream, awaitingParams)
+        }
+    } catch (error) {
+        awaitingHotRebuildSwift = []
+        stream.setBuildingDebug(false)
+        stream.setHotBuildingSwift(false)
+        sidebarTreeView?.refresh()
+        const text = `Hot Rebuild Swift Failed`
         if (isString(error)) {
             print(`🧯 ${error}`)
         } else {

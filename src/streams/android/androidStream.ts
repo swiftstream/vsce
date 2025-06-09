@@ -4,10 +4,12 @@ import { env } from 'process'
 import { ConfigurationChangeEvent, FileDeleteEvent, FileRenameEvent, TextDocument, window } from 'vscode'
 import { LogLevel, print, Stream } from '../stream'
 import { Dependency } from '../../sidebarTreeView'
-import { isInContainer, projectDirectory } from '../../extension'
+import { isInContainer, projectDirectory, sidebarTreeView } from '../../extension'
 import { pathToCompiledBinary, Swift, SwiftBuildMode } from '../../swift'
-import { buildCommand } from './commands/build'
+import { buildCommand, hotRebuildSwift } from './commands/build'
 import { ReadElf } from '../../readelf'
+import { AbortHandler } from '../../bash'
+import { AndroidStreamConfig, chooseScheme, Scheme } from '../../androidStreamConfig'
 
 export class AndroidStream extends Stream {
     readelf: ReadElf
@@ -72,12 +74,49 @@ export class AndroidStream extends Stream {
     async globalKeyRun() {
         window.showErrorMessage(`Run key binding not assigned`)
     }
+        
+    // MARK: Scheme
+
+    async chooseScheme(options: {
+        release: boolean,
+        abortHandler?: AbortHandler
+    }): Promise<Scheme | undefined> {
+        const scheme = await chooseScheme(this, {
+            release: options.release,
+            abortHandler: options.abortHandler
+        })
+        if (!scheme) return undefined
+        AndroidStreamConfig.transaction(x => {
+            x.setSelectedScheme(scheme)
+        })
+        sidebarTreeView?.refresh()
+    }
+    
+    async getSelectedSchemeOrChoose(options: {
+        release: boolean,
+        abortHandler?: AbortHandler
+    }): Promise<Scheme | undefined> {
+        const selectedScheme = AndroidStreamConfig.selectedScheme()
+        if (selectedScheme) return selectedScheme
+        return await chooseScheme(this, {
+            release: options.release,
+            abortHandler: options.abortHandler
+        })
+    }
 
     // MARK: Building
 
     async buildDebug() {
 		await super.buildDebug()
-        await buildCommand(this)
+        const scheme = await this.getSelectedSchemeOrChoose({ release: false })
+        if (!scheme) return
+        await buildCommand(this, scheme)
+    }
+
+    async hotRebuildSwift(params?: { target?: string }) {
+        hotRebuildSwift(this, {
+            target: params?.target
+        })
     }
 
     async buildRelease(successCallback?: any) {
